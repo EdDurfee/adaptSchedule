@@ -133,7 +133,7 @@ public class AppServerGUI extends NanoHTTPD { // implements Runnable
 			}
         	break;
         case "GET": // if a GET request
-        	if (connectionInitiated == false) break;
+        	if (connectionInitiated == false) break; // ignore gets until a confirmed connection with a valid client
         	/*
         	 * For now, we will use this as a type of ping / polling method
         	 * where the client sends a get every 0.2 seconds and the server

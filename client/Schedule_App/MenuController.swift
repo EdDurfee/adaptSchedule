@@ -89,10 +89,10 @@ class MenuController: UITableViewController {
             
             // if there is only 1 possible duration, display only once
             if minDurs[indexPath.row] == maxDurs[indexPath.row] {
-                cell.detailTextLabel?.text = minDurs[indexPath.row]+" minutes"
+                cell.detailTextLabel?.text = convertMinsToTimeSent(str: minDurs[indexPath.row])
             } // else if a range of durations, show range
             else {
-                cell.detailTextLabel?.text = String(minDurs[indexPath.row])+" to "+String(maxDurs[indexPath.row])+" minutes"
+                cell.detailTextLabel?.text = convertMinsToTimeSent( str: String(minDurs[indexPath.row]) ) + " - " +  convertMinsToTimeSent( str: String(maxDurs[indexPath.row]) )
             }
             
             break
@@ -224,10 +224,22 @@ class MenuController: UITableViewController {
         picker = UIDatePicker(frame: pickerFrame);
         picker.datePickerMode = .countDownTimer;
         picker.minuteInterval = 5 // only show options at 5 minute intervals
+        picker.countDownDuration = 5 * 60.0
+        picker.countDownDuration = Double(minDurs[selectionActNum])! * 60.0
+        
+        let calendar = Calendar(identifier: .gregorian)
+        let date = DateComponents(calendar: calendar, hour: 0, minute: Int(minDurs[selectionActNum])!).date!
+        picker.setDate(date, animated: true)
+        
+        picker.addTarget(self, action: #selector(datePickerChanged(sender:)), for: .valueChanged)
+        
+        
 //        let currentServDate = Date(timeInterval: Double(startTime)*60, since: Calendar.current.startOfDay(for: Date()) )
 //        picker.minimumDate = Date( timeInterval: 5 * 60,                             since: currentServDate )  // minimum idle time (in seconds)
 //        picker.maximumDate = Date( timeInterval: Double(self.maxDurs[actNum])! * 60, since: currentServDate ) // max idle time (in seconds)
 //        picker.Timer = 300.0 // start at 5 minutes
+        
+
         
         
         // picker.countDownDuration  ==  currently selected time in seconds
@@ -279,6 +291,29 @@ class MenuController: UITableViewController {
         actSelectionChanged = true
         alert!.dismiss(animated: true, completion: nil);
         // We dismiss the alert. Here you can add your additional code to execute when cancel is pressed
+    }
+    
+    @objc func datePickerChanged(sender: UIDatePicker){
+        if ( Int(sender.countDownDuration) < (60 * Int( minDurs[selectionActNum] )!) ) { // if picker value is less than min duration
+            let calendar = Calendar(identifier: .gregorian)
+            let date = DateComponents(calendar: calendar, hour: 0, minute: Int( minDurs[selectionActNum] )!).date!
+            picker.setDate(date, animated: true)
+        }
+        if ( (60 * Int( maxDurs[selectionActNum] )!) < Int(sender.countDownDuration) ) { // if picker value is greater than max duration
+            let calendar = Calendar(identifier: .gregorian)
+            let date = DateComponents(calendar: calendar, hour: 0, minute: Int( maxDurs[selectionActNum] )!).date!
+            picker.setDate(date, animated: true)
+        }
+    }
+    
+    func convertMinsToTimeSent(str: String) -> String {
+        let numMins = Int(str)
+//        if (numMins! / 60 == 0) { // if total time is less than 1 hour
+//            return String(format: "%02d", numMins!) + " minutes"
+//        } else {
+            //return String(numMins! / 60) + " hours and " + String(numMins! % 60) + " minutes"
+            return String(format: "%02d", numMins! / 60) + ":" + String(format: "%02d", numMins! % 60)
+//        }
     }
 
     

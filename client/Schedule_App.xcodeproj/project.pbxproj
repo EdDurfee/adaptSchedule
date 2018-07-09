@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3A36DD3E20F39BC100A444EE /* ActDurationPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A36DD3D20F39BC100A444EE /* ActDurationPicker.swift */; };
 		3A5365BC20B3564F0057B451 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A5365BB20B3564F0057B451 /* AppDelegate.swift */; };
 		3A5365BE20B3564F0057B451 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A5365BD20B3564F0057B451 /* ViewController.swift */; };
 		3A5365C120B3564F0057B451 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3A5365BF20B3564F0057B451 /* Main.storyboard */; };
@@ -38,6 +39,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		3A36DD3D20F39BC100A444EE /* ActDurationPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActDurationPicker.swift; sourceTree = "<group>"; };
 		3A5365B820B3564F0057B451 /* Schedule_App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Schedule_App.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3A5365BB20B3564F0057B451 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		3A5365BD20B3564F0057B451 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -110,6 +112,7 @@
 				3A5365BD20B3564F0057B451 /* ViewController.swift */,
 				3A5365BF20B3564F0057B451 /* Main.storyboard */,
 				3AB21BC820D2CF73008CADF5 /* MenuController.swift */,
+				3A36DD3D20F39BC100A444EE /* ActDurationPicker.swift */,
 				3A5365C220B356510057B451 /* Assets.xcassets */,
 				3A5365C420B356510057B451 /* LaunchScreen.storyboard */,
 				3A5365C720B356510057B451 /* Info.plist */,
@@ -271,6 +274,7 @@
 				3AD7719F20B45F6700948C2A /* ServerInteraction.swift in Sources */,
 				3A5365BE20B3564F0057B451 /* ViewController.swift in Sources */,
 				3A7A72A720DD3D7300A8EA55 /* IPEnterViewController.swift in Sources */,
+				3A36DD3E20F39BC100A444EE /* ActDurationPicker.swift in Sources */,
 				3AB21BC920D2CF73008CADF5 /* MenuController.swift in Sources */,
 				3A5365BC20B3564F0057B451 /* AppDelegate.swift in Sources */,
 				3AA188C920EC3B7D00E1C938 /* MainUIView.swift in Sources */,
