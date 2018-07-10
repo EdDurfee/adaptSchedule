@@ -229,7 +229,7 @@ public class MultiagentDTP extends MultiDTP implements java.io.Serializable{
 		newDTP.mustResolve = mustResolve.clone();
 		newDTP.reEmbed = reEmbed;
 		
-		newDTP.currentAgent = 0;
+		newDTP.currentAgent = currentAgent; // 0; // DREW: Why not set it to current agent?
 		newDTP.subDTPLabel = "agent";
 		newDTP.connectingLabel = "interagentDTP";
 		return newDTP;

@@ -13,14 +13,18 @@ class IPEnterViewController: UIViewController {
     @IBOutlet var IPEnterViewControllerOutRef: UIView!
     
     @IBOutlet weak var IP_inTextField: UITextField!
-    @IBOutlet weak var IP_enterButton: UIButton!
+    @IBOutlet weak var Agent0_enterButton: UIButton!
+    @IBOutlet weak var Agent1_enterButton: UIButton!
+    
     
     var IPaddress : String?
+    var agentNum  : String?
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        IP_enterButton.isEnabled = false
+        Agent0_enterButton.isEnabled = false
+        Agent1_enterButton.isEnabled = false
 
         // Do any additional setup after loading the view.
     }
@@ -33,17 +37,23 @@ class IPEnterViewController: UIViewController {
     
     
     @IBAction func IP_textFiel_doneEditing(_ sender: UITextField) {
-        IP_enterButton.isEnabled = true
+        Agent0_enterButton.isEnabled = true
+        Agent1_enterButton.isEnabled = true
     }
     
     @IBAction func IP_enterButton_click(_ sender: UIButton) {
         IPaddress = IP_inTextField.text
         
+        if (sender.titleLabel!.text! == "Login as Agent 0") {agentNum = "0"}
+        else if (sender.titleLabel!.text == "Login as Agent 1") {agentNum = "1"}
+        
         self.performSegue(withIdentifier: "IPEnteredSegue", sender: sender)
     }
     
+    
     @IBAction func IP_textField_EditingChanged(_ sender: UITextField) {
-        IP_enterButton.isEnabled = true
+        Agent0_enterButton.isEnabled = true
+        Agent1_enterButton.isEnabled = true
     }
     
     
@@ -51,6 +61,7 @@ class IPEnterViewController: UIViewController {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if let destinationViewController = segue.destination as? ViewController {
             destinationViewController.serverIP = IPaddress
+            destinationViewController.agentNumber = agentNum
         }
     }
 

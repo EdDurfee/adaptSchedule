@@ -129,13 +129,22 @@
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="DQx-aS-Vps">
-                                <rect key="frame" x="446" y="267" width="133" height="63"/>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="7l3-KQ-Py9">
+                                <rect key="frame" x="210" y="257" width="204" height="84"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="23"/>
-                                <state key="normal" title="Enter"/>
+                                <state key="normal" title="Login as Agent 0"/>
                                 <connections>
-                                    <action selector="IP_enterButton_click:" destination="m2T-Bl-iPw" eventType="touchUpInside" id="cPW-v0-B8F"/>
+                                    <action selector="IP_enterButton_click:" destination="m2T-Bl-iPw" eventType="touchUpInside" id="E5u-fz-rOY"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="GTd-FS-0Ic">
+                                <rect key="frame" x="562" y="257" width="204" height="84"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="23"/>
+                                <state key="normal" title="Login as Agent 1"/>
+                                <connections>
+                                    <action selector="IP_enterButton_click:" destination="m2T-Bl-iPw" eventType="touchUpInside" id="hmM-cD-A7T"/>
                                 </connections>
                             </button>
                         </subviews>
@@ -143,15 +152,16 @@
                         <viewLayoutGuide key="safeArea" id="8Go-o9-bNL"/>
                     </view>
                     <connections>
+                        <outlet property="Agent0_enterButton" destination="7l3-KQ-Py9" id="dlN-r7-ZCN"/>
+                        <outlet property="Agent1_enterButton" destination="GTd-FS-0Ic" id="nBm-tJ-A2Z"/>
                         <outlet property="IPEnterViewControllerOutRef" destination="c8T-1c-IcT" id="rHj-eL-JIk"/>
-                        <outlet property="IP_enterButton" destination="DQx-aS-Vps" id="OIO-Ig-4g7"/>
                         <outlet property="IP_inTextField" destination="7gV-GW-tP3" id="v2r-nZ-hZj"/>
                         <segue destination="BYZ-38-t0r" kind="showDetail" identifier="IPEnteredSegue" id="jwE-OO-WfQ"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="wPX-YM-4kL" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-699" y="38"/>
+            <point key="canvasLocation" x="-699.0234375" y="37.5"/>
         </scene>
     </scenes>
 </document>

@@ -701,7 +701,7 @@ public class Viz extends JPanel {
 		int rectWidth = rightIntBound - leftIntBound;
 
 		if (endTime <= currTime || rectWidth < 3) {
-			boxColor = new Color(100, 100, 100, 0);
+			boxColor = new Color(100, 100, 100, 0); // black
 		}
 		g.setColor(boxColor);
 		g.fill3DRect(leftBound, yCoord, rightBound - leftBound, HEIGHT_OF_WHISKER, true);
@@ -713,7 +713,7 @@ public class Viz extends JPanel {
 		if (endTime <= currTime || rectWidth < 3)
 			g.setColor(Color.DARK_GRAY);
 		else if (ratio < ORANGE_CUTOFF)
-			g.setColor(new Color(130, 130, 250));
+			g.setColor(new Color(130, 130, 250)); // blue/purp?
 		else if (ratio > ORANGE_CUTOFF && ratio < RED_CUTOFF)
 			g.setColor(Color.yellow);
 		else if (ratio > RED_CUTOFF)

@@ -62,9 +62,9 @@ public class AppServerGUI extends NanoHTTPD { // implements Runnable
     
     public AppServerGUI() {
         super(8080);
-//		interactive = new InteractionStageGUI(0);
-//		interactiveThread = new Thread( interactive );
-//		interactiveThread.start();
+		interactive = new InteractionStageGUI(0);
+		interactiveThread = new Thread( interactive );
+		interactiveThread.start();
     }
 
     
@@ -113,19 +113,24 @@ public class AppServerGUI extends NanoHTTPD { // implements Runnable
 	            	cmdVal = (String) JSONbody.get("infoType");
 		        	if (DEBUG) System.out.println("command value = " + cmdVal);
 		        	
+		        	/*
+		        	 * THIS DOESNT WORK
+		        	 * Because of static variables in background files, simply spawning new threads does not truly reset system
+		        	 * So for now, a new server instance is required whenever a new client is spawned
+		        	 */
 		        	if (cmdVal.equals("startup")) {
-		        		System.out.println("New server instanced.");
-//		        		interactiveThread.stop();
-//		        		interactiveThread.interrupt();
-	        			interactive = new InteractionStageGUI(0);
-	            		interactiveThread = new Thread( interactive );
-	            		interactiveThread.start();
+//		        		System.out.println("New server instanced.");
+////		        		interactiveThread.stop();
+////		        		interactiveThread.interrupt();
+//	        			interactive = new InteractionStageGUI(0);
+//	            		interactiveThread = new Thread( interactive );
+//	            		interactiveThread.start();
 	            		connectionInitiated = true;
 	            		clientID = null;
 //	            		InteractiveServNum++;
-		        	}else {
-		        		interactive.fromClientQueue.put(JSONbody);
-		        	}
+		        	}//else {
+		        	interactive.fromClientQueue.put(JSONbody);
+		        	//}
 	            }
         	} catch (Exception e){
 				System.err.println("Error: "+e.toString());
@@ -153,8 +158,9 @@ public class AppServerGUI extends NanoHTTPD { // implements Runnable
 	                return toReturn;
 	                
         		} catch (Exception e) {
-        			System.err.println("Error: "+e.toString());
-    				System.err.flush();
+        			//System.err.println("Error: "+e.toString());
+    				//System.err.flush();
+        			
         		}
         		
         	} else if (interactive.toClientQueue.size() > 0) {

@@ -34,7 +34,7 @@ class client {
     /*
      * Constructor
     */
-    init(_ servIP: String) {
+    init(_ servIP: String, _ agentNum: String) {
         do {
             
             JSON_encoder = JSONEncoder()
@@ -57,6 +57,7 @@ class client {
             var aPut = putCMD()
             aPut.infoType = "startup"
             aPut.clientID = ID
+            aPut.agentNum = agentNum
             let someData = try JSON_encoder.encode( aPut )
             requestPOST.httpBody = someData
             makeAReq(req: requestPOST)
@@ -228,6 +229,7 @@ class client {
 struct putCMD: Codable {
     var clientID = ""
     var infoType = ""  // options: startup / ganttRequest / confirmActivity / addActivity / removeActivity / editActivty
+    var agentNum = ""
     var activityName = ""
     var activityDuration = ""
     var debugInfo = [""]

@@ -23,6 +23,9 @@ class ViewController: UIViewController, UITextFieldDelegate {
     // menuDelegate is tableViewController to control left side menu of main screen
     var menuDelegate = MenuController(style: .grouped)
     
+    // this is the agent number of the client. Set at startup and never mutated
+    var agentNumber : String?
+    
     
     //MARK: Properties
     @IBOutlet var SideMenu: UITableView!
@@ -67,7 +70,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
 //        }
         
         // initialize client
-        self.aClient = client(serverIP!)
+        self.aClient = client(serverIP!, agentNumber!)
         
         // In the background, the client should continuously send heartbeat GET messages to the server
         // Heartbeat function will update the member variables of aClient in background whenever the server replies with new info
@@ -144,6 +147,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
         var aPut = putCMD()
         aPut.clientID = self.aClient!.ID
         aPut.infoType = "confirmActivity"
+        aPut.agentNum = agentNumber!
         
         // if some activity has been selected
         if SideMenu.indexPathForSelectedRow != nil {
@@ -208,6 +212,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
         var aPut = putCMD()
         aPut.clientID = self.aClient!.ID
         aPut.infoType = "tentativeActivity"
+        aPut.agentNum = agentNumber!
         
         // if no activity has been selected or if something besides an activity is selected, do nothing
         if (SideMenu.indexPathForSelectedRow == nil || SideMenu.indexPathForSelectedRow!.section != 0) {
