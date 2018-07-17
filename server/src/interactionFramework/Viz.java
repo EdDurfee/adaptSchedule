@@ -820,7 +820,10 @@ public class Viz extends JPanel {
 		});
 	}
 	
-	
+	/*
+	 * Generate a png image of a gantt for the current dtp
+	 * Author: Drew Davis
+	 */
 	public static void createAndSaveDTPDiagram(DisjunctiveTemporalProblem dtpIn, DisjunctiveTemporalProblem dtpOriginalIn,
 			int timestamp, int printStyle) {
 		dtp = dtpIn;
@@ -829,19 +832,19 @@ public class Viz extends JPanel {
 		whichToDraw = printStyle;
 		maxActivities = dtpIn.getTimepoints().size();
 
-		javax.swing.SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				JFrame j = renderAndReturn();
+		JFrame j = renderAndReturn();
+		
+		// save image
+		BufferedImage bi = new BufferedImage(j.getSize().width-1, j.getSize().height-1, BufferedImage.TYPE_INT_ARGB); 
+		Graphics g = bi.createGraphics();
+		j.paint(g);  //this == JComponent
+		g.dispose();
+		
+		// Because the drawing is done on many separate threads, we need to make sure all threads finish before saving it
+		// This is the simple temporary solution
+		try{Thread.sleep(1000);}catch (Exception e) {System.out.println(e);}
+		try{ImageIO.write(bi,"png",new File("forClient_image.png"));}catch (Exception e) {System.out.println(e);}
 				
-				// save image
-				BufferedImage bi = new BufferedImage(j.getSize().width-1, j.getSize().height-1, BufferedImage.TYPE_INT_ARGB); 
-				Graphics g = bi.createGraphics();
-				j.paint(g);  //this == JComponent
-				g.dispose();
-				try{ImageIO.write(bi,"png",new File("forClient_image.png"));}catch (Exception e) {}
-				
-			}
-		});
 
 	}
 	

@@ -31,11 +31,13 @@ class ViewController: UIViewController, UITextFieldDelegate {
     @IBOutlet var SideMenu: UITableView!
     @IBOutlet weak var ConfirmActButton: UIButton!
     @IBOutlet weak var GanttImageDisplay: UIImageView!
+    @IBOutlet weak var GanttChart: GanttChartView!
     
     
     // Called whenever this view (main screen) opens to the user (including app startup)
     override func viewDidLoad() {
         super.viewDidLoad()
+        
         
         // Set the sideMenu tableView as a child view
         addChildViewController(menuDelegate)
@@ -99,12 +101,15 @@ class ViewController: UIViewController, UITextFieldDelegate {
                 DispatchQueue.main.async() {
                 
                     // infoType will be non-empty if client has received message of significance
-                    if (self.aClient!.currentInfo.infoType != "") {
+                    // wait for counts to be same to avoid race condition towards seg fault
+                    if (self.aClient!.currentInfo.infoType != "" &&
+                                self.aClient!.currentInfo.nextActivities!.count == self.aClient!.currentInfo.nextActsMaxDur!.count) {
                         self.viewInInfo.infoType = self.aClient!.currentInfo.infoType!; self.aClient!.currentInfo.infoType = ""
                         self.viewInInfo.startTime = self.aClient!.currentInfo.startTime!; self.aClient!.currentInfo.startTime? = ""
                         self.viewInInfo.nextActivities = self.aClient!.currentInfo.nextActivities!; self.aClient!.currentInfo.nextActivities = []
                         self.viewInInfo.nextActsMinDur = self.aClient!.currentInfo.nextActsMinDur!; self.aClient!.currentInfo.nextActsMinDur = []
                         self.viewInInfo.nextActsMaxDur = self.aClient!.currentInfo.nextActsMaxDur!; self.aClient!.currentInfo.nextActsMaxDur = []
+                        self.viewInInfo.strImg = self.aClient!.currentInfo.strImg!; self.aClient!.currentInfo.strImg = ""
                         self.viewInInfo.debugInfo = self.aClient!.currentInfo.debugInfo!; self.aClient!.currentInfo.debugInfo?.removeAll()
                         
 
@@ -120,16 +125,29 @@ class ViewController: UIViewController, UITextFieldDelegate {
                                 self.ConfirmActButton.isEnabled = false
                             }
                         }
-                    }
                     
-                    if (self.GanttImageDisplay.image != self.aClient!.mostRecentGanttImg) {
-                        self.GanttImageDisplay.image = self.aClient!.mostRecentGanttImg
+                        if (self.viewInInfo.strImg != "") {
+                            if let decodedData = Data(base64Encoded: self.viewInInfo.strImg!, options: .ignoreUnknownCharacters) {
+                                let image = UIImage(data: decodedData)
+                                self.GanttImageDisplay.image = image
+                            }
+                        }
                     }
                 }
                 
                 
             }
         }
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        var gotBars : [GanttChartView.BarEntry] = []
+        gotBars.append( GanttChartView.BarEntry(color: UIColor.blue, height: 0.2, textValue: "20", title: "First") )
+        gotBars.append( GanttChartView.BarEntry(color: UIColor.orange, height: 0.80, textValue: "80", title: "Second") )
+        gotBars.append( GanttChartView.BarEntry(color: UIColor.magenta, height: 0.9, textValue: "90", title: "Third") )
+        gotBars.append( GanttChartView.BarEntry(color: UIColor.brown, height: 0.4, textValue: "40", title: "Fourth") )
+        
+        GanttChart.dataEntries = gotBars
     }
 
     // Auto-generated function to handle memory overuse

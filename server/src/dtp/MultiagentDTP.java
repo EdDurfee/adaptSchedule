@@ -100,12 +100,12 @@ public class MultiagentDTP extends MultiDTP implements java.io.Serializable{
 	}
 	
 	@Override
-	public int getNumAgents(){
+	public int getNumAgents() {
 		return subDTPs.length;
 	}
 	
 	@Override
-	public int getCurrentAgent(){
+	public int getCurrentAgent() {
 		return currentAgent;
 	}
 	

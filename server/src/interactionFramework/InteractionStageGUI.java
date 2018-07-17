@@ -5,10 +5,13 @@ import interval.*;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,6 +33,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import static java.nio.file.StandardCopyOption.*;
 import java.io.File;
 
+import org.apache.commons.codec.binary.Base64;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
@@ -88,7 +92,8 @@ public class InteractionStageGUI implements Runnable {
 	private HashSet<String> confirmedActSet = new HashSet<String>();
 	private HashSet<String> currentActSet = new HashSet<String>();
 	
-	public LinkedBlockingQueue<JSONObject> toClientQueue    = new LinkedBlockingQueue<JSONObject>();
+	public LinkedBlockingQueue<JSONObject> toClientAgent0Queue    = new LinkedBlockingQueue<JSONObject>();
+	public LinkedBlockingQueue<JSONObject> toClientAgent1Queue    = new LinkedBlockingQueue<JSONObject>();
 	public LinkedBlockingQueue<JSONObject> fromClientQueue  = new LinkedBlockingQueue<JSONObject>();
 	
 	public int thisServInstNum = 0;
@@ -113,11 +118,6 @@ public class InteractionStageGUI implements Runnable {
 	public void run(){
 
 		System.out.println("new server instanced");
-		
-///		removed the problem input for the GUI version
-//		printToClient("New session created. (Enter HELP at any point for advanced system control options)\n");
-//		printToClient("Which problem would you like to run?");
-//		printToClient("(multiagentSampleProblem, DTPtoyexample, toyExampleEd, etc.)");
 
 		File tmpDir = new File(problemFile);
 		if (!tmpDir.exists()) {
@@ -133,7 +133,7 @@ public class InteractionStageGUI implements Runnable {
 		dtp.simplifyMinNetIntervals();
 		
 		MAX_LET = (int) Math.ceil(getMaxLatestEndTime(dtp));
-		// Drew - Trying to temp quick patch a bug
+		// Drew - Trying to temp patch a bug
 		MAX_LET = 1440;
 				
 		initialDTP = dtp.clone();
@@ -212,18 +212,30 @@ public class InteractionStageGUI implements Runnable {
 				List<List<String>> allRemActivities = dtp.getActivities(DisjunctiveTemporalProblem.ActivityFinder.ALL, -getSystemTime());
 				List<Integer> maxSlack = dtp.getMaxSlack(); // list of max slack for each agent at its corresponding index
 				
-				//Update ongoing activities data struct
+//				//Update ongoing activities data struct
 				ArrayList<Integer> toRemove = new ArrayList<Integer>();
 				for(int i = 0; i < ongoingActs.size(); i++){
 					SimpleEntry<String, Interval> pair = ongoingActs.get(i);
 					Interval curr = pair.getValue();
 					int time = getSystemTime();
 					//System.out.println("current interval: " + curr.getUpperBound() + " time: " + time);
-					if(time >= curr.getUpperBound()) toRemove.add(i);
+					
+					// if the system time is greater than or equal to the end time of this ativity, then it is no longer ongoing
+					if(time >= curr.getUpperBound()) {
+						toRemove.add(i);
+					}
+					
+					if (i > ongoingActs.size()) {
+						System.out.println("concurrent loop error");
+					}
 				}
 				
-				for(int j : toRemove) ongoingActs.remove(j);
-				//System.out.println("after removal: " + ongoingActs);
+				for(int j : toRemove) {
+					if (ongoingActs.size() <= j) {
+						System.out.println("concurrent activities error");
+					}
+					ongoingActs.remove(j);
+				}
 				
 				if(maxSlack.size() == 1 && maxSlack.get(0) > 0) activities.get(0).add("idle"); // if only 1 agent
 				else for(int agent = 0; agent < maxSlack.size(); agent++){
@@ -258,7 +270,7 @@ public class InteractionStageGUI implements Runnable {
 						nextActsMaxDur.get(agent).add(String.valueOf( (int) interval.getUpperBound()));
 					}
 				}		
-						
+				
 				// create 2d vector of min and max durations of all remaining activities
 				// allRemActivities should never include idle
 				// first index is agent num, second index is act ind that coordinates to activities vector
@@ -281,51 +293,33 @@ public class InteractionStageGUI implements Runnable {
 					if (processingConfirmedAct || processingStartup) {
 						
 						// inform the client of all activity options, including idle
-						sendJSONToClient(
-								"currentChoices", // infoType
-								"TODO", // startTime
-								"", // lastActivity
-								activities.get(Integer.valueOf(agentNum)), // nextActivities of currentAgent
-								nextActsMinDur.get(Integer.valueOf(agentNum)), // nextActsMinDur
-								nextActsMaxDur.get(Integer.valueOf(agentNum)), // nextActsMaxDur
-								new ArrayList<String>(), // remActivities
-								new ArrayList<String>(), // remMinDurs
-								new ArrayList<String>(), // remMaxDurs
-								new ArrayList<String>(), // remMinStarts
-								new ArrayList<String>(), // remMaxEnds
-								new ArrayList<String>()  // debugInfo
-								);
-						
+						sendCurrentChoicesToAllClients(activities, nextActsMinDur, nextActsMaxDur);
+					}
+					
+					// if processing a confirmed action, need to update gantts of all clients to reflect permanent changes
+					if (processingConfirmedAct || processingStartup) {
+						sendGanttToAgent("ALL");
 						// done processing confirmedAct
 						processingConfirmedAct = false;
 						processingStartup = false;
-//						processingAgentNum = "";
+						
+					// if not, only send to agent of request
+					} else if (processingTentativeAct) {
+						sendGanttToAgent(agentNum);
 					}
-					
-					// create visual png of DTP with current state
-	//					Viz.printDTPDiagram(dtp, initialDTP, getSystemTime(),1);
-					Viz.createAndSaveDTPDiagram(dtp, initialDTP, getSystemTime(),1);
-					
-					// prep client for gantt image
-					// actual image will be sent on next get request
-					sendJSONToClient(
-							"ganttImage", // infoType
-							"", // startTime
-							"", // lastActivity
-							new ArrayList<String>(), // nextActivities
-							new ArrayList<String>(), // nextActsMinDur
-							new ArrayList<String>(), // nextActsMaxDur
-							new ArrayList<String>(), // remActivities
-							new ArrayList<String>(), // remMinDurs
-							new ArrayList<String>(), // remMaxDurs
-							new ArrayList<String>(), // remMinStarts
-							new ArrayList<String>(), // remMaxEnds
-							new ArrayList<String>()  // debugInfo
-							);
 					
 					// if this is a tentative activity
 					if (processingTentativeAct == true) {
 						removeTentAct(agentNum);
+						
+						// need to remove undone act from list of ongoing acts
+						for (int i = 0; i < ongoingActs.size(); i++) {
+							if (ongoingActs.get(i).getKey() == actName) {
+								ongoingActs.remove(i);
+								i--; // make sure to check the item that fills in the just removed index
+								}
+						}
+						
 						processingTentativeAct = false;
 //						processingAgentNum = "";
 						continue; // need to go back to top to get a full undo / removal of tentative activity
@@ -955,11 +949,11 @@ public class InteractionStageGUI implements Runnable {
 //	}
 	
 	@SuppressWarnings("unchecked")
-	private void sendJSONToClient(
+	private void sendJSONToClient( String toAgentNum,
 			String infoType, String startTime, String lastActivity, List<String> nextActivities,
 			List<String> nextActsMinDur, List<String> nextActsMaxDur, List<String> remActivities,
 			List<String> remMinDurs, List<String> remMaxDurs, List<String> remMinStarts,
-			List<String> remMaxEnds, List<String> debugInfo) {
+			List<String> remMaxEnds, String strImg, List<String> debugInfo) {
 		
 		System.out.println("Server #" + String.valueOf(thisServInstNum) + " Sending '"+infoType+"' JSON to client");
 		
@@ -975,16 +969,127 @@ public class InteractionStageGUI implements Runnable {
 		outJSON.put("remMaxDurs", remMaxDurs);
 		outJSON.put("remMinStarts", remMinStarts);
 		outJSON.put("remMaxEnds", remMaxEnds);
+		outJSON.put("strImg", strImg);
 		outJSON.put("debugInfo", debugInfo);
 		
 		try {
-			toClientQueue.put(outJSON);
+			if (toAgentNum.equals("0")) {
+				toClientAgent0Queue.put(outJSON);
+			} else if (toAgentNum.equals("1")) {
+				toClientAgent1Queue.put(outJSON);
+			}
 		} catch (Exception e) {
 			System.err.println("Error while adding to toClientQueue");
 			System.err.flush();
 		}
 		
 	}
+	
+	
+	private void sendCurrentChoicesToAllClients(List<List<String>> acts, ArrayList<ArrayList<String>> minDurs, ArrayList<ArrayList<String>> maxDurs) {
+		for (int a = 0; a < numAgents; a++) {
+			sendJSONToClient(
+					String.valueOf(a),	// agentNum
+					"currentChoices", // infoType
+					"TODO", // startTime
+					"", // lastActivity
+					acts.get(Integer.valueOf(String.valueOf(a))), 	 // nextActivities
+					minDurs.get(Integer.valueOf(String.valueOf(a))), // nextActsMinDur
+					maxDurs.get(Integer.valueOf(String.valueOf(a))), // nextActsMaxDur
+					new ArrayList<String>(), // remActivities
+					new ArrayList<String>(), // remMinDurs
+					new ArrayList<String>(), // remMaxDurs
+					new ArrayList<String>(), // remMinStarts
+					new ArrayList<String>(), // remMaxEnds
+					"",						 // strImg
+					new ArrayList<String>()  // debugInfo
+			);
+		}
+	}
+	
+	
+	/*
+	 * This class creates and sends a gantt chart of the current system dtp to a specified (or all) client(s)
+	 * Author: Drew
+	 * Gantt is sent as a 64byte encoded String
+	 */
+	private void sendGanttToAgent(String agentNum) {
+	
+		// delete any outdated gantt images
+		File ganttDir = new File("forClient_image.png");
+		ganttDir.delete();
+		
+		// create visual png of DTP with current state
+		Viz.createAndSaveDTPDiagram(dtp, initialDTP, getSystemTime(),1);
+		
+		// wait until gantt is made, saved, and loaded into system
+		ganttDir = new File("forClient_image.png");
+		String imageString = "";
+		try {
+			while(!ganttDir.exists()) { // while it does not exist
+				Thread.sleep(100);
+				ganttDir = new File("forClient_image.png");
+			}
+			
+			// once gantt is made and loaded, convert to base64 string
+			FileInputStream fis = new FileInputStream(ganttDir);
+			byte byteArray[] = new byte[(int)ganttDir.length()];
+			fis.read(byteArray);
+			imageString = Base64.encodeBase64String(byteArray);
+			
+			// clean up stream and delete png after use
+			fis.close();
+			ganttDir.delete();
+		
+			// send JSON file with infoType and image as encoded String
+			// if agentNum is set to "ALL", send the JSON to all clients/agents
+			if ( agentNum.equals("ALL") ) {
+				for (int a = 0; a < numAgents; a++) {
+					sendJSONToClient(String.valueOf(a),
+							"ganttImage", // infoType
+							"", // startTime
+							"", // lastActivity
+							new ArrayList<String>(), // nextActivities
+							new ArrayList<String>(), // nextActsMinDur
+							new ArrayList<String>(), // nextActsMaxDur
+							new ArrayList<String>(), // remActivities
+							new ArrayList<String>(), // remMinDurs
+							new ArrayList<String>(), // remMaxDurs
+							new ArrayList<String>(), // remMinStarts
+							new ArrayList<String>(), // remMaxEnds
+							imageString,			 // imgStr
+							new ArrayList<String>()  // debugInfo
+					);
+				}
+			
+			// otherwise only send to specified client
+			} else if(Integer.valueOf(agentNum) >= 0) {
+				sendJSONToClient(agentNum,
+						"ganttImage", // infoType
+						"", // startTime
+						"", // lastActivity
+						new ArrayList<String>(), // nextActivities
+						new ArrayList<String>(), // nextActsMinDur
+						new ArrayList<String>(), // nextActsMaxDur
+						new ArrayList<String>(), // remActivities
+						new ArrayList<String>(), // remMinDurs
+						new ArrayList<String>(), // remMaxDurs
+						new ArrayList<String>(), // remMinStarts
+						new ArrayList<String>(), // remMaxEnds
+						imageString,			 // imgStr
+						new ArrayList<String>()  // debugInfo
+				);
+			} 
+		} catch (Exception e) {
+			System.err.println("Error: "+e.toString());
+			System.err.flush();
+		}
+		
+		// delete the gantt image after it has been sent
+//		ganttDir.delete();
+	}
+	
+	
 
 	/*
 	 * Drew: We need a method that acts in replacement of the stdin

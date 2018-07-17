@@ -41,7 +41,7 @@ class client {
             JSON_encoder.outputFormatting = .prettyPrinted
             
             // URL to access server at, appended by client ID to validate access
-            urlString = "http://" + servIP + ":8080/" + ID
+            urlString = "http://" + servIP + ":8080/" + agentNum
             
             print("\n\n\n\nCONNECTING TO " + urlString + "\n\n\n\n")
             
@@ -115,21 +115,20 @@ class client {
             guard let data = data else { return }
             dataProcess: do {
                 
-                // if this is a response immediatly after a ganttImage infoType
-                if (self.lastInfoType == "ganttImage") {
-                    self.mostRecentGanttImg = UIImage(data:data, scale:1.0)
-                    if (self.mostRecentGanttImg != nil) {
-                        self.lastInfoType = ""
-                        
-                        //                let image = UIImage(data:data,scale:1.0)
-                        //                let imageView = UIImageView(image: image!)
-                        //                imageView.frame = CGRect(x: 0, y: 0, width: 100, height: 200)
-                        //                view.addSubview(imageView)
-                        
-                        break dataProcess
-                    }
-                }
-                
+//                // if this is a response immediatly after a ganttImage infoType
+//                if (self.lastInfoType == "ganttImage") {
+//                    self.mostRecentGanttImg = UIImage(data:data, scale:1.0)
+//                    if (self.mostRecentGanttImg != nil) {
+//                        self.lastInfoType = ""
+//
+//                        //                let image = UIImage(data:data,scale:1.0)
+//                        //                let imageView = UIImageView(image: image!)
+//                        //                imageView.frame = CGRect(x: 0, y: 0, width: 100, height: 200)
+//                        //                view.addSubview(imageView)
+//
+//                        return
+//                    }
+//                }
                 
                 let servData = try JSONDecoder().decode(fromServer.self, from: data)
 
@@ -141,6 +140,7 @@ class client {
                     self.currentInfo.nextActivities = servData.nextActivities!;         print("  nextActivities: ", terminator:"");  print(servData.nextActivities!)
                     self.currentInfo.nextActsMinDur = servData.nextActsMinDur!;         print("  nextActsMinDur: ", terminator:"");      print(servData.nextActsMinDur!)
                     self.currentInfo.nextActsMaxDur = servData.nextActsMaxDur!;         print("  nextActsMaxDur: ", terminator:"");      print(servData.nextActsMaxDur!)
+                    self.currentInfo.strImg = servData.strImg!;                         print("  strImg length: ", terminator:"");       print(servData.strImg!.count)//print("~suppressed for readability~")//
                     self.currentInfo.debugInfo = servData.debugInfo!;                   print("  debugInfo: ", terminator:"");       print("~suppressed for readability~")//print(servData.debugInfo!)
                     self.lastInfoType = servData.infoType!
                 }
@@ -250,6 +250,7 @@ struct fromServer: Codable {
     var remMaxDurs     : [String]?
     var remMinStarts   : [String]?
     var remMaxEnds     : [String]?
+    var strImg         : String?
     var debugInfo      : [String]?
     
     init() {
@@ -263,6 +264,7 @@ struct fromServer: Codable {
         remMaxDurs     = []
         remMinStarts   = []
         remMaxEnds     = []
+        strImg         = ""
         debugInfo      = []
     }
 }

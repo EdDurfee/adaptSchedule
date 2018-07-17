@@ -1,6 +1,7 @@
 package util;
 
 import java.io.BufferedInputStream;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -11,6 +12,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+
+import org.apache.commons.codec.binary.Base64;
 
 import interactionFramework.InteractionStageGUI;
 //import jdk.net.SocketFlow.Status;
@@ -45,11 +48,14 @@ public class AppServerGUI extends NanoHTTPD { // implements Runnable
 	
 	public String msg;
 	public String cmdVal = "";
+	public String agentNum = "";
 	public int test = 0;
-	public InteractionStageGUI interactive;
+	public InteractionStageGUI interactive = new InteractionStageGUI(0);
 	public Thread interactiveThread;
-	public String clientID;
+	public String clientID_agent0;
+	public String clientID_agent1;
 	public String lastGetReplyInfoType = "";
+	public String lastGetReplyClientID = "";
 	
 	public boolean connectionInitiated = false;
 
@@ -62,7 +68,7 @@ public class AppServerGUI extends NanoHTTPD { // implements Runnable
     
     public AppServerGUI() {
         super(8080);
-		interactive = new InteractionStageGUI(0);
+//		interactive = new InteractionStageGUI(0);
 		interactiveThread = new Thread( interactive );
 		interactiveThread.start();
     }
@@ -111,6 +117,7 @@ public class AppServerGUI extends NanoHTTPD { // implements Runnable
 	            } else {
 	            	JSONbody = (JSONObject) Jparser.parse( postBody );
 	            	cmdVal = (String) JSONbody.get("infoType");
+	            	agentNum = (String) JSONbody.get("agentNum");
 		        	if (DEBUG) System.out.println("command value = " + cmdVal);
 		        	
 		        	/*
@@ -126,7 +133,8 @@ public class AppServerGUI extends NanoHTTPD { // implements Runnable
 //	            		interactiveThread = new Thread( interactive );
 //	            		interactiveThread.start();
 	            		connectionInitiated = true;
-	            		clientID = null;
+	                	if (clientID_agent0 == null && agentNum.equals("0")) { clientID_agent0 = (String)session.getUri().substring(1); }
+	                	if (clientID_agent1 == null && agentNum.equals("1")) { clientID_agent1 = (String)session.getUri().substring(1); }
 //	            		InteractiveServNum++;
 		        	}//else {
 		        	interactive.fromClientQueue.put(JSONbody);
@@ -144,34 +152,42 @@ public class AppServerGUI extends NanoHTTPD { // implements Runnable
         	 * where the client sends a get every 0.2 seconds and the server
         	 * checks if there is any queued output and sends it back, if it exists
         	 */
-        	if (clientID == null) { clientID = (String)session.getUri().substring(1); }
+        	String getClientID = session.getUri().substring(1);
 //        	if ( session.getUri().substring(1).equals(clientID) ) {
         	
         	
-        	
-        	if (lastGetReplyInfoType.equals("ganttImage")) {
-        		try {
-        			Response toReturn = Response.newChunkedResponse( Status.OK, "png", (InputStream) new FileInputStream("forClient_image.png"));
-        			lastGetReplyInfoType = "";
-        			File file = new File("forClient_image.png");
-	                file.delete();
-	                return toReturn;
-	                
-        		} catch (Exception e) {
-        			//System.err.println("Error: "+e.toString());
-    				//System.err.flush();
-        			
-        		}
+//        	// if last request was for gantt and matches client ID, then this is an image for that client
+//        	if ( lastGetReplyInfoType.equals("ganttImage") && lastGetReplyClientID.equals(getClientID) ) {
+//        		try {
+//        			Response toReturn = Response.newChunkedResponse( Status.OK, "png", (InputStream) new FileInputStream("forClient_image.png"));
+//        			lastGetReplyInfoType = "";
+//        			lastGetReplyClientID = "";
+//        			File file = new File("forClient_image.png");
+//	                file.delete();
+//	                return toReturn;
+//	                
+//        		} catch (Exception e) {
+//        			//System.err.println("Error: "+e.toString());
+//    				//System.err.flush();
+//        			
+//        		}
         		
-        	} else if (interactive.toClientQueue.size() > 0) {
-	        	JSONObject responseJSON = interactive.toClientQueue.poll();
-	        	msg = responseJSON.toString();
-	        	lastGetReplyInfoType = (String) responseJSON.get("infoType");
-	        	return Response.newFixedLengthResponse(msg);
-        	}
+        	// if message waiting for Agent0
+//        	} else if....
         	
-		        
-//        	}
+        	// check which agent this get is from and get the JSON to process accordingly
+        	JSONObject responseJSON;
+        	if (getClientID.equals(clientID_agent0) && interactive.toClientAgent0Queue.size() > 0) {
+        		responseJSON = interactive.toClientAgent0Queue.poll();
+        	} else if (getClientID.equals(clientID_agent1) && interactive.toClientAgent1Queue.size() > 0) {
+        		responseJSON = interactive.toClientAgent1Queue.poll();
+        	} else {
+        		break; // break from switch if there are no messages for any clients
+        	}
+	        	
+        	msg = responseJSON.toString();
+        	return Response.newFixedLengthResponse(msg);
+	        
         	
         } // end of switch
         
