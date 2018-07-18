@@ -15,16 +15,16 @@ import UIKit
 class GanttChartView: UIView {
 
     /// the width of each bar
-    let barWidth: CGFloat = 40.0
+    let barHeight: CGFloat = 40.0
     
     /// space between each bar
-    let space: CGFloat = 20.0
+    let barSpace: CGFloat = 20.0
     
-    /// space at the bottom of the bar to show the title
-    private let bottomSpace: CGFloat = 40.0
+    /// space at the left of the bar to show the title
+    private let leftSpace: CGFloat = 70.0
     
-    /// space at the top of each bar to show the value
-    private let topSpace: CGFloat = 40.0
+    /// space at the right of each bar to show the value
+    private let rightSpace: CGFloat = 40.0
     
     
     private let mainLayer: CALayer = CALayer()
@@ -66,16 +66,16 @@ class GanttChartView: UIView {
             
             // remove old bars
             mainLayer.sublayers?.forEach({$0.removeFromSuperlayer()})
-            // remove drawn lines
-            //self.layer.sublayers?.forEach({$0.removeFromSuperlayer()})
+//            // remove drawn lines
+//            self.layer.sublayers?.forEach({$0.removeFromSuperlayer()})
             
             if let dataEntries = dataEntries {
-                scrollView.contentSize = CGSize(width: (barWidth + space)*CGFloat(dataEntries.count), height: self.frame.size.height)
+                scrollView.contentSize = CGSize(width: self.frame.size.width, height: (barHeight + barSpace)*CGFloat(dataEntries.count) + barSpace)
                 mainLayer.frame = CGRect(x: 0, y: 0, width: scrollView.contentSize.width, height: scrollView.contentSize.height)
                 
-                drawHorzLine(height: 0.0, color: UIColor.gray, lineType: "solid")
-                drawHorzLine(height: 1.0, color: UIColor.gray, lineType: "solid")
-                drawHorzLine(height: 0.2, color: UIColor.gray, lineType: "dashed")
+                drawVertLine(x: 0.0, color: UIColor.gray, lineType: "solid")
+                drawVertLine(x: 1.0, color: UIColor.gray, lineType: "solid")
+                drawVertLine(x: 0.5, color: UIColor.gray, lineType: "dashed")
                 
                 for i in 0..<dataEntries.count {
                     showEntry(index: i, entry: dataEntries[i])
@@ -85,21 +85,66 @@ class GanttChartView: UIView {
     }
     
     
+    // Take a BarEntry object and create and display a visual bar representing it
+    private func showEntry(index: Int, entry: BarEntry) {
+        
+        // actual left-to-right length of bar in pixels
+        let barLength: CGFloat = CGFloat(entry.length) * (mainLayer.frame.width - leftSpace - rightSpace)
+        
+        // Starting x postion of the bar
+        let xPos: CGFloat = leftSpace
+        
+        // Starting y postion of the bar
+        let yPos: CGFloat = barSpace + CGFloat(index) * (barHeight + barSpace)
+        
+        drawBar(xPos_left: xPos, yPos_top: yPos, barLength: barLength, color: entry.color)
+        
+        // Draw label in the middle of the bar
+        drawBarTextLabel(yPos_top: yPos + barHeight*3/10, barLength: barLength, textValue: entry.textValue)
+        
+        // Draw title to the left of the bar
+        drawBarTextTitle(xPos_left: 10, yPos_top: yPos + barHeight*3/10, title: entry.title, color: entry.color)
+    }
+    
+    
     // calculate frame shape and color of bar
     // and add bar to mainLayer (CALayer)
-    private func drawBar(xPos: CGFloat, yPos: CGFloat, color: UIColor) {
-        let barLayer = CALayer()
-        barLayer.frame = CGRect(x: xPos, y: yPos, width: barWidth, height: mainLayer.frame.height - bottomSpace - yPos)
-        barLayer.backgroundColor = color.cgColor
-        mainLayer.addSublayer(barLayer)
+    // xPos: starting x position of bar (left)
+    // yPos: starting y position of bar (top)
+    // barLength: length of bar in pixels
+    // color: UIColor of bar
+    private func drawBar(xPos_left: CGFloat, yPos_top: CGFloat, barLength: CGFloat, color: UIColor) {
+        
+        let path: UIBezierPath = UIBezierPath()
+        path.move(to: CGPoint(x: xPos_left + barHeight/2, y: yPos_top))
+//
+//        // draw 4 sides and 2 half-circles to fill
+        path.addLine(to: CGPoint(x: xPos_left + barLength - barHeight/2,  y: yPos_top))
+        path.addArc(withCenter: CGPoint(x: xPos_left + barLength - barHeight/2, y: yPos_top + barHeight/2), radius: barHeight/2, startAngle: CGFloat.pi/2.0, endAngle: 3.0*CGFloat.pi/2.0, clockwise: false) // addArc moves cursor to center of arc
+        
+        path.addLine(to: CGPoint(x: xPos_left + barLength - barHeight/2,  y: yPos_top + barHeight))
+        path.addLine(to: CGPoint(x: xPos_left + barHeight/2,                            y: yPos_top + barHeight))
+        path.addArc(withCenter: CGPoint(x: xPos_left + barHeight/2, y: yPos_top + barHeight/2), radius: barHeight/2, startAngle: 3.0*CGFloat.pi/2.0, endAngle: CGFloat.pi/2.0, clockwise: false)
+        
+        path.close()
+        
+        // make shape from lines and fill rectangle
+        let pathLayer = CAShapeLayer()
+        pathLayer.path = path.cgPath
+        pathLayer.lineWidth = 0.5
+        pathLayer.fillColor = color.cgColor
+        pathLayer.strokeColor = color.cgColor
+        
+        mainLayer.addSublayer(pathLayer)
+        
     }
     
     
     // Draw the text above a bar in the chart
-    private func drawTextValue(xPos: CGFloat, yPos: CGFloat, textValue: String, color: UIColor) {
+    private func drawBarTextLabel(yPos_top: CGFloat, barLength: CGFloat, textValue: String) {
         let textLayer = CATextLayer()
-        textLayer.frame = CGRect(x: xPos, y: yPos, width: barWidth+space, height: 22)
-        textLayer.foregroundColor = color.cgColor
+        textLayer.frame = CGRect(x: leftSpace + barLength/2-50, y: yPos_top, width: 100, height: 22)
+        textLayer.foregroundColor = UIColor.gray.cgColor
         textLayer.backgroundColor = UIColor.clear.cgColor
         textLayer.alignmentMode = kCAAlignmentCenter
         textLayer.contentsScale = UIScreen.main.scale
@@ -111,12 +156,12 @@ class GanttChartView: UIView {
     
     
     // Draw the text below a bar in the chart
-    private func drawTitle(xPos: CGFloat, yPos: CGFloat, title: String, color: UIColor) {
+    private func drawBarTextTitle(xPos_left: CGFloat, yPos_top: CGFloat, title: String, color: UIColor) {
         let textLayer = CATextLayer()
-        textLayer.frame = CGRect(x: xPos, y: yPos, width: barWidth + space, height: 22)
+        textLayer.frame = CGRect(x: xPos_left, y: yPos_top, width: leftSpace - xPos_left - 5, height: barHeight)
         textLayer.foregroundColor = color.cgColor
         textLayer.backgroundColor = UIColor.clear.cgColor
-        textLayer.alignmentMode = kCAAlignmentCenter
+        textLayer.alignmentMode = kCAAlignmentRight
         textLayer.contentsScale = UIScreen.main.scale
         textLayer.font = CTFontCreateWithName(UIFont.systemFont(ofSize: 0).fontName as CFString, 0, nil)
         textLayer.fontSize = 14
@@ -125,41 +170,51 @@ class GanttChartView: UIView {
     }
     
     
-    // Convert height percent (0.0 - 1.0) to actual bar height
-    private func translateHeightValueToYPosition(value: Float) -> CGFloat {
-        let height: CGFloat = CGFloat(value) * (mainLayer.frame.height - bottomSpace - topSpace)
-        return mainLayer.frame.height - bottomSpace - height
+    // Convert height percent (0.0 - 1.0) to actual bar height relative to GanttChartView
+    private func translateHeightValueToBarsYPosition(value: Float) -> CGFloat {
+        let height: CGFloat = CGFloat(value) * (scrollView.contentSize.height)
+        return scrollView.contentSize.height + height
     }
     
-    
-    // Take a BarEntry object and create and display a visual bar representing it
-    private func showEntry(index: Int, entry: BarEntry) {
-        /// Starting x postion of the bar
-        let xPos: CGFloat = space + CGFloat(index) * (barWidth + space)
-        
-        /// Starting y postion of the bar
-        let yPos: CGFloat = translateHeightValueToYPosition(value: entry.height)
-        
-        drawBar(xPos: xPos, yPos: yPos, color: entry.color)
-        
-        /// Draw text above the bar
-        drawTextValue(xPos: xPos - space/2, yPos: yPos - 30, textValue: entry.textValue, color: entry.color)
-        
-        /// Draw text below the bar
-        drawTitle(xPos: xPos - space/2, yPos: mainLayer.frame.height - bottomSpace + 10, title: entry.title, color: entry.color)
+    // Convert width percent (0.0 - 1.0) to actual bar height relative to GanttChartView
+    private func translateWidthValueToBarsXPosition(value: Float) -> CGFloat {
+        let width: CGFloat = CGFloat(value) * (scrollView.contentSize.width - leftSpace - rightSpace)
+        return width + leftSpace
     }
     
     
     // draw a horizontal line across the chart
     // will be at height yPos and will go all the way across the chart
-    private func drawHorzLine(height: Float, color: UIColor, lineType: String) {
+    private func drawHorzLine(y: Float, color: UIColor, lineType: String) {
         
         let xPos = CGFloat(0.0)
-        let yPos = translateHeightValueToYPosition(value: height)
+        let yPos = translateHeightValueToBarsYPosition(value: y)
         
         let path = UIBezierPath()
         path.move(to: CGPoint(x: xPos, y: yPos))
         path.addLine(to: CGPoint(x: scrollView.frame.size.width, y: yPos))
+        
+        let lineLayer = CAShapeLayer()
+        lineLayer.path = path.cgPath
+        lineLayer.lineWidth = 0.5
+        if lineType == "dashed" {
+            lineLayer.lineDashPattern = [4, 4]
+        }
+        lineLayer.strokeColor = color.cgColor
+        self.layer.insertSublayer(lineLayer, at: 0)
+        
+    }
+    
+    // draw a vertical line across the chart
+    // will be at width xPos and will go all the way vertical across the chart
+    private func drawVertLine(x: Float, color: UIColor, lineType: String) {
+        
+        let xPos = translateWidthValueToBarsXPosition(value: x)
+        let yPos = CGFloat(0.0)
+        
+        let path = UIBezierPath()
+        path.move(to: CGPoint(x: xPos, y: yPos))
+        path.addLine(to: CGPoint(x: xPos, y: scrollView.frame.size.height))
         
         let lineLayer = CAShapeLayer()
         lineLayer.path = path.cgPath
@@ -178,7 +233,7 @@ class GanttChartView: UIView {
         let color: UIColor
         
         /// Ranged from 0.0 to 1.0
-        let height: Float
+        let length: Float
         
         /// To be shown on top of the bar
         let textValue: String
