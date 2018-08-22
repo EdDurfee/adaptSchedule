@@ -262,6 +262,9 @@ public abstract class SimpleDTP implements DisjunctiveTemporalProblem, java.io.S
 		}
 	}
 	
+	/*
+	 * Set system clock time and update all activity EST to be legal with new time
+	 */
 	@Override
 	public void advanceToTime(int time, int deltaTime, boolean pushSelection){
 		advanceToTime(time,true, deltaTime, pushSelection);
@@ -269,6 +272,8 @@ public abstract class SimpleDTP implements DisjunctiveTemporalProblem, java.io.S
 	@Override
 	public void advanceToTime(int time, boolean resolve, int deltaTime, boolean pushSelection){
 		int count = 0;
+		
+		// check each timepoint. If the EST of that timepoint is < time, adjust the EST to be = time
 		for(Timepoint tp: timepoints.values()){
 			if(tp.name.equals("zero") || tp.isAssigned()) continue;
 //			System.out.println(tp.toString()+" "+minimalNetwork[0][getIndex(tp)].getLowerBound());

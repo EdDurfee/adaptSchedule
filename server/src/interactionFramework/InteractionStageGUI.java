@@ -65,7 +65,7 @@ public class InteractionStageGUI implements Runnable {
 	private static int MAX_LET = 1440; // End of the day's schedule
 	//private static String problemFile = "MABreakfastSplit.xml";
 	private static String problemFile = "multiagentSampleProblem_simp.xml";
-	//private static String problemFile = "multiagentSampleProblemRev.xml";
+	//private static String problemFile = "multiagentSampleProblemRev.xml"; yices
 	// Drew - If you can see this then it has been committed
 	//private static String problemFile = "toyexample.xml";
 	//private static String problemFile = "DTPtoyexample.xml";
@@ -96,12 +96,19 @@ public class InteractionStageGUI implements Runnable {
 	public LinkedBlockingQueue<JSONObject> toClientAgent1Queue    = new LinkedBlockingQueue<JSONObject>();
 	public LinkedBlockingQueue<JSONObject> fromClientQueue  = new LinkedBlockingQueue<JSONObject>();
 	
+	// list of simpleEntry that contains <actName, actEndTime>
+	public ArrayList<SimpleEntry<String, Integer>> agent0CurrentConfirmedActs;
+	public ArrayList<SimpleEntry<String, Integer>> agent1CurrentConfirmedActs;
+	
 	public int thisServInstNum = 0;
 	public boolean processingStartup = false;
 	public boolean processingTentativeAct = false;
 	public boolean processingConfirmedAct = false;
+	public boolean processingModify = false;
+	public boolean processingAdvSysTime = false;
 //	public String  processingAgentNum     = "";
 	public boolean readyForNextReq = true;
+	Integer idleTime = 0;
 	String agentNum = "";
 	String actName = "";
 	String actDur = "";
@@ -149,7 +156,8 @@ public class InteractionStageGUI implements Runnable {
 			currentAgent = 2;
 			dtp.setCurrentAgent(currentAgent);
 		}
-		
+		agent0CurrentConfirmedActs = new ArrayList<SimpleEntry<String, Integer>>(0);
+		agent1CurrentConfirmedActs = new ArrayList<SimpleEntry<String, Integer>>(0);
 		
 		//Generics.printDTP(dtp);
 		initialDTP = dtp.clone();
@@ -171,7 +179,7 @@ public class InteractionStageGUI implements Runnable {
 					else dtp.printDeltas(dtp.getDeltas(prevDTP));
 				}
 
-				int minTime = dtp.getMinTime(); // gets universal minTime for all agents
+				int minTime = dtp.getMinTime(); // gets universal minTime for all agents  -   minTime = earliest LET of remaining activities
 				minTime = Math.min(minTime, MAX_LET);
 
 				//ED: I revised the below so that it does NOT automatically move forward until the next
@@ -181,13 +189,20 @@ public class InteractionStageGUI implements Runnable {
 					flag = false;
 					return;
 				}
-				else if(minTime > getSystemTime() && minTime < MAX_LET){
-					int temp = minTime - getSystemTime();
-					advanceSystemTimeTo(minTime);
-					dtp.advanceToTime(-getSystemTime(), temp, false);
-					dtp.simplifyMinNetIntervals();
-					continue;
-				}
+				
+				// if there are no activities to complete at the current time and havent yet passed the latest LET, manually advance system clock
+				/// else if(minTime > getSystemTime() && minTime < MAX_LET){
+					
+				///	int temp = minTime - getSystemTime();
+				///	advanceSystemTimeTo(minTime);
+				///	dtp.advanceToTime(-getSystemTime(), temp, false);
+				///	dtp.simplifyMinNetIntervals();
+				///	
+				///	System.out.println("manually setting system time to " + getSystemTime());
+				///	
+				///	continue;
+				/// }
+				
 				else if(minTime < getSystemTime()){
 					System.out.println("Should be error for minTime thing. Ignoring in this version.");	
 				}
@@ -208,7 +223,7 @@ public class InteractionStageGUI implements Runnable {
 				*/
 				
 				//Prompt user for their activity selection
-				List<List<String>> activities = dtp.getActivities(DisjunctiveTemporalProblem.ActivityFinder.TIME, -getSystemTime()); // returns the activities of only the currentAgent
+				List<List<String>> activities = dtp.getActivities(DisjunctiveTemporalProblem.ActivityFinder.TIME, -getSystemTime() + idleTime); // returns the activities of only the currentAgent
 				List<List<String>> allRemActivities = dtp.getActivities(DisjunctiveTemporalProblem.ActivityFinder.ALL, -getSystemTime());
 				List<Integer> maxSlack = dtp.getMaxSlack(); // list of max slack for each agent at its corresponding index
 				
@@ -220,7 +235,7 @@ public class InteractionStageGUI implements Runnable {
 					int time = getSystemTime();
 					//System.out.println("current interval: " + curr.getUpperBound() + " time: " + time);
 					
-					// if the system time is greater than or equal to the end time of this ativity, then it is no longer ongoing
+					// if the system time is greater than or equal to the end time of this activity, then it is no longer ongoing
 					if(time >= curr.getUpperBound()) {
 						toRemove.add(i);
 					}
@@ -230,17 +245,27 @@ public class InteractionStageGUI implements Runnable {
 					}
 				}
 				
+				// need to reverse the order of toRemove so that highest indices are removed first, thereby preserving the location of lower later-removed indices
+				Collections.reverse(toRemove);
+				
 				for(int j : toRemove) {
 					if (ongoingActs.size() <= j) {
 						System.out.println("concurrent activities error");
 					}
+					if (toRemove.size() > 1) {
+						System.out.println("multi-remove occuring. This is when the index errors used to occur");
+					}
 					ongoingActs.remove(j);
 				}
 				
+				// decide whether to add 'idle' as an activity option
 				if(maxSlack.size() == 1 && maxSlack.get(0) > 0) activities.get(0).add("idle"); // if only 1 agent
 				else for(int agent = 0; agent < maxSlack.size(); agent++){
-					//agent can only idle if it has available slack and needs to currently make a selection
-					if(maxSlack.get(agent) > 0 && getSystemTime(agent) == getSystemTime()) activities.get(agent).add("idle"); //agent"+agent+"Idle"); 
+					//agent can only idle if it has available slack and needs to currently make a selection (AKA not currently performing an activity already)
+					if ( maxSlack.get(agent) > 0 && getSystemTime(agent) == getSystemTime()) {
+						if (agent == 0 && agent0CurrentConfirmedActs.size() == 0) activities.get(agent).add("idle"); //agent"+agent+"Idle"); 
+						if (agent == 1 && agent1CurrentConfirmedActs.size() == 0) activities.get(agent).add("idle"); //agent"+agent+"Idle"); 
+					}
 				}
 				
 				/*
@@ -287,25 +312,28 @@ public class InteractionStageGUI implements Runnable {
 				
 				
 				
-				if (processingConfirmedAct || processingTentativeAct || processingStartup) {
+				if (processingConfirmedAct || processingTentativeAct || processingModify || processingAdvSysTime || processingStartup) {
 					
 					// if this is not a tentative activity selection (AKA it is a confirmedActivity)
-					if (processingConfirmedAct || processingStartup) {
+					if (processingConfirmedAct || processingModify || processingAdvSysTime || processingStartup) {
 						
 						// inform the client of all activity options, including idle
 						sendCurrentChoicesToAllClients(activities, nextActsMinDur, nextActsMaxDur);
+						
+						processingModify = false;
+						processingAdvSysTime = false;
 					}
 					
 					// if processing a confirmed action, need to update gantts of all clients to reflect permanent changes
 					if (processingConfirmedAct || processingStartup) {
-						sendGanttToAgent("ALL");
+						sendGanttToAgent("ALL", allRemActivities);
 						// done processing confirmedAct
 						processingConfirmedAct = false;
 						processingStartup = false;
 						
 					// if not, only send to agent of request
 					} else if (processingTentativeAct) {
-						sendGanttToAgent(agentNum);
+						sendGanttToAgent(agentNum, allRemActivities);
 					}
 					
 					// if this is a tentative activity
@@ -326,8 +354,9 @@ public class InteractionStageGUI implements Runnable {
 					}
 				}
 			
-
+				
 				// wait for the client to send a POST request
+				System.out.println( getSystemTime() );
 				inJSON = getNextRequest();
 				
 				agentNum = String.valueOf(inJSON.get("agentNum"));
@@ -343,41 +372,67 @@ public class InteractionStageGUI implements Runnable {
 						
 					case "confirmActivity":
 					case "tentativeActivity":
+						
+						// reset idleTime
+						idleTime = 0;
+						
 						prevDTP = dtp.clone();
 						previousDTPs.get(Integer.valueOf(agentNum)).push(new SimpleEntry<Integer, DisjunctiveTemporalProblem>(getSystemTime(), prevDTP));
 						
 						
 						if (actName.equals("idle")) {
 							getAndPerformIdle(minTime-getSystemTime(), maxSlack.get(Integer.valueOf(agentNum)), Integer.valueOf(actDur.substring(3)));
-							
+							idleTime = Integer.valueOf(actDur.substring(3));
+
+							if ( ((String) inJSON.get("infoType")).equals("confirmActivity") ) {
+								if (agentNum.equals("0")) agent0CurrentConfirmedActs.add(new SimpleEntry("idle", getSystemTime() + Integer.valueOf(actDur.substring(3)))); // minutes + minutes ?
+								if (agentNum.equals("1")) agent1CurrentConfirmedActs.add(new SimpleEntry("idle", getSystemTime() + Integer.valueOf(actDur.substring(3))));
+							}
+								
 						} else {
 							
+							// endTime = EET?
 							IntervalSet endTime = dtp.getInterval("zero", actName+"_E");
 							int time = Generics.fromTimeFormat( actDur ); // actDur always comes in minutes
 							
+							// check if given duration is valid (within max duration constraints)
 							IntervalSet interval = dtp.getInterval(actName+"_S", actName+"_E").inverse().subtract(zeroInterval);
 							if(!interval.intersect(time)){
 								System.out.println("Unexpected duration response \""+actName+"\"");
 								break;
 							}
 							
-							int idle = (int) (-endTime.getUpperBound() - getSystemTime() - time);
-							if(idle > 0){	
-								// force immediate idle for "+Generics.toTimeFormat(idle)+"
-								incrementSystemTime(idle, Integer.valueOf(agentNum));
-							}
-
+							// BUG?: If this if statement is accessed, the system time is set to end time of act, then future statements treat sytemTime like it is the start of the act
+							// if the given duration + systemTime does not get you past EET, you need to force idle for a bit
+							// with manual client-triggered clock advancing we now do nothing when time < EET
+							////int idle = (int) (-endTime.getUpperBound() - getSystemTime() - time);
+							///if(idle > 0){	
+							///	System.out.println("Forcing immediate idle for " + String.valueOf(idle));
+							///	incrementSystemTime(idle, Integer.valueOf(agentNum));
+							///}
+							
+							// interval from current time to end of selected duration
 							Interval curr_int = new Interval(getSystemTime(), getSystemTime() + time);
 							ongoingActs.add(new SimpleEntry<String,Interval>(actName, curr_int));
 							
+							if ( ((String) inJSON.get("infoType")).equals("confirmActivity") ) {
+								if (agentNum.equals("0")) agent0CurrentConfirmedActs.add(new SimpleEntry(actName, getSystemTime() + time)); // minutes + minutes ?
+								if (agentNum.equals("1")) agent1CurrentConfirmedActs.add(new SimpleEntry(actName, getSystemTime() + time));
+							}
+							
 							dtp.executeAndAdvance(-getSystemTime(), actName+"_S",-(getSystemTime()+time),actName+"_E",true, time, true);
+							System.out.println("System time 1 set to " + getSystemTime());
 							
 							dtp.simplifyMinNetIntervals();
 							// The above will move the systemTime to the end of day after the last activity, rather than
 							// leaving the possibility that there could be something after the last required activity, like
 							// processing a sporadic event, or simply choosing to idle out the rest of the day
-							int new_time =  time;
-							incrementSystemTime(new_time, Integer.valueOf(agentNum));
+							
+							// time here was set as  activity duration 
+							///int new_time =  time;
+							///incrementSystemTime(new_time, Integer.valueOf(agentNum));
+							
+							System.out.println("System time 2 set to " + getSystemTime());
 						}
 						
 						if ( ((String) inJSON.get("infoType")).equals("tentativeActivity")) { processingTentativeAct = true; }
@@ -385,7 +440,122 @@ public class InteractionStageGUI implements Runnable {
 						
 						break;
 						
+						
+					// this will be sent by the client when it wants to populate the 'modify activity' screen
+					case "requestActDetails":
+						
+						JSONObject actDetails = new JSONObject();
+						
+						// get the list of activities that are viable to have their duration tightened and availability tightened
+						ArrayList<String> modifiableDurActs   = (ArrayList<String>) Generics.concat(dtp.getActivities(DisjunctiveTemporalProblem.ActivityFinder.VARDUR, -getSystemTime()));
+						ArrayList<String> modifiableAvailActs = (ArrayList<String>) Generics.concat(dtp.getActivities(DisjunctiveTemporalProblem.ActivityFinder.VARAVAIL, -getSystemTime()));
+						
+						ArrayList<String> minDurs = new ArrayList<String>();
+						ArrayList<String> maxDurs = new ArrayList<String>();
+						String EST = "";
+						String LST = "";
+						String EET = "";
+						String LET = "";
+						
+						// actname will be blank when client only is looking for modifiable lists
+						if (!actName.equals("")) {
+							IntervalSet currentDuration = dtp.getInterval(actName+"_S", actName+"_E").inverse(); // this interval will be [minDur,maxDur]
+							IntervalSet startAvail  = dtp.getInterval("zero", actName+"_S").inverse(); // this interval will be [EST,LST]
+							IntervalSet endAvail    = dtp.getInterval("zero", actName+"_E").inverse(); // this interval will be [EET,LET]
+							
+							minDurs.add( String.valueOf( currentDuration.getLowerBound() ) );
+							maxDurs.add( String.valueOf( currentDuration.getUpperBound() ) );
+							EST = String.valueOf( startAvail.getLowerBound() );
+							LST = String.valueOf( startAvail.getUpperBound() );
+							EET = String.valueOf( endAvail.getLowerBound()   );
+							LET = String.valueOf( endAvail.getUpperBound()   );
+						}
+
+						actDetails.put("actName", actName);
+						actDetails.put("modifiableDurActs", modifiableDurActs);
+						actDetails.put("modifiableAvailActs", modifiableAvailActs);
+						actDetails.put("minDurs", minDurs);
+						actDetails.put("maxDurs", maxDurs);
+						actDetails.put("EST", EST);
+						actDetails.put("LST", LST);
+						actDetails.put("EET", EET);
+						actDetails.put("LET", LET);
+						
+						sendJSONToClient(agentNum,
+								"activityDetails", // infoType
+								"", // startTime
+								"", // lastActivity
+								new ArrayList<String>(), // nextActivities
+								new ArrayList<String>(), // nextActsMinDur
+								new ArrayList<String>(), // nextActsMaxDur
+								new ArrayList<String>(), // remActivities
+								new ArrayList<String>(), // remMinDurs
+								new ArrayList<String>(), // remMaxDurs
+								new ArrayList<String>(), // remMinStarts
+								new ArrayList<String>(), // remMaxEnds
+								"",						 // imgStr
+								actDetails,				 // activity details
+								new ArrayList<String>()  // debugInfo
+						);
+						
+						break;
+						
 					
+					// client will send this when the user has entered new (tighter) duration / availability for an activity
+					case "modifyActivity":
+						
+						prevDTP = dtp.clone();
+						SimpleEntry<Integer, DisjunctiveTemporalProblem> tempSE = new SimpleEntry<Integer, DisjunctiveTemporalProblem>(getSystemTime(), prevDTP);
+						Stack<SimpleEntry<Integer, DisjunctiveTemporalProblem>> tempStack = new Stack<SimpleEntry<Integer, DisjunctiveTemporalProblem>>();
+						tempStack.push(tempSE);
+						previousDTPs.add( tempStack );
+						
+						JSONObject actJSON = (JSONObject) inJSON.get("actDetails");
+						
+						List<String> newMinDurs  = (ArrayList<String>) actJSON.get("minDurs"); // format:  hh:mm
+						List<String> newMaxDurs  = (ArrayList<String>) actJSON.get("maxDurs"); // format:  hh:mm
+						String newEST 			 = String.valueOf(actJSON.get("EST")); // format:  hh:mm
+						String newLST 			 = String.valueOf(actJSON.get("LST")); // format:  hh:mm
+						String newEET 			 = String.valueOf(actJSON.get("EET")); // format:  hh:mm
+						String newLET 			 = String.valueOf(actJSON.get("LET")); // format:  hh:mm
+						
+						// Duration
+						AddIntervalSet(actName+"_S", actName+"_E", getSystemTime(), Generics.stringToInterval( "[" + newMinDurs.get(0) + "," + newMaxDurs.get(0) + "]" ) );
+						
+						// if no value submitted for these, use default max value
+						if (newEST.equals("")) {newEST = "00:00";}
+						if (newLST.equals("")) {newLST = "24:00";}
+						if (newEET.equals("")) {newEET = "00:00";}
+						if (newLET.equals("")) {newLET = "24:00";}
+						
+						// EST and LST
+						AddIntervalSet("zero", actName+"_S", getSystemTime(), Generics.stringToInterval( "[" + newEST + "," + newLST + "]" ) );
+						// EET and LET
+						AddIntervalSet("zero", actName+"_E", getSystemTime(), Generics.stringToInterval( "[" + newEET + "," + newLET + "]" ) );
+						
+						processingModify = true;
+						
+					// temporary demo system to allow client to trigger an advancing of time to the next decision point (minTime)
+					case "advSysTime":
+						int temp = minTime - getSystemTime();
+//						if (temp == 0) break;
+						advanceSystemTimeTo(minTime + idleTime);
+						dtp.advanceToTime(-getSystemTime(), temp, false);
+						dtp.simplifyMinNetIntervals();
+						
+						// check each current activity being performed for the agent. If the activity ends at or before the new currentTime (minTime), remove it from list
+						for (int i = 0; i < agent0CurrentConfirmedActs.size(); i++) {
+							if ( agent0CurrentConfirmedActs.get(i).getValue() <= minTime + idleTime ) agent0CurrentConfirmedActs.remove(i);
+						}
+						for (int i = 0; i < agent1CurrentConfirmedActs.size(); i++) {
+							if ( agent1CurrentConfirmedActs.get(i).getValue() <= minTime + idleTime ) agent1CurrentConfirmedActs.remove(i);
+						}
+						
+						idleTime = 0;
+						sendGanttToAgent("ALL", allRemActivities);
+						
+						processingAdvSysTime = true;
+						
 					default:
 						break;
 					
@@ -436,63 +606,7 @@ public class InteractionStageGUI implements Runnable {
 		}
 		return let;
 		}
-	
-/*
-	private static void processSporadicEvent(String last_act) {
-		if(last_act.length() == 0){
-			printToClient("No activities have been performed yet...");
-			return;
-		} else if ((DUTP.SporadicEventLT < prevSystemTime.get(currentAgent)) || (DUTP.SporadicEventET >= systemTime.get(currentAgent))) {
-			printToClient("Sporadic event couldn't have happened since last check in time.");
-			return;
-		}
-		printToClient("Did a sporadic event occur during the previous activity or since the last check in time? (y/n)");
-		JSONObject jsonIN = getNextRequest();
-		String resp = (String) jsonIN.get("value");
-		
-		if(resp.equalsIgnoreCase("y")){
-			SPORADIC_OCCURRED = true;
-			printToClient("At what time did the sporadic event happen? ");
-			jsonIN = getNextRequest();
-			String time = (String) jsonIN.get("value");
-			if(true) {
-				String sename = DUTP.SPORADICNAME;
-				int se_time = Generics.fromTimeFormat(time);
-				printToClient("Inserting sporadic activity at end of previous activity, for duration " + DUTP.DUR);
-				dtp.executeAndAdvance(-getSystemTime(), sename+"_S", -(getSystemTime()+SP_DUR), sename+"_E",true, DUTP.DUR, true);
-				advanceSystemTimeTo(getSystemTime()+DUTP.DUR);
-				dtp.advanceToTime(-getSystemTime(), DUTP.DUR, false);
-				dtp.simplifyMinNetIntervals();
-				return;
-				}
-			
 
-			// ED: The below is old code from Lynn, intended to split the ongoing activity and insert the
-			//  sporadic activity into its place, kinda - some stuff was hardwired kindof funny.  So, not
-			//  doing this for now, and just always pasting the sporadic activity at the end of the activity
-			//  the sporadic event occurred within
-			/// Drew: ^^ I deleted all the code this comment references to in a clean up attempt, as I was unlikely to reimplement it.
-
-		}else {  //if(resp.equalsIgnoreCase("n")){
-			// ED: This had simply returned, but that doesn't seem right.
-			// If it didn't occur, it seems like we need to branch down the leftside of the DTrees for
-			// each of the DUSTPs, to rule out the iSTPs where the SE would have occurred during the
-			// most recent activity, as long as that activity was a required activity (not idle)
-
-			// For each of the DUTP's DUSTPs, we know the sporadic event did NOT occur, so we want
-			// to skip over it, removing the iSTP where the sporadic occurred during the previous activity
-			// if there was a previous activity (other than idle)
-			if (requiredActivity(last_activity)) {
-				printToClient("No sporadic and a required activity.");
-				dtp.advanceDownTree();
-//				System.out.println("Advancing done. Type in anything to continue.");
-//				String resp1 = cin.next();
-			}
-			return;
-		}
-		
-	}
-*/
 	
 	public static boolean requiredActivity(String actname) {
 		return (!(actname.equals("skip")) || (actname.equals("idle")));
@@ -509,29 +623,13 @@ public class InteractionStageGUI implements Runnable {
 		return min;
 	}
 
-/*
-	private static void performPreemptive(String str) {
-		if(str.equalsIgnoreCase("y")){
-			printToClient("Performing Preemptive activity for 20 minutes.");
-			PREEMPTIVE = true;
-			incrementSystemTime(20, currentAgent);
-			dtp.advanceToTime(-getSystemTime(), 20, true);
-			dtp.simplifyMinNetIntervals();
-		
-			printToClient("You have prevented an emergency activity from happening before your morning class.");
-		} else if(str.equalsIgnoreCase("n")){
-			printToClient("You have chosen not to perform a preemptive activity at this time.");
-			return;
-		}
-	}
-*/
 
 	private static void getAndPerformIdle(int minIdle, int maxIdle, int time){
 		if(time < 0 || time > maxIdle+1){
 			System.out.println("Unexpected idle time response \""+Integer.toString(time)+"\"");
 			return;
 		}
-		incrementSystemTime(time, currentAgent);
+		/// incrementSystemTime(time, currentAgent);
 		dtp.advanceToTime(-getSystemTime(), time, true);
 		dtp.simplifyMinNetIntervals();
 	}
@@ -558,26 +656,6 @@ public class InteractionStageGUI implements Runnable {
 			uftps = dtp.getUnFixedTimepoints();
 			//for(Timepoint tp : uftps) System.out.println(tp.getName());
 		}
-	}
-*/
-	
-/*
-	private static void printRequestedOutput(String option){
-		if(option.equalsIgnoreCase("D")){
-			if(prevDTP == null) printToClient("You have not yet made a choice or have just undone a choice.");
-			else dtp.printDeltas(dtp.getDeltas(previousDTPs.peek().getValue()));
-		}else if(option.equalsIgnoreCase("C")){
-			Generics.printDTP(dtp);
-		} else if(option.equalsIgnoreCase("V")){
-			Viz.printDTPDiagram(dtp, initialDTP, getSystemTime(),1);
-		}else if(option.equalsIgnoreCase("B")){
-			dtp.checkBookends(20);
-		}
-		
-		else{
-			printToClient("Unexpected response \"" + option + "\"");
-		}
-		return;
 	}
 */
 	
@@ -757,6 +835,7 @@ public class InteractionStageGUI implements Runnable {
 	
 	
 	/**
+	 * oldName: getIntervalSetAndAdd()
 	 * ui helper code to prompt a user to input an intervalset
 	 * also generates a disjunctivetemporalconstraint from that intervalset and adds it to the dtp
 	 * @param tpS
@@ -764,18 +843,18 @@ public class InteractionStageGUI implements Runnable {
 	 * @param time
 	 * @param msg
 	 */
-/*	private static void getIntervalSetAndAdd(String tpS, String tpE, int time, String msg){
-		printToClient(msg+"\nEnter new interval set or (n) to leave unchanged. Format {[interval1]v[interval2]v...} with no whitespace.");
-		JSONObject jsonIN = getNextRequest();
-		String avail = (String) jsonIN.get("value");
-		String avail = cin.next(); // Commented out by Drew
-		if(!avail.equalsIgnoreCase("N")){
-			IntervalSet is = Generics.stringToInterval(avail);
-			dtp.addAdditionalConstraint(tpS, tpE, is, time, true, true);	
-			dtp.simplifyMinNetIntervals();
-		}		
+	private static void AddIntervalSet(String tpS, String tpE, int time, IntervalSet newIS){
+//		printToClient(msg+"\nEnter new interval set or (n) to leave unchanged. Format {[interval1]v[interval2]v...} with no whitespace.");
+//		JSONObject jsonIN = getNextRequest();
+//		String avail = (String) jsonIN.get("value");
+//		String avail = cin.next(); // Commented out by Drew
+//		if(!avail.equalsIgnoreCase("N")){
+//			IntervalSet is = Generics.stringToInterval(avail);
+		
+		dtp.addAdditionalConstraint(tpS, tpE, newIS, time, true, true);	
+		dtp.simplifyMinNetIntervals();
 	}
-*/
+
 	
 	/**
 	 * ui helper code to prompt a user to select a timepoint from a
@@ -953,9 +1032,10 @@ public class InteractionStageGUI implements Runnable {
 			String infoType, String startTime, String lastActivity, List<String> nextActivities,
 			List<String> nextActsMinDur, List<String> nextActsMaxDur, List<String> remActivities,
 			List<String> remMinDurs, List<String> remMaxDurs, List<String> remMinStarts,
-			List<String> remMaxEnds, String strImg, List<String> debugInfo) {
+			List<String> remMaxEnds, String strImg, JSONObject actDetails, List<String> debugInfo) {
 		
-		System.out.println("Server #" + String.valueOf(thisServInstNum) + " Sending '"+infoType+"' JSON to client");
+		System.out.println("- Server sending '"+infoType+"' JSON to client #" + toAgentNum);
+//		System.out.println(actDetails);
 		
 		JSONObject outJSON = new JSONObject();
 		outJSON.put("infoType", infoType);
@@ -970,6 +1050,7 @@ public class InteractionStageGUI implements Runnable {
 		outJSON.put("remMinStarts", remMinStarts);
 		outJSON.put("remMaxEnds", remMaxEnds);
 		outJSON.put("strImg", strImg);
+		outJSON.put("actDetails", actDetails);
 		outJSON.put("debugInfo", debugInfo);
 		
 		try {
@@ -993,15 +1074,16 @@ public class InteractionStageGUI implements Runnable {
 					"currentChoices", // infoType
 					"TODO", // startTime
 					"", // lastActivity
-					acts.get(Integer.valueOf(String.valueOf(a))), 	 // nextActivities
-					minDurs.get(Integer.valueOf(String.valueOf(a))), // nextActsMinDur
-					maxDurs.get(Integer.valueOf(String.valueOf(a))), // nextActsMaxDur
+					acts.get(a), 	 // nextActivities
+					minDurs.get(a), // nextActsMinDur
+					maxDurs.get(a), // nextActsMaxDur
 					new ArrayList<String>(), // remActivities
 					new ArrayList<String>(), // remMinDurs
 					new ArrayList<String>(), // remMaxDurs
 					new ArrayList<String>(), // remMinStarts
 					new ArrayList<String>(), // remMaxEnds
 					"",						 // strImg
+					new JSONObject(),
 					new ArrayList<String>()  // debugInfo
 			);
 		}
@@ -1013,7 +1095,7 @@ public class InteractionStageGUI implements Runnable {
 	 * Author: Drew
 	 * Gantt is sent as a 64byte encoded String
 	 */
-	private void sendGanttToAgent(String agentNum) {
+	private void sendGanttToAgent(String agentNum, List<List<String>> remActs) {
 	
 		// delete any outdated gantt images
 		File ganttDir = new File("forClient_image.png");
@@ -1052,12 +1134,13 @@ public class InteractionStageGUI implements Runnable {
 							new ArrayList<String>(), // nextActivities
 							new ArrayList<String>(), // nextActsMinDur
 							new ArrayList<String>(), // nextActsMaxDur
-							new ArrayList<String>(), // remActivities
+							remActs.get(a),        // remActivities
 							new ArrayList<String>(), // remMinDurs
 							new ArrayList<String>(), // remMaxDurs
 							new ArrayList<String>(), // remMinStarts
 							new ArrayList<String>(), // remMaxEnds
 							imageString,			 // imgStr
+							new JSONObject(),
 							new ArrayList<String>()  // debugInfo
 					);
 				}
@@ -1071,12 +1154,13 @@ public class InteractionStageGUI implements Runnable {
 						new ArrayList<String>(), // nextActivities
 						new ArrayList<String>(), // nextActsMinDur
 						new ArrayList<String>(), // nextActsMaxDur
-						new ArrayList<String>(), // remActivities
+						remActs.get(Integer.valueOf(agentNum)), // remActivities
 						new ArrayList<String>(), // remMinDurs
 						new ArrayList<String>(), // remMaxDurs
 						new ArrayList<String>(), // remMinStarts
 						new ArrayList<String>(), // remMaxEnds
 						imageString,			 // imgStr
+						new JSONObject(),
 						new ArrayList<String>()  // debugInfo
 				);
 			} 
@@ -1104,7 +1188,8 @@ public class InteractionStageGUI implements Runnable {
 				Thread.sleep(100);
 				if (fromClientQueue.size() > 0) {
 					jsonIN = fromClientQueue.poll();
-					break;			
+					System.out.println("- Server recieved '" + (String) jsonIN.get("infoType") + "' from client #" + (String) jsonIN.get("agentNum"));
+					break;
 				}
 			}
 		} catch (Exception e) {

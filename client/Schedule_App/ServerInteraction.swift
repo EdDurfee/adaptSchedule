@@ -135,13 +135,20 @@ class client {
                 // if the reply info type is not blank, parse the data
                 if (servData.infoType != "") {
                     print("\nJSON received from server:")
-                    self.currentInfo.infoType = servData.infoType!;                     print("  infoType: ", terminator:"");        print(servData.infoType!)
-                    self.currentInfo.startTime = servData.startTime!;                   print("  startTime: ", terminator:"");       print(servData.infoType!)
-                    self.currentInfo.nextActivities = servData.nextActivities!;         print("  nextActivities: ", terminator:"");  print(servData.nextActivities!)
-                    self.currentInfo.nextActsMinDur = servData.nextActsMinDur!;         print("  nextActsMinDur: ", terminator:"");      print(servData.nextActsMinDur!)
-                    self.currentInfo.nextActsMaxDur = servData.nextActsMaxDur!;         print("  nextActsMaxDur: ", terminator:"");      print(servData.nextActsMaxDur!)
-                    self.currentInfo.strImg = servData.strImg!;                         print("  strImg length: ", terminator:"");       print(servData.strImg!.count)//print("~suppressed for readability~")//
-                    self.currentInfo.debugInfo = servData.debugInfo!;                   print("  debugInfo: ", terminator:"");       print("~suppressed for readability~")//print(servData.debugInfo!)
+                    self.currentInfo.infoType = servData.infoType!;                     print("  infoType: ", terminator:"");          print(servData.infoType!)
+                    self.currentInfo.startTime = servData.startTime!;                   print("  startTime: ", terminator:"");         print(servData.startTime!)
+                    self.currentInfo.nextActivities = servData.nextActivities!;         print("  nextActivities: ", terminator:"");    print(servData.nextActivities!)
+                    self.currentInfo.nextActsMinDur = servData.nextActsMinDur!;         print("  nextActsMinDur: ", terminator:"");    print(servData.nextActsMinDur!)
+                    self.currentInfo.nextActsMaxDur = servData.nextActsMaxDur!;         print("  nextActsMaxDur: ", terminator:"");    print(servData.nextActsMaxDur!)
+                    self.currentInfo.remActivities =  servData.remActivities;           print("  remActivities: ", terminator:"");     print(servData.remActivities!)
+                    self.currentInfo.remMinDurs =     servData.remMinDurs;              print("  remMinDurs: ", terminator:"");        print(servData.remMinDurs!)
+                    self.currentInfo.remMaxDurs =     servData.remMaxDurs;              print("  remMaxDurs: ", terminator:"");        print(servData.remMaxDurs!)
+                    self.currentInfo.remMinStarts =   servData.remMinStarts;            print("  remMinStarts: ", terminator:"");      print(servData.remMinStarts!)
+                    self.currentInfo.remMaxEnds =     servData.remMaxEnds;              print("  remMaxEnds: ", terminator:"");        print(servData.remMaxEnds!)
+                    self.currentInfo.strImg = servData.strImg!;                         print("  strImg length: ", terminator:"");     print(servData.strImg!.count)
+                    self.currentInfo.actDetails = servData.actDetails;                  print("  actDetails: ", terminator:"");        print(servData.actDetails!)
+                    self.currentInfo.debugInfo = servData.debugInfo!;                   print("  debugInfo: ", terminator:"");         print("~suppressed for readability~")//print(servData.debugInfo!)
+                    
                     self.lastInfoType = servData.infoType!
                 }
                 
@@ -152,54 +159,6 @@ class client {
             
             }.resume()
     }
-        
-//        do {
-//            if (self.currentInfo.infoType == "ganttImage") {
-////                var aPut = putCMD()
-////                aPut.infoType = "ganttImage"
-////                aPut.clientID = self.ID
-////                let someData = try self.JSON_encoder.encode( aPut )
-//
-//                var imgReq = URLRequest(url: self.url!)
-//                imgReq.httpMethod = "GET"
-////                imgReq.httpBody = someData
-//
-//                self.getGanttImageFromServ(req: imgReq)
-//
-//            }
-//        } catch let error as NSError {
-//            print("\nganttImage error:")
-//            print(error)
-//        }
-//
-//    }
-    
-//    func getGanttImageFromServ(req: URLRequest) {
-//        URLSession.shared.dataTask(with: req) { (data, response, error) in
-//            if error != nil {
-//                print("nill error:")
-//                print(error!.localizedDescription)
-//            }
-//
-//            // get the data from inside the reply
-//            guard let data = data else { return }
-////            do {
-////                let servData = try JSONDecoder().decode(fromServer.self, from: data)
-//
-//            let image = UIImage(data:data, scale:1.0)
-//                //                let imageView = UIImageView(image: image!)
-//                //                imageView.frame = CGRect(x: 0, y: 0, width: 100, height: 200)
-//                //                view.addSubview(imageView)
-//
-//
-////            } catch let error as NSError {
-////                print("\nmakeAReq error:")
-////                print(error)
-////            }
-//
-//            }.resume()
-//
-//    }
 
     
     /*
@@ -232,6 +191,7 @@ struct putCMD: Codable {
     var agentNum = ""
     var activityName = ""
     var activityDuration = ""
+    var actDetails = activityDefinition()
     var debugInfo = [""]
 }
 
@@ -240,22 +200,23 @@ struct putCMD: Codable {
 struct fromServer: Codable {
     // do not make these optional, because we want to throw error if some of the data is missing
     // (unecesary components should be included as blank strings / empty vectors)
-    var infoType : String?
-    var startTime: String?
-    var nextActivities : [String]?
-    var nextActsMinDur : [String]?
-    var nextActsMaxDur : [String]?
-    var remActivities  : [String]?
-    var remMinDurs     : [String]?
-    var remMaxDurs     : [String]?
-    var remMinStarts   : [String]?
-    var remMaxEnds     : [String]?
-    var strImg         : String?
-    var debugInfo      : [String]?
+    var infoType         : String?
+    var startTime        : String?
+    var nextActivities   : [String]?
+    var nextActsMinDur   : [String]?
+    var nextActsMaxDur   : [String]?
+    var remActivities    : [String]?
+    var remMinDurs       : [String]?
+    var remMaxDurs       : [String]?
+    var remMinStarts     : [String]?
+    var remMaxEnds       : [String]?
+    var strImg           : String?
+    var actDetails  : activityDefinition?
+    var debugInfo        : [String]?
     
     init() {
-        infoType = ""
-        startTime = ""
+        infoType       = ""
+        startTime      = ""
         nextActivities = []
         nextActsMinDur = []
         nextActsMaxDur = []
@@ -265,7 +226,40 @@ struct fromServer: Codable {
         remMinStarts   = []
         remMaxEnds     = []
         strImg         = ""
+        actDetails     = activityDefinition()
         debugInfo      = []
     }
 }
 
+
+// These struct variables need to match the names seen in the JSON object
+// This structure format should match the format on the server side
+struct activityDefinition: Codable {
+    // (unecesary components should be included as blank strings / empty vectors)
+    var actName             : String?
+    var modifiableDurActs   : [String]?
+    var modifiableAvailActs : [String]?
+    var minDurs             : [String]?
+    var maxDurs             : [String]?
+    var EST                 : String?
+    var LST                 : String?
+    var EET                 : String?
+    var LET                 : String?
+    var constraintTypes     : [String]?
+    var constraintSource    : [String]?
+    var constraintDest      : [String]?
+
+    
+    init() {
+        actName             = ""
+        minDurs             = []
+        maxDurs             = []
+        EST                 = ""
+        LST                 = ""
+        EET                 = ""
+        LET                 = ""
+        constraintTypes     = []
+        constraintSource    = []
+        constraintDest      = []
+    }
+}

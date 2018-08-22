@@ -1,14 +1,17 @@
 //
-//  MainUIView.swift
+//  AvailTextBox.swift
 //  Schedule_App
 //
-//  Created by Drew Davis on 7/3/18.
+//  Created by Drew Davis on 7/30/18.
 //  Copyright © 2018 Drew. All rights reserved.
 //
 
 import UIKit
 
-class MainUIView: UIView {
+class AvailTextBox: UITextField {
+    
+    var availConstraint : String?
+    var validValue : Bool = false
 
     /*
     // Only override draw() if you perform custom drawing.
@@ -17,5 +20,5 @@ class MainUIView: UIView {
         // Drawing code
     }
     */
-
+    
 }

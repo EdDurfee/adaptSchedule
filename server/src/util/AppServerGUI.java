@@ -193,18 +193,19 @@ public class AppServerGUI extends NanoHTTPD { // implements Runnable
         
         // have to reply with something. So just reply with expect object with all default vals
         JSONObject outJSON = new JSONObject();
-		outJSON.put("infoType", "");
-		outJSON.put("startTime", "");
-		outJSON.put("lastActivity", "");
-		outJSON.put("nextActivities", new ArrayList<String>());
-		outJSON.put("nextActsMinDur", new ArrayList<String>());
-		outJSON.put("nextActsMaxDur", new ArrayList<String>());
-		outJSON.put("remActivities", new ArrayList<String>());
-		outJSON.put("remMinDurs", new ArrayList<String>());
-		outJSON.put("remMaxDurs", new ArrayList<String>());
-		outJSON.put("remMinStarts", new ArrayList<String>());
-		outJSON.put("remMaxEnds", new ArrayList<String>());
-		outJSON.put("debugInfo", new ArrayList<String>());
+		outJSON.put("infoType",        "");
+		outJSON.put("startTime",       "");
+		outJSON.put("lastActivity",    "");
+		outJSON.put("nextActivities",  new ArrayList<String>());
+		outJSON.put("nextActsMinDur",  new ArrayList<String>());
+		outJSON.put("nextActsMaxDur",  new ArrayList<String>());
+		outJSON.put("remActivities",   new ArrayList<String>());
+		outJSON.put("remMinDurs",      new ArrayList<String>());
+		outJSON.put("remMaxDurs",      new ArrayList<String>());
+		outJSON.put("remMinStarts",    new ArrayList<String>());
+		outJSON.put("remMaxEnds",      new ArrayList<String>());
+		outJSON.put("activityDetails", new JSONObject());
+		outJSON.put("debugInfo",       new ArrayList<String>());
 		
 		msg = outJSON.toString();
         return Response.newFixedLengthResponse(msg); // if you have not returned before this line, the response does not require meaningful material

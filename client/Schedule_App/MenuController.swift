@@ -19,9 +19,11 @@ class MenuController: UITableViewController {
     var minDurs: [String] = []
     var maxDurs: [String] = []
     
+    var selectionSectNum = -1
     var selectionActNum = -1
     var selectionDuration = 0 // time of activity in minutes
     
+    var sectSelectionChanged = false
     var actSelectionChanged = false
     
 
@@ -104,10 +106,10 @@ class MenuController: UITableViewController {
                 cell.textLabel?.text = "Add Activity"
                 break
             case 1:
-                cell.textLabel?.text = "Remove Activity"
+                cell.textLabel?.text = "Modify Activity"
                 break
             case 2:
-                cell.textLabel?.text = "Advanced Options"
+                cell.textLabel?.text = "Remove Activity"
                 break
             default:
                 break
@@ -128,17 +130,15 @@ class MenuController: UITableViewController {
     // If an attempt to selct something else, show a popup informing the user it is not yet implemented
     override public func tableView(_ tableView: UITableView, willSelectRowAt indexPath: IndexPath) -> IndexPath? {
         
-        // in not in activity selection section
-        if indexPath.section != 0 {
-            
-            // alert user with popup that this feature is not yet implemented
-            let alert = UIAlertController(title: "Warning", message: "This feature has not yet been implemented.", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "Resume", style: .default, handler: nil))
-            self.present(alert, animated: true)
-            return nil
-        }
         // if in activity section
         if indexPath.section == 0 {
+            
+            // check if this is a change in section and update section flag
+            if selectionSectNum != 0 {
+                sectSelectionChanged = true;
+                selectionSectNum = 0
+            }
+            
             selectionActNum = indexPath.row // if an actiivity was selected, save its number for later access
             
             // if there is a range of possible time, show time selection popover
@@ -155,6 +155,27 @@ class MenuController: UITableViewController {
             }
             
         }
+        
+        // if 'modify activity' is selected
+        else if (indexPath.section == 1 && indexPath.row == 1) {
+            
+            // check if this is a change in section and update section flag
+            if selectionSectNum != 1 {
+                sectSelectionChanged = true;
+                selectionSectNum = 1
+            }
+            // do nothing
+        }
+        
+        // if something not-yet-implemented is selected
+        else {
+            // alert user with popup that this feature is not yet implemented
+            let alert = UIAlertController(title: "Warning", message: "This feature has not yet been implemented.", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "Resume", style: .default, handler: nil))
+            self.present(alert, animated: true)
+            return nil
+        }
+            
         return indexPath
     }
     

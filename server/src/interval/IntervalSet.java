@@ -85,7 +85,7 @@ public class IntervalSet implements Iterable<Interval>, java.io.Serializable{
 		for(int i = 0; i < intervals.size(); i++){
 			for(int j = i+1; j < intervals.size(); j++){
 				if(intervals.get(i).intersects(intervals.get(j)) || intervals.get(i).adjacent(intervals.get(j))){
-					// System.out.println(intervals.get(i).inverse().toString()+" "+i+" intersects "+j+" "+intervals.get(j).inverse().toString());
+					// System.out.println(intervals.get(i).inverse().toString()+" "+i+" intersects "+j+" "+intervals.get(j).inverse().toString() + "  <- removing interval");
 					intervals.set(i, intervals.get(i).union(intervals.get(j)));
 					intervals.remove(j);
 					j--;
