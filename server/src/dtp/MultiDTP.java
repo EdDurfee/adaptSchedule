@@ -384,6 +384,15 @@ public class MultiDTP implements DisjunctiveTemporalProblem, java.io.Serializabl
 		cleanup(time, resolve, pushSelection);
 		return;
 	}
+
+	@Override
+	public void advanceSubDTPToTime(int time, int deltaT, boolean pushSelection, int dtpNum) {
+		selectionOrder.push(new SimpleEntry<Integer,Integer>(-1, deltaT));
+		count++;
+		advanceToTimeHelper(dtpNum, time, false, deltaT, pushSelection);
+		cleanup(time, true, pushSelection);
+		return;
+	}
 	
 	protected boolean advanceToTimeHelper(int idx, int time, boolean resolve, int deltaT, boolean pushSelection){
 		int minTime = subDTPs[idx].getMinTime();

@@ -41,8 +41,8 @@ public abstract class SimpleDTP implements DisjunctiveTemporalProblem, java.io.S
 	public String se_act = "";
 	public static String z3ExecCommand = "C:\\Program Files (x86)\\Microsoft Research\\Z3-1.3.6\\bin\\z3.exe ";
 //	public static String yicesExecCommand = "./yices-1.0.40/bin/yices";
-//	public static String yicesExecCommand = "./yices-1.0.32/bin/yices.exe";
-	public static String yicesExecCommand = "./yices-1.0.40_mac/bin/yices";
+	public static String yicesExecCommand = "./yices-1.0.32/bin/yices.exe";
+//	public static String yicesExecCommand = "./yices-1.0.40_mac/bin/yices";
 	
 	//Data structure for recording solve statistics
 	private int numConflicts = 0;
@@ -291,6 +291,13 @@ public abstract class SimpleDTP implements DisjunctiveTemporalProblem, java.io.S
 //			System.out.println("About to enumerateSolutions for time "+time);
 			enumerateSolutions(time);
 		}
+	}
+	
+	
+	@Override
+	public void advanceSubDTPToTime(int time, int deltaT, boolean pushSelection, int dtpNum) {
+		advanceToTime(time, deltaT, pushSelection);
+		return;
 	}
 	
 	@Override

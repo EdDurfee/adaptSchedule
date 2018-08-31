@@ -50,7 +50,7 @@ public class AppServerGUI extends NanoHTTPD { // implements Runnable
 	public String cmdVal = "";
 	public String agentNum = "";
 	public int test = 0;
-	public InteractionStageGUI interactive = new InteractionStageGUI(0);
+	public InteractionStageGUI interactive = new InteractionStageGUI();
 	public Thread interactiveThread;
 	public String clientID_agent0;
 	public String clientID_agent1;

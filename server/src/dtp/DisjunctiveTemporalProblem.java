@@ -71,6 +71,17 @@ public interface DisjunctiveTemporalProblem {
 	public void advanceToTime(int time, int deltaTime, boolean pushSelection);
 	
 	/**
+	 * Advance a single sub DTP to time.  Adds new constraints to the DTP to force available schedule choices to be no earlier than time.
+	 * Equivalent to advanceToTime(time,true,deltaTime,pushSelection,getMinTimeArray())
+	 * WARNING: Only relevant for MultiDTP
+	 * @param time to advance the DTP to
+	 * @param deltaTime the increment that time is advancing
+	 * @param pushSelection whether to push onto the selection stack
+	 * @param dtpNum is the subDTP to adjust
+	 */
+	public void advanceSubDTPToTime(int time, int deltaT, boolean pushSelection, int dtpNum);
+	
+	/**
 	 * Equivalent to advanceToTime(time,resolve,deltaTime,pushSelection,getMinTimeArray())
 	 * Advance the DTP to time.  Adds new constraints to the DTP to force available schedule choices to be no earlier than time.
 	 * @param time to advance the DTP to

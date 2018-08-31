@@ -222,6 +222,11 @@ public class ExhaustiveDTP implements DisjunctiveTemporalProblem, java.io.Serial
 		}
 
 	}
+	
+	@Override
+	public void advanceSubDTPToTime(int time, int deltaT, boolean pushSelection, int dtpNum) {
+		System.out.println("Error: advanceSubDTPToTime() not implemented for " + this.getClass().getSimpleName());
+	}
 
 	@Override
 	public void tightenTimepoint(int timeStart, String tp1, int timeEnd,

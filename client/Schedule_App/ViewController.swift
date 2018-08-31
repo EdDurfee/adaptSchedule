@@ -331,21 +331,21 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
 //        }
 //    }
 
-//    override func viewDidAppear(_ animated: Bool) {
-//        var gotBars : [GanttChartView.BarEntry] = []
-//        gotBars.append( GanttChartView.BarEntry(color: UIColor.blue,     length: 0.2,   textValue: "20",  title: "First") )
-//        gotBars.append( GanttChartView.BarEntry(color: UIColor.orange,   length: 0.80,  textValue: "80",  title: "Second") )
-//        gotBars.append( GanttChartView.BarEntry(color: UIColor.magenta,  length: 0.9,   textValue: "90",  title: "Third") )
-//        gotBars.append( GanttChartView.BarEntry(color: UIColor.brown,    length: 0.4,   textValue: "40",  title: "Fourth") )
-//
-//        gotBars.append(contentsOf: gotBars)
-//        gotBars.append(contentsOf: gotBars)
-//        gotBars.append(contentsOf: gotBars)
-//        gotBars.append(contentsOf: gotBars)
-//        gotBars.append(contentsOf: gotBars)
-//
-//        GanttChart.dataEntries = gotBars
-//    }
+    override func viewDidAppear(_ animated: Bool) {
+        var gotBars : [GanttChartView.BarEntry] = []
+        gotBars.append( GanttChartView.BarEntry(color: UIColor.blue,     length: 0.2,   textValue: "20",  title: "First") )
+        gotBars.append( GanttChartView.BarEntry(color: UIColor.orange,   length: 0.80,  textValue: "80",  title: "Second") )
+        gotBars.append( GanttChartView.BarEntry(color: UIColor.magenta,  length: 0.9,   textValue: "90",  title: "Third") )
+        gotBars.append( GanttChartView.BarEntry(color: UIColor.brown,    length: 0.4,   textValue: "40",  title: "Fourth") )
+
+        gotBars.append(contentsOf: gotBars)
+        gotBars.append(contentsOf: gotBars)
+        gotBars.append(contentsOf: gotBars)
+        gotBars.append(contentsOf: gotBars)
+        gotBars.append(contentsOf: gotBars)
+
+        GanttChart.dataEntries = gotBars
+    }
 
     // Auto-generated function to handle memory overuse
     override func didReceiveMemoryWarning() {

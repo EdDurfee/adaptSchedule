@@ -79,6 +79,7 @@ public class DisjunctiveTemporalConstraint implements Comparable<DisjunctiveTemp
 		for(ArrayList<TemporalDifference> v : diffs){
 			if(v.size() == 0){
 				System.out.println(v);
+				System.out.println(diffs);
 				System.out.println("This is not a valid constraint to be added");
 				return constraints;
 			}
