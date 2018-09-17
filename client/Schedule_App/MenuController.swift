@@ -15,6 +15,7 @@ class MenuController: UITableViewController {
     var alert: UIAlertController?
     
     var startTime: Int = 0 // start time in minutes
+    var clearToConfirm = false
     var activityOptions: [String] = []
     var minDurs: [String] = []
     var maxDurs: [String] = []
@@ -95,6 +96,18 @@ class MenuController: UITableViewController {
             } // else if a range of durations, show range
             else {
                 cell.detailTextLabel?.text = convertMinsToTimeSent( str: String(minDurs[indexPath.row]) ) + " - " +  convertMinsToTimeSent( str: String(maxDurs[indexPath.row]) )
+            }
+            
+            // If this agent is not yet clear to confirm an activity (AKA waiting on lower num agent to make a selection)
+            //  then grey out the activity options and do not allow user to select them
+            if clearToConfirm == false {
+                cell.textLabel?.isEnabled = false
+                cell.selectionStyle = UITableViewCellSelectionStyle.none
+                cell.isUserInteractionEnabled = false
+            } else {
+                cell.textLabel?.isEnabled = true
+                cell.selectionStyle = UITableViewCellSelectionStyle.blue
+                cell.isUserInteractionEnabled = true
             }
             
             break

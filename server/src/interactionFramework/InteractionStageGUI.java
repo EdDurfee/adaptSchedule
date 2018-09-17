@@ -105,6 +105,8 @@ public class InteractionStageGUI implements Runnable {
 	String actDur = "";
 	JSONObject inJSON;
 	
+	ArrayList< HashMap< String, ArrayList< String > > > oldPlotData;
+	
 	
 	// run is activated as a new thread inside of AppServerGUI.java
 	@SuppressWarnings("unused")
@@ -187,6 +189,8 @@ public class InteractionStageGUI implements Runnable {
 		
 		initialDTP = dtp.clone();
 		
+		oldPlotData = new ArrayList< HashMap< String, ArrayList< String > > >();
+		
 		// this is where JSON requests from clients will be put
 		JSONObject jsonIN = new JSONObject();
 		
@@ -229,7 +233,7 @@ public class InteractionStageGUI implements Runnable {
 				
 				// get list of current activity choices and all incomplete activites for all agents
 				List<List<String>> activities = dtp.getActivities(DisjunctiveTemporalProblem.ActivityFinder.TIME, -getSystemTime()); // returns the activities
-				List<List<String>> allRemActivities = dtp.getActivities(DisjunctiveTemporalProblem.ActivityFinder.ALL, -getSystemTime());
+				List<List<String>> allactNames = dtp.getActivities(DisjunctiveTemporalProblem.ActivityFinder.ALL, -getSystemTime());
 				
 				// get list of max slack (max idle time) for each agent at its corresponding index
 				List<Integer> maxSlack = dtp.getMaxSlack();
@@ -288,19 +292,20 @@ public class InteractionStageGUI implements Runnable {
 						IntervalSet interval = dtp.getInterval(activities.get(agent).get(act)+"_S", activities.get(agent).get(act)+"_E").inverse().subtract(zeroInterval);
 						nextActsMinDur.get(agent).add(String.valueOf( (int) interval.getLowerBound()));
 						nextActsMaxDur.get(agent).add(String.valueOf( (int) interval.getUpperBound()));
+						
 					}
 				}		
 				
 				// create 2d vector of min and max durations of all remaining activities
-				// allRemActivities should never include idle
+				// allactNames should never include idle
 				// first index is agent num, second index is act ind that coordinates to activities vector
-				ArrayList<ArrayList<String>> remMinDurs = new ArrayList<ArrayList<String>>(); for (int i=0;i<numAgents;i++) remMinDurs.add(new ArrayList<String>());
-				ArrayList<ArrayList<String>> remMaxDurs = new ArrayList<ArrayList<String>>(); for (int i=0;i<numAgents;i++) remMaxDurs.add(new ArrayList<String>());
+				ArrayList<ArrayList<String>> actMinDurs = new ArrayList<ArrayList<String>>(); for (int i=0;i<numAgents;i++) actMinDurs.add(new ArrayList<String>());
+				ArrayList<ArrayList<String>> actMaxDurs = new ArrayList<ArrayList<String>>(); for (int i=0;i<numAgents;i++) actMaxDurs.add(new ArrayList<String>());
 				for (int agent = 0; agent < numAgents; agent++) {
-					for (int act = 0; act < allRemActivities.get(agent).size(); act++) {
-						IntervalSet interval = dtp.getInterval(allRemActivities.get(agent).get(act)+"_S", allRemActivities.get(agent).get(act)+"_E").inverse().subtract(zeroInterval);
-						remMinDurs.get(agent).add(String.valueOf( (int) interval.getLowerBound()));
-						remMaxDurs.get(agent).add(String.valueOf( (int) interval.getUpperBound()));
+					for (int act = 0; act < allactNames.get(agent).size(); act++) {
+						IntervalSet interval = dtp.getInterval(allactNames.get(agent).get(act)+"_S", allactNames.get(agent).get(act)+"_E").inverse().subtract(zeroInterval);
+						actMinDurs.get(agent).add(String.valueOf( (int) interval.getLowerBound()));
+						actMaxDurs.get(agent).add(String.valueOf( (int) interval.getUpperBound()));
 					}
 				}
 				
@@ -317,13 +322,13 @@ public class InteractionStageGUI implements Runnable {
 					
 					// if processing a confirmed action, need to update gantts of all clients to reflect permanent dependent changes
 					if (processingConfirmedAct) {
-						sendGanttToAgent("ALL", allRemActivities);
+						sendGanttToAgent("ALL", allactNames);
 						processingConfirmedAct = false;
 					}
 					
 					// if tentative action or startup, only send new gantt to agent of request
 					else if (processingTentativeAct || processingStartup) {
-						sendGanttToAgent(agentNum, allRemActivities);
+						sendGanttToAgent(agentNum, allactNames);
 						processingStartup = false;
 					}
 					
@@ -464,14 +469,20 @@ public class InteractionStageGUI implements Runnable {
 								"activityDetails", // infoType
 								"", // startTime
 								"", // lastActivity
+								"", // clearToConfirm
 								new ArrayList<String>(), // nextActivities
 								new ArrayList<String>(), // nextActsMinDur
 								new ArrayList<String>(), // nextActsMaxDur
-								new ArrayList<String>(), // remActivities
-								new ArrayList<String>(), // remMinDurs
-								new ArrayList<String>(), // remMaxDurs
-								new ArrayList<String>(), // remMinStarts
-								new ArrayList<String>(), // remMaxEnds
+								new ArrayList<String>(), // actNames
+								new ArrayList<String>(), // actIDs
+								new ArrayList<String>(), // actMinDurs
+								new ArrayList<String>(), // actMaxDurs
+								new ArrayList<String>(), // actESTs
+								new ArrayList<String>(), // actLETs
+								new ArrayList<String>(), // actRestricts
+								"",						 // otherWeakRestrictCount
+								"",						 // otherStrongRestrictCount
+								"",						 // currentTime
 								"",						 // imgStr
 								actDetails,				 // activity details
 								new ArrayList<String>()  // debugInfo
@@ -530,7 +541,7 @@ public class InteractionStageGUI implements Runnable {
 						}
 						
 						// after advancing the clock all clients will need an updated gantt chart
-						sendGanttToAgent("ALL", allRemActivities);
+						sendGanttToAgent("ALL", allactNames);
 						
 						processingAdvSysTime = true;
 						
@@ -1010,10 +1021,11 @@ public class InteractionStageGUI implements Runnable {
 	
 	@SuppressWarnings("unchecked")
 	private void sendJSONToClient( String toAgentNum,
-			String infoType, String startTime, String lastActivity, List<String> nextActivities,
-			List<String> nextActsMinDur, List<String> nextActsMaxDur, List<String> remActivities,
-			List<String> remMinDurs, List<String> remMaxDurs, List<String> remMinStarts,
-			List<String> remMaxEnds, String strImg, JSONObject actDetails, List<String> debugInfo) {
+			String infoType, String startTime, String lastActivity, String clearToConfirm, List<String> nextActivities,
+			List<String> nextActsMinDur, List<String> nextActsMaxDur, List<String> actNames, List<String> actIDs,
+			List<String> actMinDurs, List<String> actMaxDurs, List<String> actESTs,
+			List<String> actLETs, List<String> actRestricts, String otherWeakRestrictCount, String otherStrongRestrictCount,
+			String currentTime, String strImg, JSONObject actDetails, List<String> debugInfo) {
 		
 		System.out.println("- Server sending '"+infoType+"' JSON to client #" + toAgentNum);
 //		System.out.println(actDetails);
@@ -1022,14 +1034,20 @@ public class InteractionStageGUI implements Runnable {
 		outJSON.put("infoType", infoType);
 		outJSON.put("startTime", startTime);
 		outJSON.put("lastActivity", lastActivity);
+		outJSON.put("clearToConfirm", clearToConfirm);
 		outJSON.put("nextActivities", nextActivities);
 		outJSON.put("nextActsMinDur", nextActsMinDur);
 		outJSON.put("nextActsMaxDur", nextActsMaxDur);
-		outJSON.put("remActivities", remActivities);
-		outJSON.put("remMinDurs", remMinDurs);
-		outJSON.put("remMaxDurs", remMaxDurs);
-		outJSON.put("remMinStarts", remMinStarts);
-		outJSON.put("remMaxEnds", remMaxEnds);
+		outJSON.put("actNames", actNames);
+		outJSON.put("actIDs", actIDs);
+		outJSON.put("actMinDurs", actMinDurs);
+		outJSON.put("actMaxDurs", actMaxDurs);
+		outJSON.put("actESTs", actESTs);
+		outJSON.put("actLETs", actLETs);
+		outJSON.put("actRestricts", actRestricts);
+		outJSON.put("otherWeakRestrictCount", otherWeakRestrictCount);
+		outJSON.put("otherStrongRestrictCount", otherStrongRestrictCount);
+		outJSON.put("currentTime", currentTime);
 		outJSON.put("strImg", strImg);
 		outJSON.put("actDetails", actDetails);
 		outJSON.put("debugInfo", debugInfo);
@@ -1049,20 +1067,39 @@ public class InteractionStageGUI implements Runnable {
 	
 	
 	private void sendCurrentChoicesToAllClients(List<List<String>> acts, ArrayList<ArrayList<String>> minDurs, ArrayList<ArrayList<String>> maxDurs) {
+		int lowestAgentReadyToConfirm = 99999;
+		String clearToConfirm = "true";
+		
+		// send the current activity choices for every agent
 		for (int a = 0; a < numAgents; a++) {
+			
+			// If multiple agents are at a decision point, require the lowest numbered agent to make a decision before allowing higher agents to confirm acts
+			if (acts.get(a).size() > 0 && a < lowestAgentReadyToConfirm) {
+				lowestAgentReadyToConfirm = a;
+			}
+			if (lowestAgentReadyToConfirm < a) {
+				clearToConfirm = "false";
+			}
+			
 			sendJSONToClient(
 					String.valueOf(a),	// agentNum
 					"currentChoices", // infoType
 					"TODO", // startTime
 					"", // lastActivity
+					clearToConfirm,
 					acts.get(a), 	 // nextActivities
 					minDurs.get(a), // nextActsMinDur
 					maxDurs.get(a), // nextActsMaxDur
-					new ArrayList<String>(), // remActivities
-					new ArrayList<String>(), // remMinDurs
-					new ArrayList<String>(), // remMaxDurs
-					new ArrayList<String>(), // remMinStarts
-					new ArrayList<String>(), // remMaxEnds
+					new ArrayList<String>(), // actNames
+					new ArrayList<String>(), // actIDs
+					new ArrayList<String>(), // actMinDurs
+					new ArrayList<String>(), // actMaxDurs
+					new ArrayList<String>(), // actESTs
+					new ArrayList<String>(), // actLETs
+					new ArrayList<String>(), // actRestricts
+					"",						 // otherWeakRestrictCount
+					"",						 // otherStrongRestrictCount
+					"",						 // currentTime
 					"",						 // strImg
 					new JSONObject(),
 					new ArrayList<String>()  // debugInfo
@@ -1079,31 +1116,73 @@ public class InteractionStageGUI implements Runnable {
 	private void sendGanttToAgent(String agentNum, List<List<String>> remActs) {
 	
 		// delete any outdated gantt images
-		File ganttDir = new File("forClient_image.png");
-		ganttDir.delete();
+//		File ganttDir = new File("forClient_image.png");
+//		ganttDir.delete();
 		
 		// create visual png of DTP with current state
-		Viz.createAndSaveDTPDiagram(dtp, initialDTP, getSystemTime(),1);
+//		Viz.createAndSaveDTPDiagram(dtp, initialDTP, getSystemTime(),1);
+		
+		
+		// retreive all of the data needed to create a plot from the timepoints inside viz
+		ArrayList< HashMap< String, ArrayList< String > > > plotData = Viz.retrievePlotData( dtp, initialDTP, getSystemTime() );
+		for (int i = 0; i < plotData.size(); i++) {plotData.get(i).get("currentTime").add( String.valueOf(getSystemTime()) );} // add system current time to each agent
 		
 		// wait until gantt is made, saved, and loaded into system
-		ganttDir = new File("forClient_image.png");
-		String imageString = "";
+//		ganttDir = new File("forClient_image.png");
+//		String imageString = "";
 		try {
-			while(!ganttDir.exists()) { // while it does not exist
-				Thread.sleep(100);
-				ganttDir = new File("forClient_image.png");
-			}
+//			while(!ganttDir.exists()) { // while it does not exist
+//				Thread.sleep(100);
+//				ganttDir = new File("forClient_image.png");
+//			}
 			
 			// once gantt is made and loaded, convert to base64 string
-			FileInputStream fis = new FileInputStream(ganttDir);
-			byte byteArray[] = new byte[(int)ganttDir.length()];
-			fis.read(byteArray);
-			imageString = Base64.encodeBase64String(byteArray);
+//			FileInputStream fis = new FileInputStream(ganttDir);
+//			byte byteArray[] = new byte[(int)ganttDir.length()];
+//			fis.read(byteArray);
+//			imageString = Base64.encodeBase64String(byteArray);
 			
 			// clean up stream and delete png after use
-			fis.close();
-			ganttDir.delete();
-		
+//			fis.close();
+//			ganttDir.delete();
+			
+			
+			// get count of partially constricted and significantly constricted activities
+			// go through each agent, then each activity and check the activity ratio
+			double ratioThreshold = 0.66;
+			ArrayList< Integer > weakRestrictCounts = new ArrayList(numAgents);
+			ArrayList< Integer > strongRestrictCounts = new ArrayList(numAgents);
+			int totalWeakCount = 0;
+			int totalStrongCount = 0;
+			
+			// if this is the first choice (no oldPlotData), then fill the restrictCount arrays with 0's
+			if (oldPlotData.size() == 0) {
+				for (int i = 0; i < Integer.valueOf(numAgents); i++) {
+					weakRestrictCounts.add(0);
+					strongRestrictCounts.add(0);
+				}
+			}
+			
+			for (int a = 0; a < oldPlotData.size(); a++) {
+				weakRestrictCounts.add(0);
+				strongRestrictCounts.add(0);
+				for (int i = 0; i < oldPlotData.get(a).get("actRestricts").size(); i++) {
+					double newRatio =  Double.parseDouble( plotData.get(a).get("actRestricts").get(i) );
+					double oldRatio =  Double.parseDouble( oldPlotData.get(a).get("actRestricts").get(i) );
+					double ratioOfRatios = newRatio / oldRatio;
+					
+					// if there has been a change over the threshold, increment strong restriction count
+					if (ratioOfRatios < 0.7) {
+						strongRestrictCounts.set(a, strongRestrictCounts.get(a)+1);
+						totalStrongCount++;
+					} // if there has been a change less than the threshold, increment weak restriction count
+					else if (ratioOfRatios < 1.0) {
+						weakRestrictCounts.set(a, weakRestrictCounts.get(a)+1);
+						totalWeakCount++;
+					}
+				};
+			}
+			
 			// send JSON file with infoType and image as encoded String
 			// if agentNum is set to "ALL", send the JSON to all clients/agents
 			if ( agentNum.equals("ALL") ) {
@@ -1112,18 +1191,26 @@ public class InteractionStageGUI implements Runnable {
 							"ganttImage", // infoType
 							"", // startTime
 							"", // lastActivity
+							"", // clearToConfirm
 							new ArrayList<String>(), // nextActivities
 							new ArrayList<String>(), // nextActsMinDur
 							new ArrayList<String>(), // nextActsMaxDur
-							remActs.get(a),        // remActivities
-							new ArrayList<String>(), // remMinDurs
-							new ArrayList<String>(), // remMaxDurs
-							new ArrayList<String>(), // remMinStarts
-							new ArrayList<String>(), // remMaxEnds
-							imageString,			 // imgStr
+							plotData.get(a).get("actNames"),   // actNames
+							plotData.get(a).get("actIDs"),		// actIDs
+							plotData.get(a).get("actMinDurs"), // actMinDurs
+							plotData.get(a).get("actMaxDurs"), // actMaxDurs
+							plotData.get(a).get("actESTs"),    // actESTs
+							plotData.get(a).get("actLETs"),    // actLETs
+							plotData.get(a).get("actRestricts"), // actRestricts
+							String.valueOf( totalWeakCount - weakRestrictCounts.get(a) ),     // otherWeakRestrictCount
+							String.valueOf( totalStrongCount - strongRestrictCounts.get(a) ), // otherStrongRestrictCount
+							plotData.get(a).get("currentTime").get(0),			 // currentTime
+							"",   // imgStr
+//							imageString,			    // imgStr
 							new JSONObject(),
 							new ArrayList<String>()  // debugInfo
 					);
+
 				}
 			
 			// otherwise only send to specified client
@@ -1132,21 +1219,36 @@ public class InteractionStageGUI implements Runnable {
 						"ganttImage", // infoType
 						"", // startTime
 						"", // lastActivity
+						"", // clearToConfirm
 						new ArrayList<String>(), // nextActivities
 						new ArrayList<String>(), // nextActsMinDur
 						new ArrayList<String>(), // nextActsMaxDur
-						remActs.get(Integer.valueOf(agentNum)), // remActivities
-						new ArrayList<String>(), // remMinDurs
-						new ArrayList<String>(), // remMaxDurs
-						new ArrayList<String>(), // remMinStarts
-						new ArrayList<String>(), // remMaxEnds
-						imageString,			 // imgStr
+						plotData.get(Integer.valueOf(agentNum)).get("actNames"),   // actNames
+						plotData.get(Integer.valueOf(agentNum)).get("actIDs"),		// actIDs
+						plotData.get(Integer.valueOf(agentNum)).get("actMinDurs"), // actMinDurs
+						plotData.get(Integer.valueOf(agentNum)).get("actMaxDurs"), // actMaxDurs
+						plotData.get(Integer.valueOf(agentNum)).get("actESTs"),    // actESTs
+						plotData.get(Integer.valueOf(agentNum)).get("actLETs"),    // actLETs
+						plotData.get(Integer.valueOf(agentNum)).get("actRestricts"), // actRestricts
+						String.valueOf( totalWeakCount - weakRestrictCounts.get(Integer.valueOf(agentNum)) ),     // otherWeakRestrictCount
+						String.valueOf( totalStrongCount - strongRestrictCounts.get(Integer.valueOf(agentNum)) ), // otherStrongRestrictCount
+						plotData.get(Integer.valueOf(agentNum)).get("currentTime").get(0),			 // currentTime
+						"",   // imgStr
+//						imageString,			 // imgStr
 						new JSONObject(),
 						new ArrayList<String>()  // debugInfo
 				);
-			} 
+				
+
+				System.out.println("totalStrongCount: " + String.valueOf(totalStrongCount));
+				System.out.println("totalWeakCount: " + String.valueOf(totalWeakCount));
+				System.out.println("this agent strong count: " + String.valueOf(strongRestrictCounts.get(Integer.valueOf(agentNum))) );
+			}
+			
+			oldPlotData = plotData;
+			
 		} catch (Exception e) {
-			System.err.println("Error: "+e.toString());
+			System.err.println("sendGanttToAgent Error: "+e.toString());
 			System.err.flush();
 		}
 		

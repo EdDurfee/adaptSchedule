@@ -137,17 +137,24 @@ class client {
                     print("\nJSON received from server:")
                     self.currentInfo.infoType = servData.infoType!;                     print("  infoType: ", terminator:"");          print(servData.infoType!)
                     self.currentInfo.startTime = servData.startTime!;                   print("  startTime: ", terminator:"");         print(servData.startTime!)
+                    self.currentInfo.clearToConfirm = servData.clearToConfirm!;         print("  clearToConfirm: ", terminator:"");    print(servData.clearToConfirm!)
                     self.currentInfo.nextActivities = servData.nextActivities!;         print("  nextActivities: ", terminator:"");    print(servData.nextActivities!)
                     self.currentInfo.nextActsMinDur = servData.nextActsMinDur!;         print("  nextActsMinDur: ", terminator:"");    print(servData.nextActsMinDur!)
                     self.currentInfo.nextActsMaxDur = servData.nextActsMaxDur!;         print("  nextActsMaxDur: ", terminator:"");    print(servData.nextActsMaxDur!)
-                    self.currentInfo.remActivities =  servData.remActivities;           print("  remActivities: ", terminator:"");     print(servData.remActivities!)
-                    self.currentInfo.remMinDurs =     servData.remMinDurs;              print("  remMinDurs: ", terminator:"");        print(servData.remMinDurs!)
-                    self.currentInfo.remMaxDurs =     servData.remMaxDurs;              print("  remMaxDurs: ", terminator:"");        print(servData.remMaxDurs!)
-                    self.currentInfo.remMinStarts =   servData.remMinStarts;            print("  remMinStarts: ", terminator:"");      print(servData.remMinStarts!)
-                    self.currentInfo.remMaxEnds =     servData.remMaxEnds;              print("  remMaxEnds: ", terminator:"");        print(servData.remMaxEnds!)
+                    self.currentInfo.actNames =  servData.actNames!;           print("  actNames: ", terminator:"");     print(servData.actNames!)
+                    self.currentInfo.actIDs =  servData.actIDs!;           print("  actIDs: ", terminator:"");     print(servData.actIDs!)
+                    self.currentInfo.actMinDurs =     servData.actMinDurs!;              print("  actMinDurs: ", terminator:"");        print(servData.actMinDurs!)
+                    self.currentInfo.actMaxDurs =     servData.actMaxDurs!;              print("  actMaxDurs: ", terminator:"");        print(servData.actMaxDurs!)
+                    self.currentInfo.actESTs =   servData.actESTs!;            print("  actESTs: ", terminator:"");      print(servData.actESTs!)
+                    self.currentInfo.actLETs =     servData.actLETs!;              print("  actLETs: ", terminator:"");        print(servData.actLETs!)
+                    self.currentInfo.actRestricts =     servData.actRestricts!;              print("  actRestricts: ", terminator:"");        print(servData.actRestricts!)
+                    self.currentInfo.otherWeakRestrictCount =   servData.otherWeakRestrictCount!;    print("  otherWeakRestrictCount: ", terminator:"");          print(servData.otherWeakRestrictCount!)
+                    self.currentInfo.otherStrongRestrictCount = servData.otherStrongRestrictCount!;  print("  otherStrongRestrictCount: ", terminator:"");        print(servData.otherStrongRestrictCount!)
+                    self.currentInfo.currentTime =     servData.currentTime!;              print("  currentTime: ", terminator:"");        print(servData.currentTime!)
                     self.currentInfo.strImg = servData.strImg!;                         print("  strImg length: ", terminator:"");     print(servData.strImg!.count)
                     self.currentInfo.actDetails = servData.actDetails;                  print("  actDetails: ", terminator:"");        print(servData.actDetails!)
                     self.currentInfo.debugInfo = servData.debugInfo!;                   print("  debugInfo: ", terminator:"");         print("~suppressed for readability~")//print(servData.debugInfo!)
+                    
                     
                     self.lastInfoType = servData.infoType!
                 }
@@ -195,6 +202,7 @@ struct putCMD: Codable {
     var debugInfo = [""]
 }
 
+// JSON received from server
 // These struct variables need to match the names seen in the JSON object
 // This structure format should match the reply format on the server side
 struct fromServer: Codable {
@@ -202,14 +210,20 @@ struct fromServer: Codable {
     // (unecesary components should be included as blank strings / empty vectors)
     var infoType         : String?
     var startTime        : String?
+    var clearToConfirm   : String?
     var nextActivities   : [String]?
     var nextActsMinDur   : [String]?
     var nextActsMaxDur   : [String]?
-    var remActivities    : [String]?
-    var remMinDurs       : [String]?
-    var remMaxDurs       : [String]?
-    var remMinStarts     : [String]?
-    var remMaxEnds       : [String]?
+    var actNames    : [String]?
+    var actIDs    : [String]?
+    var actESTs       : [String]?
+    var actLETs       : [String]?
+    var actMinDurs     : [String]?
+    var actMaxDurs       : [String]?
+    var actRestricts       : [String]?
+    var otherWeakRestrictCount  : String?
+    var otherStrongRestrictCount  : String?
+    var currentTime       : String?
     var strImg           : String?
     var actDetails  : activityDefinition?
     var debugInfo        : [String]?
@@ -217,14 +231,20 @@ struct fromServer: Codable {
     init() {
         infoType       = ""
         startTime      = ""
+        clearToConfirm = ""
         nextActivities = []
         nextActsMinDur = []
         nextActsMaxDur = []
-        remActivities  = []
-        remMinDurs     = []
-        remMaxDurs     = []
-        remMinStarts   = []
-        remMaxEnds     = []
+        actNames  = []
+        actIDs      = []
+        actESTs     = []
+        actLETs     = []
+        actMinDurs   = []
+        actMaxDurs     = []
+        actRestricts = []
+        otherWeakRestrictCount = ""
+        otherStrongRestrictCount = ""
+        currentTime = ""
         strImg         = ""
         actDetails     = activityDefinition()
         debugInfo      = []

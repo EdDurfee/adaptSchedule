@@ -23,8 +23,10 @@ class IPEnterViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        Agent0_enterButton.isEnabled = false
-        Agent1_enterButton.isEnabled = false
+        
+        // TEMP: These should be changed back to false if you want them to be grayed out on startup
+        Agent0_enterButton.isEnabled = true
+        Agent1_enterButton.isEnabled = true
 
         // Do any additional setup after loading the view.
     }

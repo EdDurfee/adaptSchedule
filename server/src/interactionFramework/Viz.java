@@ -35,6 +35,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -523,6 +524,7 @@ public class Viz extends JPanel {
 					originalEnd = (Timepoint) originalTps[i];
 			}
 
+			// change the color of the box bar based on how much it has been constrained relative to original availability
 			if (!(originalStart.equals(null) || originalEnd.equals(null))) {
 				ESToriginal = getEST(dtpOriginal, originalStart);
 				LEToriginal = getLET(dtpOriginal, originalEnd);
@@ -571,6 +573,115 @@ public class Viz extends JPanel {
 		drawCurrentTime(g2, verticalSpace);
 	}
 
+	
+	
+	/*
+	 * Author: Drew Davis
+	 * Adapted from the drawStepStyle1 function
+	 * This function is used to collect the data necessary to plot out the gantt chart using xcode side plotting
+	 * Returns an ArrayList (index = agent) of Hashmaps (property name, ArrayList of values for each activity)
+	 */
+	public static ArrayList< HashMap< String, ArrayList< String > > > retrievePlotData(DisjunctiveTemporalProblem dtpIn, DisjunctiveTemporalProblem dtpOriginalIn,
+			int timestamp) {
+
+		dtp = dtpIn;
+		dtpOriginal = dtpOriginalIn;
+		currTime = timestamp;
+		maxActivities = dtpIn.getTimepoints().size();
+		
+		Set<Timepoint> timepoints = dtp.getTimepoints();
+		Set<Timepoint> originalTimepoints = dtpOriginal.getTimepoints();
+		Object[] originalTps = originalTimepoints.toArray();
+		Iterator<Timepoint> it = timepoints.iterator();
+
+
+		ArrayList< HashMap< String, ArrayList< String > > > resultsPerAgent = new ArrayList< HashMap< String, ArrayList< String > > >( dtp.getNumAgents() );
+		
+		
+		// for each agent index in results, initialize it to have all hashmap fields
+		for (int i = 0; i < dtp.getNumAgents(); i++) {
+			resultsPerAgent.add(new HashMap< String, ArrayList< String > >());
+			resultsPerAgent.get(i).put("actNames", new ArrayList<String>());
+			resultsPerAgent.get(i).put("actIDs", new ArrayList<String>());
+			resultsPerAgent.get(i).put("actESTs", new ArrayList<String>());
+			resultsPerAgent.get(i).put("actLETs", new ArrayList<String>());
+			resultsPerAgent.get(i).put("actMinDurs", new ArrayList<String>());
+			resultsPerAgent.get(i).put("actMaxDurs", new ArrayList<String>());
+			resultsPerAgent.get(i).put("actRestricts", new ArrayList<String>());
+			resultsPerAgent.get(i).put("currentTime", new ArrayList<String>());
+		}
+		
+		
+		// iterate through each end/start timepoint
+		while (it.hasNext()) {
+			Timepoint end = it.next();
+			AlphaComposite alphaComposite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f);
+			if (end.name.equals("showerM_E")) {
+				System.out.println("in dss1");
+			}
+			
+			if (end.getName().equals("zero"))
+				break;
+			Timepoint start = it.next();
+			int tempAgentNum = dtp.getAgent(start.name);
+			int duration = getDuration(dtp, start, end);
+			int minDuration = getMinDuration(dtp, start, end);
+			
+			Timepoint originalStart = null;
+			Timepoint originalEnd = null;
+			int EST = getEST(dtp, start);
+			int LET = getLET(dtp, end);
+			int EET = getEET(dtp, end);
+			int space = LET - EST;
+			
+			//int durationOffset = ((LET - EST) - duration) / 2;
+			//int minDurationOffset = ((LET - EST) - minDuration) / 2;
+			//int leftDuration = EST + durationOffset;
+			//int rightDuration = LET - durationOffset;
+			//int rightMinDuration = LET - minDurationOffset;
+			int leftDuration = EST;
+			int rightDuration = EST + duration;
+			int rightMinDuration = Math.max(EET, EST + minDuration); // earliest legal end time
+			int timepointID = (end.getAbsIndex() / 2) - 1;
+			int ESToriginal = 0;
+			int LEToriginal = 0;
+			int originalSpace;
+			//Color boxColor = new Color(137, 147, 250);
+			Color boxColor = new Color(180, 180, 250);
+			for (int i = 0; i < originalTps.length; i++) {
+				if (((Timepoint) originalTps[i]).getName().equals(start.getName()))
+					originalStart = (Timepoint) originalTps[i];
+				if (((Timepoint) originalTps[i]).getName().equals(end.getName()))
+					originalEnd = (Timepoint) originalTps[i];
+			}
+
+			double ratio = 1.0;
+			
+			// change the color of the box bar based on how much it has been constrained relative to original availability
+			if (!(originalStart.equals(null) || originalEnd.equals(null))) {
+				ESToriginal = getEST(dtpOriginal, originalStart);
+				LEToriginal = getLET(dtpOriginal, originalEnd);
+				originalSpace = LEToriginal - ESToriginal;
+				
+				ratio = (double) space / originalSpace;
+			}
+			
+			resultsPerAgent.get(tempAgentNum).get("actNames").add( start.getName().substring(0, start.getName().lastIndexOf('_')) );
+			resultsPerAgent.get(tempAgentNum).get("actIDs").add( String.valueOf(timepointID) );
+			resultsPerAgent.get(tempAgentNum).get("actESTs").add( String.valueOf( EST ) );
+			resultsPerAgent.get(tempAgentNum).get("actLETs").add( String.valueOf( LET ) );
+			resultsPerAgent.get(tempAgentNum).get("actMinDurs").add( String.valueOf( minDuration ) );
+//			resultsPerAgent.get(tempAgentNum).get("actMinDurs").add( String.valueOf( rightMinDuration - leftDuration ) );
+			resultsPerAgent.get(tempAgentNum).get("actMaxDurs").add( String.valueOf( duration ) );
+//			resultsPerAgent.get(tempAgentNum).get("actMaxDurs").add( String.valueOf( rightDuration - leftDuration ) );
+			resultsPerAgent.get(tempAgentNum).get("actRestricts").add( String.valueOf(ratio) );
+			
+		}
+
+		return resultsPerAgent;
+	}
+	
+	
 	/* Increases the height of the window by amount pixels */
 	public static void bumpSize(Window g, int amount) {
 		g.setSize(g.getWidth(), g.getHeight() + amount);
@@ -842,7 +953,7 @@ public class Viz extends JPanel {
 		
 		// Because the drawing is done on many separate threads, we need to make sure all threads finish before saving it
 		// This is the simple temporary solution
-		try{Thread.sleep(1000);}catch (Exception e) {System.out.println(e);}
+		try{Thread.sleep(2000);}catch (Exception e) {System.out.println(e);}
 		try{ImageIO.write(bi,"png",new File("forClient_image.png"));}catch (Exception e) {System.out.println(e);}
 				
 

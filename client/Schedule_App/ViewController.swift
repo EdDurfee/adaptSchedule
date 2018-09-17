@@ -31,9 +31,10 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
     
     
     //MARK: Properties
+    
     @IBOutlet weak var SideMenu: UITableView!
     @IBOutlet weak var ConfirmActButton: UIButton!
-    @IBOutlet weak var GanttImageDisplay: UIImageView!
+//    @IBOutlet weak var GanttImageDisplay: UIImageView!
     
     @IBOutlet weak var advSysClockButton: UIButton!
     
@@ -48,6 +49,8 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
     @IBOutlet weak var LETField: AvailTextBox!
     @IBOutlet weak var DurationTextBox: UITextView!
     @IBOutlet weak var ConfirmModificationButton: UIButton!
+    @IBOutlet weak var WarningImage: UIImageView!
+    
     
     
     var origEST : String?
@@ -56,6 +59,10 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
     var origLET : String?
     var origDur : String?
     var validDurationValue : Bool?
+    var lastConfirmedBars : [GanttChartView.BarEntry]?
+    
+    let stronglyRestrictColor: UIColor = UIColor.init(red: 255.0/255.0, green: 204.0/255.0, blue: 204.0/255.0, alpha: 1.0)
+    let weaklyRestrictedColor: UIColor = UIColor.init(red: 255.0/255.0, green: 247.0/255.0, blue: 204.0/255.0, alpha: 1.0)
     
     
     // This is the outlet for custom xCode generated gantt chart
@@ -69,6 +76,14 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
 //        NotificationCenter.default.addObserver(self, selector: #selector(ViewControl ler.keyboardWillShow), name: NSNotification.Name.UIKeyboardWillShow, object: nil)
 //        NotificationCenter.default.addObserver(self, selector: #selector(ViewController.keyboardWillHide), name: NSNotification.Name.UIKeyboardWillHide, object: nil)
         
+        
+        // set up warning exclamation point image
+        // This image will appear when there is a system notification of status for the user
+        // The user can click the image to see the notification of status
+        WarningImage.isHidden = true
+        let warningTap = UITapGestureRecognizer(target: self, action: Selector("WarningImgTapDetected"))
+        WarningImage.isUserInteractionEnabled = true
+        WarningImage.addGestureRecognizer(warningTap)
         
         // Set the sideMenu tableView as a child view and Set the ModActMenu delegate and dataSource
 //        addChildViewController(modActMenuDelegate)
@@ -121,9 +136,26 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
 //            sleep(1)
 //        }
     
+        // make sure the advSystemTimeButton is always above the scale
+        
+        
+        advSysClockButton.frame = CGRect(x: SideMenu.frame.width + 20.0, y: self.view.frame.height - GanttChart.scaleSpace - advSysClockButton.frame.height - 20.0, width: 200, height: 72)
         
         // initialize client
         self.aClient = client(serverIP!, agentNumber!)
+        
+        
+        //        let boxWidth: CGFloat = 200.0
+        //        let boxHeight: CGFloat = 125.0
+        //        let boxX: CGFloat = view.frame.width - boxWidth - 50.0
+        //        let boxY: CGFloat = 50
+        
+        let impactHeight: CGFloat = 70.0
+        let impactWidth: CGFloat =  140.0
+        let impactY: CGFloat =  50
+        
+//        drawImpactBox(title: "Personal", weakCount: 0, StrongCount: 0, boxX: view.frame.width - impactWidth - 30.0,   boxY: impactY, boxWidth: impactWidth, boxHeight: impactHeight)
+//        drawImpactBox(title: "Others",   weakCount: 0, StrongCount: 0, boxX: view.frame.width - impactWidth*2 - 50.0, boxY: impactY, boxWidth: impactWidth, boxHeight: impactHeight)
         
         // In the background, the client should continuously send heartbeat GET messages to the server
         // Heartbeat function will update the member variables of aClient in background whenever the server replies with new info
@@ -235,15 +267,100 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
                             self.menuDelegate.minDurs = self.viewInInfo.nextActsMinDur!
                             self.menuDelegate.maxDurs = self.viewInInfo.nextActsMaxDur!
                             self.SideMenu.reloadData()
-                            if self.viewInInfo.nextActivities!.count > 0 {
+                            if self.viewInInfo.nextActivities!.count > 0 && self.viewInInfo.clearToConfirm == "true" {
                                 self.ConfirmActButton.isEnabled = true
                             } else {
                                 self.ConfirmActButton.isEnabled = false
                             }
+                            self.lastConfirmedBars = self.GanttChart.dataEntries
+                            
+                            // if the user needs to wait for a higher priority user to make a decision first, display the
+                            //  notification warning clickable image to explain the situation
+                            //  only trigger 'confirm block' response when the user would typically be able to make a decision
+                            if self.viewInInfo.clearToConfirm == "false" && self.menuDelegate.activityOptions.count > 0 {
+                                self.menuDelegate.clearToConfirm = false
+                                self.WarningImage.isHidden = false
+                                self.WarningImage.alpha = 1.0
+                            } else {
+                                self.menuDelegate.clearToConfirm = true
+                                self.WarningImage.isHidden = true
+                            }
                         }
                     
+                        // save the bars of the confirmed acts so that ratios can be compared when evaluating tentative choices
                         if (self.viewInInfo.infoType == "ganttImage") {
                             
+                            
+                            
+                            // temp info to test gantt with
+                            // these traits will need to be derived from list of timepoits in server, not necesarily what is hardcoded into dtp definition file
+                            var actNames = self.viewInInfo.actNames!
+                            var actIDs = self.viewInInfo.actIDs!
+                            var actESTs = self.viewInInfo.actESTs!
+                            var actLETs = self.viewInInfo.actLETs!
+                            var actMinDurs  = self.viewInInfo.actMinDurs! // use only the smallest min and the greatest max
+                            var actMaxDurs = self.viewInInfo.actMaxDurs! // use only the smallest min and the greatest max
+                            var actRestricts = self.viewInInfo.actRestricts!
+                            var currentTime = self.viewInInfo.currentTime!
+                            
+                            var barColor : UIColor
+                            
+                            var gotBars : [GanttChartView.BarEntry] = []
+                            
+                            for actNum in 0..<actNames.count {
+                                
+                                barColor = UIColor.init(red: 204.0/255.0, green: 255.0/255.0, blue: 204.0/255.0, alpha: 1.0)
+                                
+                                // set the bar color (for tentative selections) based on how much the availability has
+                                //  been restricted relative to the last confirmed act
+                                // lower restrict values => more restricted
+                                // if lastConfirmedBars has not been set yet (which also implies this is not a tentative choice, therefore everything will be green 'non-restricted')
+                                if (self.lastConfirmedBars != nil) {
+                                    // if it has been restricted twice as much as previous:
+                                    // 50% threshold
+                                    if (self.lastConfirmedBars![actNum].restrict > 1.5 * Double(actRestricts[actNum])!) {
+                                        barColor = self.stronglyRestrictColor
+                                    } // if it has been restricted any more than previous but less than double:
+                                    else if (self.lastConfirmedBars![actNum].restrict > Double(actRestricts[actNum])!) {
+                                        barColor = self.weaklyRestrictedColor
+                                    }
+                                }
+                                
+                                
+                                // if this activity has already been completed
+                                if (Int(actLETs[actNum])! <= Int(currentTime)!) {
+                                    gotBars.append( GanttChartView.BarEntry(
+                                        color: barColor,
+                                        ID:  Int(actIDs[actNum])!,
+                                        EST: Int(actESTs[actNum])!,
+                                        LET: Int(actLETs[actNum])!,
+                                        minDuration: Int( actLETs[actNum] )! - Int( actESTs[actNum] )!,
+                                        maxDuration: Int( actLETs[actNum] )! - Int( actESTs[actNum] )!,
+                                        restrict: Double( actRestricts[actNum] )!,
+                                        activityName: actNames[actNum],
+                                        title: "test" ) )
+                                } else {
+                                    gotBars.append( GanttChartView.BarEntry(
+                                        color: barColor,
+                                        ID:  Int(actIDs[actNum])!,
+                                        EST: Int(actESTs[actNum])!,
+                                        LET: Int(actLETs[actNum])!,
+                                        minDuration: Int(actMinDurs[actNum])!,
+                                        maxDuration: Int(actMaxDurs[actNum])!,
+                                        restrict: Double( actRestricts[actNum] )!,
+                                        activityName: actNames[actNum],
+                                        title: "test" ) )
+                                }
+                            }
+                            
+                            self.GanttChart.currTime = Int(currentTime)!
+                            self.GanttChart.dataEntries = gotBars
+                            
+                            // if it has not yet been set, then this is the first gantt displayed after startup
+                            // (AKA a gantt of confirmed actions)
+                            if (self.lastConfirmedBars == nil) {
+                                self.lastConfirmedBars = self.GanttChart.dataEntries
+                            }
                         }
                         
                         if (self.viewInInfo.infoType == "activityDetails") {
@@ -292,13 +409,14 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
                                 self.origDur = durStr
                             }
                         }
-                        
-                        if (self.viewInInfo.strImg != "") {
-                            if let decodedData = Data(base64Encoded: self.viewInInfo.strImg!, options: .ignoreUnknownCharacters) {
-                                let image = UIImage(data: decodedData)
-                                self.GanttImageDisplay.image = image
-                            }
-                        }
+
+                        // Legacy code for old gantt image display system (generated on Java server)
+//                        if (self.viewInInfo.strImg != "") {
+//                            if let decodedData = Data(base64Encoded: self.viewInInfo.strImg!, options: .ignoreUnknownCharacters) {
+//                                let image = UIImage(data: decodedData)
+//                                self.GanttImageDisplay.image = image
+//                            }
+//                        }
                     
                     self.aClient!.currentInfo = fromServer()
                     }
@@ -330,21 +448,23 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
 //            }
 //        }
 //    }
+    
+    @objc func WarningImgTapDetected() {
+        
+        self.WarningImage.alpha = 0.6
+        
+        let alert = UIAlertController(title: "User Status", message: "Higher priority users must confirm an activity before you can proceed.", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Cancel", style: .default, handler: nil))
+        
+        self.present(alert, animated: true)
+        
+    }
 
     override func viewDidAppear(_ animated: Bool) {
-        var gotBars : [GanttChartView.BarEntry] = []
-        gotBars.append( GanttChartView.BarEntry(color: UIColor.blue,     length: 0.2,   textValue: "20",  title: "First") )
-        gotBars.append( GanttChartView.BarEntry(color: UIColor.orange,   length: 0.80,  textValue: "80",  title: "Second") )
-        gotBars.append( GanttChartView.BarEntry(color: UIColor.magenta,  length: 0.9,   textValue: "90",  title: "Third") )
-        gotBars.append( GanttChartView.BarEntry(color: UIColor.brown,    length: 0.4,   textValue: "40",  title: "Fourth") )
-
-        gotBars.append(contentsOf: gotBars)
-        gotBars.append(contentsOf: gotBars)
-        gotBars.append(contentsOf: gotBars)
-        gotBars.append(contentsOf: gotBars)
-        gotBars.append(contentsOf: gotBars)
-
-        GanttChart.dataEntries = gotBars
+        
+        
+        
+        
     }
 
     // Auto-generated function to handle memory overuse
@@ -592,6 +712,8 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
     }
     
     
+    
+    
     func drawMenuRightLine() {
     
         var lineView : UIView = {
@@ -607,6 +729,7 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
         self.view.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|-198-[view(1)]", options: NSLayoutFormatOptions(), metrics: nil, views: ["view": lineView]))
     
     }
+    
     
     // Draw a vertical line on the right side of the activity selection table in the mod activity view
     func drawModActMenuRightLine() {
@@ -624,6 +747,120 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
         ModifyActView.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:|-100-[view]-100-|", options: NSLayoutFormatOptions(), metrics: nil, views: ["view": lineView]))
         ModifyActView.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|-230-[view(1)]", options: NSLayoutFormatOptions(), metrics: nil, views: ["view": lineView]))
 
+    }
+    
+    
+    // This will draw 3 different rectangles and the text to tell the user the impact of their tentative choice
+    func drawImpactBox(title: String, weakCount: Int, StrongCount: Int, boxX: CGFloat, boxY: CGFloat, boxWidth: CGFloat, boxHeight: CGFloat) {
+//        let boxWidth: CGFloat = 200.0
+//        let boxHeight: CGFloat = 125.0
+//        let boxX: CGFloat = view.frame.width - boxWidth - 50.0
+//        let boxY: CGFloat = 50
+        
+        drawBox(leftX: boxX, topY: boxY, height: boxHeight, width: boxWidth, type: "interior")
+        
+        drawSubBox(leftX: boxX,                topY: boxY + boxHeight*0.4, height: boxHeight*0.6, width: boxWidth/2.0, pos: "l")
+        drawSubBox(leftX: boxX + boxWidth/2.0, topY: boxY + boxHeight*0.4, height: boxHeight*0.6, width: boxWidth/2.0, pos: "r")
+        
+        drawBox(leftX: boxX, topY: boxY, height: boxHeight, width: boxWidth, type: "border")
+        
+        
+        
+    }
+    
+    // Draw a rectangle box with rounded corners
+    func drawBox(leftX: CGFloat, topY: CGFloat, height: CGFloat, width: CGFloat, type: String) {
+        let cornerRadius: CGFloat = 15.0
+        
+        let path: UIBezierPath = UIBezierPath()
+        
+        path.move(to: CGPoint(x: leftX + cornerRadius, y: topY))
+        
+        path.addLine(to: CGPoint(x: leftX + width - cornerRadius,  y: topY))
+        
+        path.addArc(withCenter: CGPoint(x: leftX + width - cornerRadius, y: topY + cornerRadius), radius: cornerRadius, startAngle: 3.0*CGFloat.pi/2.0, endAngle: 0.0, clockwise: true)
+        
+        path.addLine(to: CGPoint(x: leftX + width,  y: topY + height - cornerRadius))
+        
+        path.addArc(withCenter: CGPoint(x: leftX + width - cornerRadius, y: topY + height - cornerRadius), radius: cornerRadius, startAngle: 0.0, endAngle: CGFloat.pi/2.0, clockwise: true)
+        
+        path.addLine(to: CGPoint(x: leftX + cornerRadius,  y: topY + height))
+        
+        path.addArc(withCenter: CGPoint(x: leftX + cornerRadius, y: topY + height - cornerRadius), radius: cornerRadius, startAngle: CGFloat.pi/2.0, endAngle: CGFloat.pi, clockwise: true)
+        
+        path.addLine(to: CGPoint(x: leftX,  y: topY + cornerRadius))
+        
+        path.addArc(withCenter: CGPoint(x: leftX + cornerRadius, y: topY + cornerRadius), radius: cornerRadius, startAngle: CGFloat.pi, endAngle: 3.0*CGFloat.pi/2.0, clockwise: true)
+        
+        path.close()
+        
+        // make shape from lines and fill rectangle
+        let pathLayer = CAShapeLayer()
+        pathLayer.path = path.cgPath
+        pathLayer.lineWidth = 1
+        if type == "border" {
+            pathLayer.fillColor = UIColor.clear.cgColor
+            pathLayer.strokeColor = UIColor.darkGray.cgColor
+        } else {
+            pathLayer.fillColor = UIColor.white.cgColor
+            pathLayer.strokeColor = UIColor.clear.cgColor
+        }
+        
+        view.layer.addSublayer(pathLayer)
+    }
+    
+    // Draw a rectangle box with ONLY 1 rounded corner
+    // This will be used for filling an inside corner of a normal rectangular box with 4 rounded corners
+    func drawSubBox(leftX: CGFloat, topY: CGFloat, height: CGFloat, width: CGFloat, pos: String) {
+        let cornerRadius: CGFloat = 15.0
+        
+        let path: UIBezierPath = UIBezierPath()
+        
+        // top left
+        path.move(to: CGPoint(x: leftX, y: topY))
+        
+        // top right
+        path.addLine(to: CGPoint(x: leftX + width,  y: topY))
+        
+        // bottom right
+        if pos == "r" {
+            path.addLine(to: CGPoint(x: leftX + width,  y: topY + height - cornerRadius))
+            path.addArc(withCenter: CGPoint(x: leftX + width - cornerRadius, y: topY + height - cornerRadius), radius: cornerRadius, startAngle: 0.0, endAngle: CGFloat.pi/2.0, clockwise: true)
+        } else {
+            path.addLine(to: CGPoint(x: leftX + width,  y: topY + height))
+        }
+        
+        // bottom left
+        if pos == "l" {
+            path.addLine(to: CGPoint(x: leftX + cornerRadius,  y: topY + height))
+            path.addArc(withCenter: CGPoint(x: leftX + cornerRadius, y: topY + height - cornerRadius), radius: cornerRadius, startAngle: CGFloat.pi/2.0, endAngle: CGFloat.pi, clockwise: true)
+        } else {
+            path.addLine(to: CGPoint(x: leftX,  y: topY + height))
+        }
+        
+        // top left
+        path.addLine(to: CGPoint(x: leftX,  y: topY))
+        
+        
+        path.close()
+        
+        // make shape from lines and fill rectangle
+        let pathLayer = CAShapeLayer()
+        pathLayer.path = path.cgPath
+        pathLayer.lineWidth = 4.1
+        if (pos == "l") {
+            pathLayer.fillColor = weaklyRestrictedColor.cgColor
+            pathLayer.strokeColor = UIColor.clear.cgColor
+        } else if (pos == "r") {
+            pathLayer.fillColor = stronglyRestrictColor.cgColor
+            pathLayer.strokeColor = UIColor.clear.cgColor
+        } else {
+            pathLayer.fillColor = UIColor.magenta.cgColor
+            pathLayer.strokeColor = UIColor.magenta.cgColor
+        }
+        
+        
+        view.layer.addSublayer(pathLayer)
     }
     
     
