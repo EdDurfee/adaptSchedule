@@ -249,7 +249,7 @@ public class ProblemLoader {
 			Timepoint end = new Timepoint(name+"_E",1);
 			tpHash.put(start.getName(),start);
 			tpHash.put(end.getName(),end);
-			localTimepoints[0].add(start);
+			localTimepoints[0].add(start); // Drew: zero timepoint is already added in the initialization
 			localTimepoints[0].add(end);
 			timepoints.put(name+"_S", 0);
 			timepoints.put(name+"_E", 0);

@@ -29,18 +29,43 @@ class GanttChartView: UIView, UITextViewDelegate {
     /// space at the right of each bar to show the value
     let scaleSpace: CGFloat = 60.0
     
+    // how wide the names bar on the left should be
+    let namesWidth: CGFloat = 100.0
+    
+    // how many minutes the plot repreents horizontally
     private let minutesDisplayedInPlot: CGFloat = 1440.0
+    
+    // this variable determines how wide the bars are scaled to
+    let barsWidthScaleFactor: CGFloat = 1.75
     
     // current time in minutes from start of day
     public var currTime: Int = 0
     
+    // set this as true if the upcoming set of bars if from a tentative user request
+    var tentGantt: Bool = false
+    
+    // keep track of what the bars were before any tentative choice - set in ViewController
+    var lastConfirmedBars: [BarEntry]? = []
+    
+    // the coloring of the duration and availability bars
+    let blueGradStart: UIColor = UIColor.init(red: 128.0/255.0, green: 191.0/255.0, blue: 255.0/255.0, alpha: 1.0)
+    let durDefaultColor: UIColor = UIColor.init(red: 150.0/255.0, green: 150.0/255.0, blue: 150.0/255.0, alpha: 1.0)
+    let availDefaultColor: UIColor = UIColor.init(red: 200.0/255.0, green: 200.0/255.0, blue: 200.0/255.0, alpha: 1.0)
+    let currentTentActColor: UIColor = UIColor(red: 65.0/255.0, green: 135.0/255.0, blue: 65.0/255.0, alpha: 1.0)
+    let finishedColor: UIColor         = UIColor.init(red: 100.0/255.0,  green: 100.0/255.0, blue: 100.0/255.0, alpha: 1.0)
+    
+    // if the new availability is < threshold*oldAvailability then we can say it is strongly restricted by this choice
+    let strongRestrictThreshold: Double = 0.75
+    
+    var sortedLastConfirmedBars: [BarEntry]? = []
     
     private let barsDrawLayer: CALayer = CALayer()
     private let barsScrollView: UIScrollView = UIScrollView()
     private let scaleDrawLayer: CALayer = CALayer()
     private let scaleScrollView: UIScrollView = UIScrollView()
+    private let namesDrawLayer: CALayer = CALayer()
+    private let namesScrollView: UIScrollView = UIScrollView()
     
-    let finishedColor: UIColor         = UIColor.init(red: 128.0/255.0, green: 064.0/255.0, blue: 000.0/255.0, alpha: 1.0)
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -65,17 +90,31 @@ class GanttChartView: UIView, UITextViewDelegate {
         barsScrollView.layer.addSublayer(barsDrawLayer)
         self.addSubview(barsScrollView)
         barsScrollView.delegate = self
+        
+//        namesScrollView.backgroundColor = UIColor.clear
+//        namesDrawLayer.backgroundColor = UIColor.clear.cgColor
+        namesScrollView.layer.addSublayer(namesDrawLayer)
+        self.addSubview(namesScrollView)
+        namesScrollView.delegate = self
     }
     
-    // Force the two scroll views to keep x coordinates synchronized so that scale always lines up with bars
+    // Force the x coordinates synchronized so that scaleScroll always lines up with barsScroll
+    // Force the y coordinates synchronized so that namesScroll always lines up with barsScroll
     // Also force the x and y coordinates to move together and match % offsets
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         
-        // lock the x coordinates of the 2 scroll views
+        // lock the x coordinates of 2 scroll views
         if scrollView == scaleScrollView {
-            barsScrollView.contentOffset.x = scrollView.contentOffset.x
+            barsScrollView.contentOffset.x = scaleScrollView.contentOffset.x
         }else if scrollView == barsScrollView {
             scaleScrollView.contentOffset.x = barsScrollView.contentOffset.x
+        }
+        
+        // lock the y coordinates of 2 scroll views
+        if scrollView == namesScrollView {
+            barsScrollView.contentOffset.y = namesScrollView.contentOffset.y
+        }else if scrollView == barsScrollView {
+            namesScrollView.contentOffset.y = barsScrollView.contentOffset.y
         }
         
         // synchrinize vertical and horizontal scrolling
@@ -89,9 +128,12 @@ class GanttChartView: UIView, UITextViewDelegate {
     }
     
     override func layoutSubviews() {
-        barsScrollView.frame  = CGRect(x: 0, y: 0, width: self.frame.size.width, height: self.frame.size.height - scaleSpace)
         
-        scaleScrollView.frame = CGRect(x: 0, y: self.frame.size.height - scaleSpace, width: self.frame.size.width, height: scaleSpace)
+        barsScrollView.frame  = CGRect(x: namesWidth, y: 0, width: self.frame.size.width - namesWidth, height: self.frame.size.height - scaleSpace)
+        
+        scaleScrollView.frame = CGRect(x: namesWidth, y: self.frame.size.height - scaleSpace, width: self.frame.size.width - namesWidth, height: scaleSpace)
+        
+        namesScrollView.frame = CGRect(x: 0, y: 0, width: namesWidth, height: self.frame.size.height - scaleSpace)
     }
     
     
@@ -108,10 +150,13 @@ class GanttChartView: UIView, UITextViewDelegate {
             barsDrawLayer.sublayers?.forEach({$0.removeFromSuperlayer()})
             // remove old scale
             scaleDrawLayer.sublayers?.forEach({$0.removeFromSuperlayer()})
+            // remove old names
+            namesDrawLayer.sublayers?.forEach({$0.removeFromSuperlayer()})
             
             if let dataEntries = dataEntries {
-                barsScrollView.contentSize = CGSize(width: self.frame.size.width*2, height: (barHeight + barSpace)*CGFloat(dataEntries.count) + barSpace)
-                scaleScrollView.contentSize = CGSize(width: self.frame.size.width*2, height: scaleSpace)
+                barsScrollView.contentSize = CGSize(width: self.frame.size.width*barsWidthScaleFactor, height: (barHeight + barSpace)*CGFloat(dataEntries.count) + barSpace)
+                scaleScrollView.contentSize = CGSize(width: barsScrollView.contentSize.width, height: scaleSpace)
+                namesScrollView.contentSize = CGSize(width: namesWidth, height: barsScrollView.contentSize.height)
                 barsDrawLayer.frame = CGRect(x: 0, y: 0, width: barsScrollView.contentSize.width, height: barsScrollView.contentSize.height)
                 
                 drawVertLine(x: leftSpace,                                               color: UIColor.gray,   lineType: "solid")
@@ -121,10 +166,25 @@ class GanttChartView: UIView, UITextViewDelegate {
                 drawScale()
                 
                 // sort the entries based on their ID (which was sorted in the server based on act time)
-                let tempDataEntries = dataEntries.sorted(by: { $0.ID < $1.ID })
+                var tempDataEntries = dataEntries.sorted(by: { $0.ID < $1.ID })
+                if tentGantt { sortedLastConfirmedBars = lastConfirmedBars!.sorted(by: { $0.ID < $1.ID }) }
                 
                 // display the sorted items so that the earlier activities are at the top
-                for i in 0..<dataEntries.count {
+                var i = -1
+                while i < tempDataEntries.count-1 {
+                    i+=1
+                    // if max duration == 0, this is an optinal acitvity that cannot be performed, so skip it:
+                    if (tempDataEntries[i].maxDuration == 0) {
+                        tempDataEntries.remove(at: i)
+                        sortedLastConfirmedBars!.remove(at: i)
+                        i -= 1
+                        continue
+                    }
+                    
+                    if (tentGantt && sortedLastConfirmedBars![i].minDuration == 0) {
+                        sortedLastConfirmedBars![i].minDuration = sortedLastConfirmedBars![i].maxDuration
+                    }
+                    
                     showEntry(index: i, entry: tempDataEntries[i], currentTime: currTime)
                 }
             }
@@ -132,14 +192,14 @@ class GanttChartView: UIView, UITextViewDelegate {
             // Automatically adjust scroll so that the left side of the screen is a few hours behind current time
             barsScrollView.contentOffset.x  = minsToX(mins: self.currTime ) - minsToX(mins: 180 )
             scaleScrollView.contentOffset.x = minsToX(mins: self.currTime ) - minsToX(mins: 180 )
+            
         }
     }
     
     
     // Take a BarEntry object and create and display a visual bar representing it
     private func showEntry(index: Int, entry: BarEntry, currentTime: Int) {
-        
-        
+        var entry = entry
         
         // Starting x postion of the bar
         let xPos: CGFloat = leftSpace + minsToX(mins: entry.EST)
@@ -150,29 +210,99 @@ class GanttChartView: UIView, UITextViewDelegate {
         // barLength is actual left-to-right length of bar in pixels
         var barLength: CGFloat
         
+        // color that will appear behind the activity names
+        var nameColor: UIColor = UIColor.clear
+        
         // if this activity is already completed
         if (entry.LET <= currentTime) {
             // draw activity participation time
             barLength = minsToX ( mins: entry.LET - entry.EST )
-            drawBar(xPos_left: xPos, yPos_top: yPos, barLength: barLength, color: finishedColor)
+            drawBar(xPos_left: xPos, yPos_top: yPos, barLength: barLength, color: finishedColor, type: "default")
         }
-        // if this activity is not yet completed, draw duration
+        // if this activity is not yet completed, draw duration & availibility
         else {
-            // draw availability
-            barLength = minsToX ( mins: entry.LET - entry.EST )
-            drawBar(xPos_left: xPos, yPos_top: yPos, barLength: barLength, color: entry.color)
             
-            // draw max duration
-            barLength = minsToX ( mins: entry.maxDuration )
-            drawBar(xPos_left: xPos, yPos_top: yPos, barLength: barLength, color: UIColor.lightGray)
+            // if this activity is optional (min duration = 0), display using the max duration
+            if (entry.minDuration == 0) {
+                entry.minDuration = entry.maxDuration
+            }
             
-            // draw min duration
-            barLength = minsToX ( mins: entry.minDuration )
-            drawBar(xPos_left: xPos + minsToX(mins: entry.maxDuration/2 - entry.minDuration/2), yPos_top: yPos, barLength: barLength, color: UIColor.darkGray)
+            
+            // if this is a tentative action, show old availability/duration with hollow bars
+            if tentGantt {
+                let oldEntry = sortedLastConfirmedBars![index]
+                
+                // draw availability
+                // if availability has shrunk, color it darker
+                let avail = entry.LET - entry.EST
+                let oldAvail = oldEntry.LET - oldEntry.EST
+                barLength = minsToX ( mins: avail )
+                
+                var red: CGFloat = 0
+                var green: CGFloat = 0
+                var blue: CGFloat = 0
+                var alpha: CGFloat = 0
+                blueGradStart.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+                
+                let restrictRatio = Double(avail) / Double(oldAvail)
+                
+                let barColor = UIColor(red: red, green: green*CGFloat(restrictRatio), blue: blue, alpha: 1.0)
+                drawBar(xPos_left: xPos, yPos_top: yPos, barLength: barLength, color: barColor, type: "default")
+                
+                // draw min duration
+                // if the duration has changed, paint the bar red
+                barLength = minsToX ( mins: entry.minDuration )
+                var durColor: UIColor
+                if (entry.isTentAct) { durColor = currentTentActColor
+                } else if (entry.minDuration == oldEntry.minDuration || entry.EST == currentTime) { durColor = durDefaultColor
+                } else { durColor = UIColor.darkGray }
+                drawBar(xPos_left: xPos, yPos_top: yPos, barLength: barLength, color: durColor, type: "default")
+                
+                
+                // Starting x postion of the old bar
+                let oldxPos: CGFloat = leftSpace + minsToX(mins: oldEntry.EST)
+                
+                // draw old availability
+                barLength = minsToX ( mins: oldEntry.LET - oldEntry.EST )
+                drawBar(xPos_left: oldxPos, yPos_top: yPos, barLength: barLength, color: UIColor.darkGray, type: "hollow")
+                
+                // draw old min duration
+                barLength = minsToX ( mins: oldEntry.minDuration )
+                drawBar(xPos_left: xPos, yPos_top: yPos, barLength: barLength, color: UIColor.darkGray, type: "hollow")
+            
+                // adjust the coloring behind the name to match the bar coloring level
+                if (entry.isTentAct) { // if this is the tentative activity being investigated
+                    nameColor = currentTentActColor
+                } else {
+                    nameColor = UIColor(red: red, green: green*CGFloat(restrictRatio), blue: blue, alpha: 1.0)
+                }
+            
+            } // else if not a tentative gantt, do not color things relative to previous entries
+            else {
+                
+                // draw availability w/ outline
+                // if availability has shrunk, paint it red
+                let avail = entry.LET - entry.EST
+                barLength = minsToX ( mins: avail )
+                drawBar(xPos_left: xPos, yPos_top: yPos, barLength: barLength, color: blueGradStart, type: "default")
+                drawBar(xPos_left: xPos, yPos_top: yPos, barLength: barLength, color: UIColor.darkGray, type: "hollow")
+                
+                // draw min duration w/ outline
+                // if the duration has changed, paint the bar red
+                barLength = minsToX ( mins: entry.minDuration )
+                drawBar(xPos_left: xPos, yPos_top: yPos, barLength: barLength, color: durDefaultColor, type: "default")
+                drawBar(xPos_left: xPos, yPos_top: yPos, barLength: barLength, color: UIColor.darkGray, type: "hollow")
+                
+
+                
+                nameColor = UIColor.clear
+            }
+            
         }
         
-        // Draw label in the middle of the bar
-        drawBarTextLabel(yPos_top: yPos + barHeight/4, xPos: leftSpace + minsToX(mins: entry.EST), textValue: entry.activityName)
+        
+        // Draw label on left for bar
+        drawActName(yPos_top: yPos + barHeight/4, xPos: leftSpace + minsToX(mins: entry.EST), textValue: entry.activityName, backColor: nameColor)
         
         // Draw title to the left of the bar
 //        drawBarTextTitle(xPos_left: 10, yPos_top: yPos + barHeight*3/10, title: entry.title, color: entry.color)
@@ -185,42 +315,43 @@ class GanttChartView: UIView, UITextViewDelegate {
     // yPos: starting y position of bar (top)
     // barLength: length of bar in pixels
     // color: UIColor of bar
-    private func drawBar(xPos_left: CGFloat, yPos_top: CGFloat, barLength: CGFloat, color: UIColor) {
+    private func drawBar(xPos_left: CGFloat, yPos_top: CGFloat, barLength: CGFloat, color: UIColor, type: String) {
         
-        let barLength = max(barLength - 7.5*2, 0)
+        let barLength = max(barLength, 0)
         
-        let xPos_left = xPos_left + 7.5
+        let xPos_left = xPos_left
         
         let path: UIBezierPath = UIBezierPath()
         
-//        path.move(to: CGPoint(x: xPos_left + barHeight/4, y: yPos_top))
-//
-//
-//        // TODO: Display of bar is wrong when barHeight > barLength
-////        // draw 4 sides and 2 half-circles to fill
-//        path.addLine(to: CGPoint(x: xPos_left + barLength - barHeight/4,  y: yPos_top))
-////        path.addArc(withCenter: CGPoint(x: xPos_left + barLength - barHeight/4, y: yPos_top + barHeight/4), radius: barHeight/4, startAngle: CGFloat.pi/2.0, endAngle: 3.0*CGFloat.pi/2.0, clockwise: false) // addArc moves cursor to center of arc
-//        path.addCurve(to: CGPoint(x: xPos_left + barLength - barHeight/4,  y: yPos_top + barHeight), controlPoint1: CGPoint(x: xPos_left + barLength, y: yPos_top), controlPoint2: CGPoint(x: xPos_left + barLength, y: yPos_top + barHeight))
-//
-//        path.addLine(to: CGPoint(x: xPos_left + barLength - barHeight/4,  y: yPos_top + barHeight))
-//        path.addLine(to: CGPoint(x: xPos_left + barHeight/4,                            y: yPos_top + barHeight))
-////        path.addArc(withCenter: CGPoint(x: xPos_left + barHeight/4, y: yPos_top + barHeight/4), radius: barHeight/4, startAngle: 3.0*CGFloat.pi/2.0, endAngle: CGFloat.pi/2.0, clockwise: false)
-
-                path.move(to: CGPoint(x: xPos_left, y: yPos_top))
+        let cornerRadius = CGFloat(5)
         
-        
-                // TODO: Display of bar is wrong when barHeight > barLength
-        //        // draw 4 sides and 2 half-circles to fill
-                path.addLine(to: CGPoint(x: xPos_left + barLength,  y: yPos_top))
-        //        path.addArc(withCenter: CGPoint(x: xPos_left + barLength - barHeight/4, y: yPos_top + barHeight/4), radius: barHeight/4, startAngle: CGFloat.pi/2.0, endAngle: 3.0*CGFloat.pi/2.0, clockwise: false) // addArc moves cursor to center of arc
-                path.addCurve(to: CGPoint(x: xPos_left + barLength,  y: yPos_top + barHeight), controlPoint1: CGPoint(x: xPos_left + barLength + 10, y: yPos_top), controlPoint2: CGPoint(x: xPos_left + barLength + 10, y: yPos_top + barHeight))
-        
-                path.addLine(to: CGPoint(x: xPos_left + barLength,  y: yPos_top + barHeight))
-                path.addLine(to: CGPoint(x: xPos_left,                            y: yPos_top + barHeight))
-                path.addCurve(to: CGPoint(x: xPos_left,  y: yPos_top), controlPoint1: CGPoint(x: xPos_left - 10, y: yPos_top + barHeight), controlPoint2: CGPoint(x: xPos_left - 10, y: yPos_top))
 
-        //        path.addArc(withCenter: CGPoint(x: xPos_left + barHeight/4, y: yPos_top + barHeight/4), radius: barHeight/4, startAngle: 3.0*CGFloat.pi/2.0, endAngle: CGFloat.pi/2.0, clockwise: false)
+        // draw side lines and corner curves
+        path.move(to: CGPoint(x: xPos_left + cornerRadius, y: yPos_top))
 
+        path.addLine(to: CGPoint(x: xPos_left + barLength - cornerRadius,  y: yPos_top))
+
+        path.addCurve(to: CGPoint(x: xPos_left + barLength,  y: yPos_top + cornerRadius),
+                      controlPoint1: CGPoint(x: xPos_left + barLength, y: yPos_top),
+                      controlPoint2: CGPoint(x: xPos_left + barLength, y: yPos_top))
+
+        path.addLine(to: CGPoint(x: xPos_left + barLength,  y: yPos_top + barHeight - cornerRadius))
+
+        path.addCurve(to: CGPoint(x: xPos_left + barLength - cornerRadius,  y: yPos_top + barHeight),
+              controlPoint1: CGPoint(x: xPos_left + barLength, y: yPos_top + barHeight),
+              controlPoint2: CGPoint(x: xPos_left + barLength, y: yPos_top + barHeight))
+
+        path.addLine(to: CGPoint(x: xPos_left + cornerRadius,  y: yPos_top + barHeight))
+
+        path.addCurve(to: CGPoint(x: xPos_left,  y: yPos_top + barHeight - cornerRadius),
+              controlPoint1: CGPoint(x: xPos_left, y: yPos_top + barHeight),
+              controlPoint2: CGPoint(x: xPos_left, y: yPos_top + barHeight))
+
+        path.addLine(to: CGPoint(x: xPos_left, y: yPos_top + cornerRadius))
+
+        path.addCurve(to: CGPoint(x: xPos_left + cornerRadius,  y: yPos_top),
+                      controlPoint1: CGPoint(x: xPos_left, y: yPos_top),
+                      controlPoint2: CGPoint(x: xPos_left, y: yPos_top))
         
         path.close()
         
@@ -228,19 +359,26 @@ class GanttChartView: UIView, UITextViewDelegate {
         let pathLayer = CAShapeLayer()
         pathLayer.path = path.cgPath
         pathLayer.lineWidth = 0.5
-        pathLayer.fillColor = color.cgColor
         pathLayer.strokeColor = color.cgColor
+        
+        if type == "hollow" {
+            pathLayer.fillColor = UIColor.clear.cgColor
+        } else {
+            pathLayer.fillColor = color.cgColor
+        }
         
         barsDrawLayer.addSublayer(pathLayer)
         
     }
     
     
-    // Draw the text on a bar in the chart
-    private func drawBarTextLabel(yPos_top: CGFloat, xPos: CGFloat, textValue: String) {
+    // Draw the text on left for a bar in the chart
+    private func drawActName(yPos_top: CGFloat, xPos: CGFloat, textValue: String, backColor: UIColor) {
+        let w = namesWidth - 10.0
+        drawNameRect(topY: yPos_top - barSpace, color: backColor)
         let textLayer = CATextLayer()
-        let textBoxWidth = CGFloat(100.0)
-        textLayer.frame = CGRect(x: xPos - textBoxWidth - 10, y: yPos_top, width: textBoxWidth, height: barHeight)
+//        textLayer.frame = CGRect(x: xPos - textBoxWidth - 10, y: yPos_top, width: textBoxWidth, height: barHeight)
+        textLayer.frame = CGRect(x: 0, y: yPos_top, width: w, height: barHeight)
         textLayer.foregroundColor = UIColor.black.cgColor
         textLayer.backgroundColor = UIColor.clear.cgColor
         textLayer.alignmentMode = kCAAlignmentRight
@@ -248,23 +386,10 @@ class GanttChartView: UIView, UITextViewDelegate {
         textLayer.font = CTFontCreateWithName(UIFont.systemFont(ofSize: 0).fontName as CFString, 0, nil)
         textLayer.fontSize = 14
         textLayer.string = textValue
-        barsDrawLayer.addSublayer(textLayer)
+        namesDrawLayer.addSublayer(textLayer)
     }
     
     
-    // Draw the text below a bar in the chart
-    private func drawBarTextTitle(xPos_left: CGFloat, yPos_top: CGFloat, title: String, color: UIColor) {
-        let textLayer = CATextLayer()
-        textLayer.frame = CGRect(x: xPos_left, y: yPos_top, width: leftSpace - xPos_left - 5, height: barHeight)
-        textLayer.foregroundColor = color.cgColor
-        textLayer.backgroundColor = UIColor.clear.cgColor
-        textLayer.alignmentMode = kCAAlignmentRight
-        textLayer.contentsScale = UIScreen.main.scale
-        textLayer.font = CTFontCreateWithName(UIFont.systemFont(ofSize: 0).fontName as CFString, 0, nil)
-        textLayer.fontSize = 14
-        textLayer.string = title
-        barsDrawLayer.addSublayer(textLayer)
-    }
     
     
     // Convert height percent (0.0 - 1.0) to actual bar height relative to GanttChartView
@@ -286,18 +411,29 @@ class GanttChartView: UIView, UITextViewDelegate {
             drawVertLine(x: minsToX(mins: i*60) + leftSpace, color: UIColor.gray, lineType: "dashed")
             drawScaleLabel(mins: i*60)
         }
+        
+        // draw line that will show on the right side of the names
+        let namesPath = UIBezierPath()
+        namesPath.move(to: CGPoint(x: namesWidth-1, y: 0.0))
+        namesPath.addLine(to: CGPoint( x: namesWidth-1, y: namesScrollView.frame.height ))
+        
+        let lineLayerNames = CAShapeLayer()
+        lineLayerNames.path = namesPath.cgPath
+        lineLayerNames.lineWidth = 0.5
+        lineLayerNames.strokeColor = UIColor.black.cgColor
+        namesDrawLayer.insertSublayer(lineLayerNames, at: 0)
     }
     
     // draw a horizontal line across the chart
     // will be at height yPos and will go all the way across the chart
     private func drawHorzLine(y: CGFloat, color: UIColor, lineType: String) {
         
-        let xPos = CGFloat(0.0)
+        let xPos = namesWidth
         let yPos = y
         
         let path = UIBezierPath()
         path.move(to: CGPoint(x: xPos, y: yPos))
-        path.addLine(to: CGPoint(x: barsScrollView.frame.size.width, y: yPos))
+        path.addLine(to: CGPoint(x: self.layer.frame.size.width, y: yPos))
         
         let lineLayer = CAShapeLayer()
         lineLayer.path = path.cgPath
@@ -305,7 +441,7 @@ class GanttChartView: UIView, UITextViewDelegate {
         if lineType == "dashed" {
             lineLayer.lineDashPattern = [4, 4]
         }
-        lineLayer.strokeColor = color.cgColor
+        lineLayer.strokeColor = UIColor.black.cgColor
         self.layer.insertSublayer(lineLayer, at: 0)
         
     }
@@ -349,6 +485,94 @@ class GanttChartView: UIView, UITextViewDelegate {
         scaleDrawLayer.insertSublayer(lineLayerScale, at: 0)
     }
     
+    
+    // Draw a rectangle box with rounded corners
+    func drawNameRect(topY: CGFloat, color: UIColor) {
+        let width = namesWidth
+        let height = barHeight + barSpace + 1
+        
+        let path: UIBezierPath = UIBezierPath()
+        
+        path.move(to: CGPoint(x: 0.0, y: topY))
+        
+        path.addLine(to: CGPoint(x: width,  y: topY))
+        
+        path.addLine(to: CGPoint(x: width,  y: topY + height))
+        
+        path.addLine(to: CGPoint(x: 0.0,  y: topY + height))
+        
+        path.close()
+        
+        // make shape from lines and fill rectangle
+        let pathLayer = CAShapeLayer()
+        pathLayer.path = path.cgPath
+        pathLayer.lineWidth = 1
+        pathLayer.fillColor = color.cgColor
+        pathLayer.strokeColor = UIColor.clear.cgColor
+        
+        namesDrawLayer.addSublayer(pathLayer)
+    }
+    
+    
+    // draw a clock display as a box with a simple text display of time inside
+    private func drawClock(xPos_left: CGFloat, yPos_top: CGFloat, time: Int) {
+        
+        let boxWidth: CGFloat = 100
+        let boxHeight: CGFloat = 50
+        
+        let xPos_left = xPos_left
+        
+        let path: UIBezierPath = UIBezierPath()
+        
+        let cornerRadius = CGFloat(5)
+        
+        
+        // draw side lines and corner curves
+        path.move(to: CGPoint(x: xPos_left + cornerRadius, y: yPos_top))
+        
+        path.addLine(to: CGPoint(x: xPos_left + boxWidth - cornerRadius,  y: yPos_top))
+        
+        path.addCurve(to: CGPoint(x: xPos_left + boxWidth,  y: yPos_top + cornerRadius),
+                      controlPoint1: CGPoint(x: xPos_left + boxWidth, y: yPos_top),
+                      controlPoint2: CGPoint(x: xPos_left + boxWidth, y: yPos_top))
+        
+        path.addLine(to: CGPoint(x: xPos_left + boxWidth,  y: yPos_top + boxHeight - cornerRadius))
+        
+        path.addCurve(to: CGPoint(x: xPos_left + boxWidth - cornerRadius,  y: yPos_top + boxHeight),
+                      controlPoint1: CGPoint(x: xPos_left + boxWidth, y: yPos_top + boxHeight),
+                      controlPoint2: CGPoint(x: xPos_left + boxWidth, y: yPos_top + boxHeight))
+        
+        path.addLine(to: CGPoint(x: xPos_left + cornerRadius,  y: yPos_top + boxHeight))
+        
+        path.addCurve(to: CGPoint(x: xPos_left,  y: yPos_top + boxHeight - cornerRadius),
+                      controlPoint1: CGPoint(x: xPos_left, y: yPos_top + boxHeight),
+                      controlPoint2: CGPoint(x: xPos_left, y: yPos_top + boxHeight))
+        
+        path.addLine(to: CGPoint(x: xPos_left, y: yPos_top + cornerRadius))
+        
+        path.addCurve(to: CGPoint(x: xPos_left + cornerRadius,  y: yPos_top),
+                      controlPoint1: CGPoint(x: xPos_left, y: yPos_top),
+                      controlPoint2: CGPoint(x: xPos_left, y: yPos_top))
+        
+        path.close()
+        
+        let pathLayer = CAShapeLayer()
+        pathLayer.path = path.cgPath
+        pathLayer.lineWidth = 1
+        pathLayer.fillColor = UIColor.white.cgColor
+        pathLayer.strokeColor = UIColor.black.cgColor
+        
+        self.layer.addSublayer(pathLayer)
+        
+    }
+    
+    // update the displayed clock time
+    // input: time in minutes since start of day
+    private func updateClock(newTime: Int) {
+        
+        
+    }
+    
     // draw a label on the x scale (ex: 14:00)
     private func drawScaleLabel(mins: Int) {
         let xPos = minsToX(mins: mins-30) + leftSpace // left of text
@@ -362,7 +586,6 @@ class GanttChartView: UIView, UITextViewDelegate {
         textLayer.string = String(mins / 60) + ":00"
         
         scaleDrawLayer.insertSublayer(textLayer, at: 0)
-        
     }
     
     // Convert from minutes to the X pixel coordinate from left side of plot
@@ -374,25 +597,27 @@ class GanttChartView: UIView, UITextViewDelegate {
     
     // The struct containing all the info represented by a visual bar
     struct BarEntry {
-        let color: UIColor
+        var color: UIColor
         
-        let ID: Int
+        var ID: Int
         
-        let EST: Int
+        var isTentAct: Bool
         
-        let LET: Int
+        var EST: Int
         
-        let minDuration: Int
+        var LET: Int
         
-        let maxDuration: Int
+        var minDuration: Int
         
-        let restrict: Double
+        var maxDuration: Int
+        
+        var restrict: Double
         
         /// To be shown on top of the bar
-        let activityName: String
+        var activityName: String
         
         /// To be shown at the bottom of the bar
-        let title: String
+        var title: String
     }
 
 }

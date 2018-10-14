@@ -41,8 +41,7 @@ import stp.TemporalDifference;
 import stp.Timepoint;
 import util.MultiNode;
 import util.Node;
-
-
+import util.XMLParser;
 import dtp.*;
 
 import util.AppServer;
@@ -96,6 +95,7 @@ public class InteractionStageGUI implements Runnable {
 	public boolean processingTentativeAct = false;
 	public boolean processingConfirmedAct = false;
 	public boolean processingModify = false;
+	public boolean processingAdd = false;
 	public boolean processingAdvSysTime = false;
 //	public String  processingAgentNum     = "";
 	public boolean readyForNextReq = true;
@@ -127,7 +127,7 @@ public class InteractionStageGUI implements Runnable {
 		System.out.println("1 - multiagentSampleProblem_simp.xml");
 		System.out.println("2 - multiagentSampleProblem.xml");
 		System.out.println("3 - toyexample.xml");
-		System.out.println("4 - DTPtoyexample.xml");
+		System.out.println("4 - drew_test.xml");
 		System.out.println("5 - DUTPtoyexampleNoSE.xml");
 		System.out.println("6 - toyExampleEd.xml");
 		System.out.println("7 - parentSampleProblem.xml");
@@ -140,7 +140,7 @@ public class InteractionStageGUI implements Runnable {
 		case 1: problemFile = "multiagentSampleProblem_simp.xml"; break;
 		case 2: problemFile = "multiagentSampleProblem.xml"; break;
 		case 3: problemFile = "toyexample.xml"; break;
-		case 4: problemFile = "DTPtoyexample.xml"; break;
+		case 4: problemFile = "drew_test.xml"; break;
 		case 5: problemFile = "DUTPtoyexampleNoSE.xml"; break;
 		case 6: problemFile = "toyExampleEd.xml"; break;
 		case 7: problemFile = "parentSampleProblem.xml"; break;
@@ -193,6 +193,121 @@ public class InteractionStageGUI implements Runnable {
 		
 		// this is where JSON requests from clients will be put
 		JSONObject jsonIN = new JSONObject();
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		/* TEMP TEST
+		 * TODO: Test this then remove
+		 * The idea here is to allow a user to add an activity through the server but to do it before any of the typical looping and
+		 * before they get a chance to select activities. This is theoretically the simplest place to add a new activity, and if it can be
+		 * first done here, it should be easier to expand out to the future case 
+		 */
+/*		
+		String addActName = "TestAddAct";
+		int newMinDurs_add = 30;   //new ArrayList<String>(); newMinDurs_add.add("00:30");
+		int newMaxDurs_add = 240;  //new ArrayList<String>(); newMinDurs_add.add("02:00");
+		int newEST_add 			= 0000;
+		int newLST_add 			= 540;
+		int newEET_add 			= 30;
+		int newLET_add 			= 660;
+
+
+		DisjunctiveTemporalProblem beforeAddDTP = dtp.clone();
+		
+		
+		//dtp = new ProblemLoader().loadDTPFromFile(problemFile);
+		System.out.println(problemFile + " loaded succesfully.\n\n"); // file loaded correctly
+
+		
+
+		
+		
+		// code chunk below is from inside simple dtp when initializing
+				// So, ignoring constraints, it appears all that needs to be done to create a dtp is add timepoints
+				// Can this be replaced by the addTimepoint() method?
+				//     ^^ addTimepoint does all of below 
+				//		^^ SO -> YES
+		Timepoint start = new Timepoint(addActName+"_S",0); //Drew: add timepoint to agent 0
+		Timepoint end = new Timepoint(addActName+"_E",0);
+		dtp.addTimepoint(start);   // Drew: zero timepoint is already added in the initialization
+		dtp.addTimepoint(end);
+		initialDTP.addTimepoint(start);
+		initialDTP.addTimepoint(end);
+		
+		
+		// next question: What are the constraints that need to be added?
+				// if constraints are ignored, just need timepoints that have actname_S and actname_E
+				// however, including constraints is necessary to set est, let, eet, lst, and min/max duration
+		
+		// get duration bounds
+		ArrayList<TemporalDifference> new_minDurs = new ArrayList<TemporalDifference>();
+		ArrayList<TemporalDifference> new_maxDurs = new ArrayList<TemporalDifference>();
+		int minDuration = newMinDurs_add;
+		int maxDuration = newMaxDurs_add;
+		new_minDurs.add(new TemporalDifference(start,end,-minDuration)); // Drew: Should minDuration be negative or positive coming into this line
+		new_maxDurs.add(new TemporalDifference(end,start,maxDuration));
+		ArrayList<ArrayList<TemporalDifference>> tdVec = new ArrayList<ArrayList<TemporalDifference>>();
+		tdVec.add(new_minDurs);
+		tdVec.add(new_maxDurs);
+		dtp.addAdditionalConstraints( DisjunctiveTemporalConstraint.crossProduct(tdVec) ); // Drew: Here we are adding 'additionalConstraints' as opposed to 'tempConstraints'
+		initialDTP.addAdditionalConstraints( DisjunctiveTemporalConstraint.crossProduct(tdVec) );																				// does it matter?
+		
+		// get avail bounds
+		//default values of 0 for earliest start-/end- times, infinite for latest start-/end-times
+		ArrayList<TemporalDifference> eStart = new ArrayList<TemporalDifference>();
+		ArrayList<TemporalDifference> lStart = new ArrayList<TemporalDifference>();
+		ArrayList<TemporalDifference> eEnd = new ArrayList<TemporalDifference>();
+		ArrayList<TemporalDifference> lEnd = new ArrayList<TemporalDifference>();
+			
+		Timepoint zero = dtp.getTimepoint("zero");
+		int est = newEST_add;
+		int lst = newLST_add;
+		int eet = newEET_add;
+		int let = newLET_add;
+		eStart.add(new TemporalDifference(zero,start,-est));
+		lStart.add(new TemporalDifference(start,zero,lst));
+		eEnd.add(new TemporalDifference(zero,end,-eet));
+		lEnd.add(new TemporalDifference(end,zero,let));
+
+		tdVec.clear();
+		tdVec.add(eStart);
+		tdVec.add(lStart);
+		tdVec.add(eEnd);
+		tdVec.add(lEnd);
+		dtp.addAdditionalConstraints( DisjunctiveTemporalConstraint.crossProduct(tdVec) );
+		initialDTP.addAdditionalConstraints( DisjunctiveTemporalConstraint.crossProduct(tdVec) );
+		
+		
+		
+		// reconfigure the DTP with new timepoints and constraints
+		dtp.updateInternalData();
+		dtp.enumerateSolutions(0);	
+		dtp.simplifyMinNetIntervals();
+		initialDTP.updateInternalData();
+		initialDTP.enumerateSolutions(0);	
+		initialDTP.simplifyMinNetIntervals(); // initialDTP also needs to be updated with added activities, although it will maintain its state of no confirmed acitivities
+		
+*/		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
 		
 		/*
 		 * Begin loop
@@ -311,12 +426,13 @@ public class InteractionStageGUI implements Runnable {
 				
 				
 				// depending on the request type of last request, communicate system changes to clients
-				if (processingConfirmedAct || processingTentativeAct || processingModify || processingAdvSysTime || processingStartup) {
+				if (processingConfirmedAct || processingTentativeAct || processingModify || processingAdd || processingAdvSysTime || processingStartup) {
 					
 					// if this is not a tentative activity selection, send new activity options to each client
 					if (!processingTentativeAct) {
 						sendCurrentChoicesToAllClients(activities, nextActsMinDur, nextActsMaxDur);
 						processingModify = false;
+						processingAdd = false;
 						processingAdvSysTime = false;
 					}
 					
@@ -495,35 +611,74 @@ public class InteractionStageGUI implements Runnable {
 					case "modifyActivity":
 						
 						prevDTP = dtp.clone();
-						SimpleEntry<Integer, DisjunctiveTemporalProblem> tempSE = new SimpleEntry<Integer, DisjunctiveTemporalProblem>(getSystemTime(), prevDTP);
-						Stack<SimpleEntry<Integer, DisjunctiveTemporalProblem>> tempStack = new Stack<SimpleEntry<Integer, DisjunctiveTemporalProblem>>();
-						tempStack.push(tempSE);
-						previousDTPs.add( tempStack );
+						SimpleEntry<Integer, DisjunctiveTemporalProblem> tempSE_mod = new SimpleEntry<Integer, DisjunctiveTemporalProblem>(getSystemTime(), prevDTP);
+						Stack<SimpleEntry<Integer, DisjunctiveTemporalProblem>> tempStack_mod = new Stack<SimpleEntry<Integer, DisjunctiveTemporalProblem>>();
+						tempStack_mod.push(tempSE_mod);
+						previousDTPs.add( tempStack_mod );
 						
-						JSONObject actJSON = (JSONObject) inJSON.get("actDetails");
+						JSONObject actJSON_mod = (JSONObject) inJSON.get("actDetails");
 						
-						List<String> newMinDurs  = (ArrayList<String>) actJSON.get("minDurs"); // format:  hh:mm
-						List<String> newMaxDurs  = (ArrayList<String>) actJSON.get("maxDurs"); // format:  hh:mm
-						String newEST 			 = String.valueOf(actJSON.get("EST")); // format:  hh:mm
-						String newLST 			 = String.valueOf(actJSON.get("LST")); // format:  hh:mm
-						String newEET 			 = String.valueOf(actJSON.get("EET")); // format:  hh:mm
-						String newLET 			 = String.valueOf(actJSON.get("LET")); // format:  hh:mm
+						List<String> newMinDurs_mod  = (ArrayList<String>) actJSON_mod.get("minDurs"); // format:  hh:mm
+						List<String> newMaxDurs_mod  = (ArrayList<String>) actJSON_mod.get("maxDurs"); // format:  hh:mm
+						String newEST_mod 			 = String.valueOf(actJSON_mod.get("EST")); // format:  hh:mm
+						String newLST_mod 			 = String.valueOf(actJSON_mod.get("LST")); // format:  hh:mm
+						String newEET_mod 			 = String.valueOf(actJSON_mod.get("EET")); // format:  hh:mm
+						String newLET_mod 			 = String.valueOf(actJSON_mod.get("LET")); // format:  hh:mm
 						
 						// Duration
-						AddIntervalSet(actName+"_S", actName+"_E", getSystemTime(), Generics.stringToInterval( "[" + newMinDurs.get(0) + "," + newMaxDurs.get(0) + "]" ) );
+						AddIntervalSet(actName+"_S", actName+"_E", getSystemTime(), Generics.stringToInterval( "[" + newMinDurs_mod.get(0) + "," + newMaxDurs_mod.get(0) + "]" ) );
 						
 						// if no value submitted for these, use default max value
-						if (newEST.equals("")) {newEST = "00:00";}
-						if (newLST.equals("")) {newLST = "24:00";}
-						if (newEET.equals("")) {newEET = "00:00";}
-						if (newLET.equals("")) {newLET = "24:00";}
+						if (newEST_mod.equals("")) {newEST_mod = "00:00";}
+						if (newLST_mod.equals("")) {newLST_mod = "24:00";}
+						if (newEET_mod.equals("")) {newEET_mod = "00:00";}
+						if (newLET_mod.equals("")) {newLET_mod = "24:00";}
 						
 						// EST and LST
-						AddIntervalSet("zero", actName+"_S", getSystemTime(), Generics.stringToInterval( "[" + newEST + "," + newLST + "]" ) );
+						AddIntervalSet("zero", actName+"_S", getSystemTime(), Generics.stringToInterval( "[" + newEST_mod + "," + newLST_mod + "]" ) );
 						// EET and LET
-						AddIntervalSet("zero", actName+"_E", getSystemTime(), Generics.stringToInterval( "[" + newEET + "," + newLET + "]" ) );
+						AddIntervalSet("zero", actName+"_E", getSystemTime(), Generics.stringToInterval( "[" + newEET_mod + "," + newLET_mod + "]" ) );
 						
 						processingModify = true;
+						break;
+					
+						
+						// client will send this when the user has entered new (tighter) duration / availability for an activity
+						// the system is not capable of checking that the user modifications are legal => they can only tighten constraints
+						case "addActivity":
+							
+							prevDTP = dtp.clone();
+							SimpleEntry<Integer, DisjunctiveTemporalProblem> tempSE_add = new SimpleEntry<Integer, DisjunctiveTemporalProblem>(getSystemTime(), prevDTP);
+							Stack<SimpleEntry<Integer, DisjunctiveTemporalProblem>> tempStack_add = new Stack<SimpleEntry<Integer, DisjunctiveTemporalProblem>>();
+							tempStack_add.push(tempSE_add);
+							previousDTPs.add( tempStack_add );
+							
+							JSONObject actJSON_add = (JSONObject) inJSON.get("actDetails");
+							
+//							List<String> newMinDurs_add  = (ArrayList<String>) actJSON_add.get("minDurs"); // format:  hh:mm
+//							List<String> newMaxDurs_add  = (ArrayList<String>) actJSON_add.get("maxDurs"); // format:  hh:mm
+//							String newEST_add 			 = String.valueOf(actJSON_add.get("EST")); // format:  hh:mm
+//							String newLST_add 			 = String.valueOf(actJSON_add.get("LST")); // format:  hh:mm
+//							String newEET_add 			 = String.valueOf(actJSON_add.get("EET")); // format:  hh:mm
+//							String newLET_add 			 = String.valueOf(actJSON_add.get("LET")); // format:  hh:mm
+							
+							// Duration
+//							AddIntervalSet(actName+"_S", actName+"_E", getSystemTime(), Generics.stringToInterval( "[" + newMinDurs_add.get(0) + "," + newMaxDurs_add.get(0) + "]" ) );
+							
+							// if no value submitted for these, use default max value
+//							if (newEST_add.equals("")) {newEST_add = "00:00";}
+//							if (newLST_add.equals("")) {newLST_add = "24:00";}
+//							if (newEET_add.equals("")) {newEET_add = "00:00";}
+//							if (newLET_add.equals("")) {newLET_add = "24:00";}
+							
+//							// EST and LST
+//							AddIntervalSet("zero", actName+"_S", getSystemTime(), Generics.stringToInterval( "[" + newEST_add + "," + newLST_add + "]" ) );
+//							// EET and LET
+//							AddIntervalSet("zero", actName+"_E", getSystemTime(), Generics.stringToInterval( "[" + newEET_add + "," + newLET_add + "]" ) );
+							
+							processingAdd = true;
+							
+							break;
 						
 					// temporary demo system to allow a client to trigger an advancing of time to the next decision point (minTime)
 					case "advSysTime":
@@ -551,7 +706,7 @@ public class InteractionStageGUI implements Runnable {
 				}
 				
 			} catch (Exception e) {
-				System.err.println("Error.  Please try again.\n"+e.toString()+"\n"+Arrays.toString(e.getStackTrace()));
+				System.err.println("Error in request processing.  Please try again.\n"+e.toString()+"\n"+Arrays.toString(e.getStackTrace()));
 				System.err.flush();
 			}
 		}

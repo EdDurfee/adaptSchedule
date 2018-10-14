@@ -75,14 +75,11 @@ public class AppServerGUI extends NanoHTTPD { // implements Runnable
 
     
     /*
-     * This is how the server reacts to a request. In order to implement custom servers, this method must be overridden
-     * (non-Javadoc)
-     * @see org.nanohttpd.protocols.http.NanoHTTPD#serve(org.nanohttpd.protocols.http.IHTTPSession)
+     * This is how the server reacts to a request from a client.
      */
     @Override
     public Response serve(IHTTPSession session) {
     	
-
     	Map<String, List<String>> decodedQueryParameters = decodeParameters(session.getQueryParameterString());
     	if (DEBUG) {
 	        System.out.println("uri: " + String.valueOf(session.getUri()));
@@ -92,16 +89,9 @@ public class AppServerGUI extends NanoHTTPD { // implements Runnable
 	        System.out.println("decodedQueryParams: " + toString(decodedQueryParameters));
     	}
 	    
-        ArrayList debugArr = new ArrayList<String>();
-        debugArr.add("uri: " + String.valueOf(session.getUri()));
-        debugArr.add("method: " + String.valueOf(session.getMethod()));
-        debugArr.add("headers: " + toString(session.getHeaders()));
-        debugArr.add("params: " + toString(session.getParameters()));
-        debugArr.add("decodedQueryParams: " + toString(decodedQueryParameters));
-        
-
+    	// react depending on which type of request this is
         switch(String.valueOf(session.getMethod())) {
-        case "POST":
+        case "POST": // if a POST request
         	try {
 	        	session.getInputStream();
 	            Map<String, String> files = new HashMap<String, String>();
@@ -120,60 +110,23 @@ public class AppServerGUI extends NanoHTTPD { // implements Runnable
 	            	agentNum = (String) JSONbody.get("agentNum");
 		        	if (DEBUG) System.out.println("command value = " + cmdVal);
 		        	
-		        	/*
-		        	 * THIS DOESNT WORK
-		        	 * Because of static variables in background files, simply spawning new threads does not truly reset system
-		        	 * So for now, a new server instance is required whenever a new client is spawned
-		        	 */
 		        	if (cmdVal.equals("startup")) {
-//		        		System.out.println("New server instanced.");
-////		        		interactiveThread.stop();
-////		        		interactiveThread.interrupt();
-//	        			interactive = new InteractionStageGUI(0);
-//	            		interactiveThread = new Thread( interactive );
-//	            		interactiveThread.start();
 	            		connectionInitiated = true;
 	                	if (clientID_agent0 == null && agentNum.equals("0")) { clientID_agent0 = (String)session.getUri().substring(1); }
 	                	if (clientID_agent1 == null && agentNum.equals("1")) { clientID_agent1 = (String)session.getUri().substring(1); }
-//	            		InteractiveServNum++;
-		        	}//else {
+		        	}
 		        	interactive.fromClientQueue.put(JSONbody);
-		        	//}
 	            }
         	} catch (Exception e){
 				System.err.println("Error: "+e.toString());
 				System.err.flush();
 			}
         	break;
+        
         case "GET": // if a GET request
         	if (connectionInitiated == false) break; // ignore gets until a confirmed connection with a valid client
-        	/*
-        	 * For now, we will use this as a type of ping / polling method
-        	 * where the client sends a get every 0.2 seconds and the server
-        	 * checks if there is any queued output and sends it back, if it exists
-        	 */
+        	
         	String getClientID = session.getUri().substring(1);
-//        	if ( session.getUri().substring(1).equals(clientID) ) {
-        	
-        	
-//        	// if last request was for gantt and matches client ID, then this is an image for that client
-//        	if ( lastGetReplyInfoType.equals("ganttImage") && lastGetReplyClientID.equals(getClientID) ) {
-//        		try {
-//        			Response toReturn = Response.newChunkedResponse( Status.OK, "png", (InputStream) new FileInputStream("forClient_image.png"));
-//        			lastGetReplyInfoType = "";
-//        			lastGetReplyClientID = "";
-//        			File file = new File("forClient_image.png");
-//	                file.delete();
-//	                return toReturn;
-//	                
-//        		} catch (Exception e) {
-//        			//System.err.println("Error: "+e.toString());
-//    				//System.err.flush();
-//        			
-//        		}
-        		
-        	// if message waiting for Agent0
-//        	} else if....
         	
         	// check which agent this get is from and get the JSON to process accordingly
         	JSONObject responseJSON;
@@ -191,7 +144,8 @@ public class AppServerGUI extends NanoHTTPD { // implements Runnable
         	
         } // end of switch
         
-        // have to reply with something. So just reply with expect object with all default vals
+        // if a reply has not been sent yet, no meaninful information needs to be sent
+        // but have to reply with correct format, so reply with all default vals
         JSONObject outJSON = new JSONObject();
 		outJSON.put("infoType",        "");
 		outJSON.put("startTime",       "");
@@ -208,7 +162,7 @@ public class AppServerGUI extends NanoHTTPD { // implements Runnable
 		outJSON.put("debugInfo",       new ArrayList<String>());
 		
 		msg = outJSON.toString();
-        return Response.newFixedLengthResponse(msg); // if you have not returned before this line, the response does not require meaningful material
+        return Response.newFixedLengthResponse(msg);
     }
     
     

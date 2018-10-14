@@ -24,8 +24,8 @@ class MenuController: UITableViewController {
     var selectionActNum = -1
     var selectionDuration = 0 // time of activity in minutes
     
-    var sectSelectionChanged = false
     var actSelectionChanged = false
+    var otherSelectionChanged = false
     
 
     override func viewDidLoad() {
@@ -148,7 +148,7 @@ class MenuController: UITableViewController {
             
             // check if this is a change in section and update section flag
             if selectionSectNum != 0 {
-                sectSelectionChanged = true;
+                otherSelectionChanged = true;
                 selectionSectNum = 0
             }
             
@@ -169,19 +169,25 @@ class MenuController: UITableViewController {
             
         }
         
-        // if 'modify activity' is selected
+        // if 'add activity' is selected
+        else if (indexPath.section == 1 && indexPath.row == 0) {
+            
+            otherSelectionChanged = true
+            selectionSectNum = 1
+        }
+            
+            // if 'modify activity' is selected
         else if (indexPath.section == 1 && indexPath.row == 1) {
             
-            // check if this is a change in section and update section flag
-            if selectionSectNum != 1 {
-                sectSelectionChanged = true;
-                selectionSectNum = 1
-            }
-            // do nothing
+            otherSelectionChanged = true
+            selectionSectNum = 1
         }
         
         // if something not-yet-implemented is selected
         else {
+            selectionSectNum = -1
+            selectionActNum = -1
+            
             // alert user with popup that this feature is not yet implemented
             let alert = UIAlertController(title: "Warning", message: "This feature has not yet been implemented.", preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "Resume", style: .default, handler: nil))

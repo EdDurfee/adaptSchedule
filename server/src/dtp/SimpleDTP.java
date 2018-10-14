@@ -2201,7 +2201,7 @@ public abstract class SimpleDTP implements DisjunctiveTemporalProblem, java.io.S
 		contingentTimepoints.add(tp);
 		localTimepoints.add(tp); // adding this so getActivites works. might not make sense to keep it this way tho
 		timepoints.put(tp.getName(), tp);
-		//updateInternalData(); // do I need this call her ein this function? 
+		//updateInternalData(); // do I need this call her ein this function?
 	}
 	
 	public int getValidity(){

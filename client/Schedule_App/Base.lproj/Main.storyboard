@@ -85,7 +85,7 @@
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                             </imageView>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="wordWrap" hasAttributedTitle="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2n3-US-Iw0">
-                                <rect key="frame" x="220" y="680" width="163" height="72"/>
+                                <rect key="frame" x="320" y="680" width="163" height="72"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <color key="backgroundColor" red="0.93725490570000003" green="0.93725490570000003" blue="0.95686274770000002" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 <state key="normal">
@@ -103,7 +103,14 @@
                                     <action selector="ClickAdvSysClock:" destination="BYZ-38-t0r" eventType="touchUpInside" id="66h-05-ieC"/>
                                 </connections>
                             </button>
-                            <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="KXY-Db-k8W" customClass="ModifyActivityView" customModule="Schedule_App" customModuleProvider="target">
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="PYz-Pf-K0E">
+                                <rect key="frame" x="855" y="27" width="126" height="47"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="KXY-Db-k8W" customClass="ActivityEditView" customModule="Schedule_App" customModuleProvider="target">
                                 <rect key="frame" x="198" y="0.0" width="826" height="768"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <subviews>
@@ -227,6 +234,107 @@
                                 <color key="backgroundColor" white="0.0" alpha="0.54387654049295775" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <edgeInsets key="layoutMargins" top="40" left="40" bottom="40" right="40"/>
                             </view>
+                            <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="liH-E5-Won" userLabel="AddActivityView" customClass="ActivityEditView" customModule="Schedule_App" customModuleProvider="target">
+                                <rect key="frame" x="198" y="0.0" width="826" height="768"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <subviews>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Earliest End Time:" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="yLF-v3-Mtz">
+                                        <rect key="frame" x="466" y="342" width="172" height="21"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="20"/>
+                                        <nil key="textColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Latest End Time:" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ELl-c6-PK1">
+                                        <rect key="frame" x="466" y="435" width="172" height="21"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="20"/>
+                                        <nil key="textColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Earliest Start Time:" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="GdJ-qA-OHK">
+                                        <rect key="frame" x="189" y="342" width="172" height="21"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="20"/>
+                                        <nil key="textColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Latest Start Time:" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="e32-aZ-Sc2">
+                                        <rect key="frame" x="189" y="435" width="172" height="21"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="20"/>
+                                        <nil key="textColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <textField opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="GGw-Uy-OsJ" customClass="AvailTextBox" customModule="Schedule_App" customModuleProvider="target">
+                                        <rect key="frame" x="227" y="371" width="97" height="30"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <nil key="textColor"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                        <textInputTraits key="textInputTraits" keyboardType="numberPad"/>
+                                    </textField>
+                                    <textField opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="8Pn-wJ-4yf" customClass="AvailTextBox" customModule="Schedule_App" customModuleProvider="target">
+                                        <rect key="frame" x="504" y="371" width="97" height="30"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <nil key="textColor"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                        <textInputTraits key="textInputTraits" keyboardType="numberPad"/>
+                                    </textField>
+                                    <textField opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="elA-AE-rdK" customClass="AvailTextBox" customModule="Schedule_App" customModuleProvider="target">
+                                        <rect key="frame" x="227" y="464" width="97" height="30"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <nil key="textColor"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                        <textInputTraits key="textInputTraits" keyboardType="decimalPad"/>
+                                    </textField>
+                                    <textField opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="EhK-qk-ABo" customClass="AvailTextBox" customModule="Schedule_App" customModuleProvider="target">
+                                        <rect key="frame" x="504" y="464" width="97" height="30"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <nil key="textColor"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                        <textInputTraits key="textInputTraits" keyboardType="numbersAndPunctuation"/>
+                                    </textField>
+                                    <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" fixedFrame="YES" textAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="dgh-uX-i1n">
+                                        <rect key="frame" x="299" y="259" width="240" height="50"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                        <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                                    </textView>
+                                    <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ams-o6-WSK">
+                                        <rect key="frame" x="339" y="535" width="161" height="39"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="22"/>
+                                        <state key="normal" title="Confirm Addition"/>
+                                        <connections>
+                                            <action selector="ConfirmAddButtonClick:" destination="BYZ-38-t0r" eventType="touchUpInside" id="hjJ-a8-QtF"/>
+                                        </connections>
+                                    </button>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Duration Ranges" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="7ZT-ip-efK">
+                                        <rect key="frame" x="341" y="227" width="144" height="24"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="20"/>
+                                        <nil key="textColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Activity Name" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="A9c-EX-uF0">
+                                        <rect key="frame" x="353" y="117" width="121" height="24"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="20"/>
+                                        <nil key="textColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <textField opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="djy-y0-FP1" userLabel="Add ACTName Field" customClass="AvailTextBox" customModule="Schedule_App" customModuleProvider="target">
+                                        <rect key="frame" x="346" y="149" width="135" height="30"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <nil key="textColor"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                        <textInputTraits key="textInputTraits"/>
+                                    </textField>
+                                </subviews>
+                                <color key="backgroundColor" white="0.0" alpha="0.54387654050000001" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <edgeInsets key="layoutMargins" top="40" left="40" bottom="40" right="40"/>
+                            </view>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
@@ -239,15 +347,23 @@
                     <toolbarItems/>
                     <nil key="simulatedBottomBarMetrics"/>
                     <connections>
+                        <outlet property="AddActView" destination="liH-E5-Won" id="JTL-wA-im5"/>
+                        <outlet property="AddAct_ActNameField" destination="djy-y0-FP1" id="ndQ-ZM-H1J"/>
+                        <outlet property="AddAct_ConfirmButton" destination="ams-o6-WSK" id="gXg-l7-rKd"/>
+                        <outlet property="AddAct_DurationTextBox" destination="dgh-uX-i1n" id="ybn-t2-Lo2"/>
+                        <outlet property="AddAct_EETField" destination="8Pn-wJ-4yf" id="oPq-8C-1HU"/>
+                        <outlet property="AddAct_ESTField" destination="GGw-Uy-OsJ" id="2yM-Kc-O9p"/>
+                        <outlet property="AddAct_LETField" destination="EhK-qk-ABo" id="fhb-8p-gYU"/>
+                        <outlet property="AddAct_LSTField" destination="elA-AE-rdK" id="dbt-Gm-nuh"/>
                         <outlet property="ConfirmActButton" destination="E7I-8t-cU8" id="uH9-3s-ZuN"/>
-                        <outlet property="ConfirmModificationButton" destination="eK9-PB-nur" id="cVJ-kW-HFg"/>
-                        <outlet property="DurationTextBox" destination="OIM-VJ-1ca" id="L8g-ce-ZaX"/>
-                        <outlet property="EETField" destination="wZR-Mj-grh" id="dkf-nr-Udy"/>
-                        <outlet property="ESTField" destination="fhM-yJ-OTu" id="Ok0-86-d8t"/>
                         <outlet property="GanttChart" destination="ksU-J1-nDR" id="Nrm-sP-lFN"/>
-                        <outlet property="LETField" destination="r3h-g6-9ly" id="q6D-m5-1RL"/>
-                        <outlet property="LSTField" destination="6nQ-Ug-ZpA" id="cUJ-Ax-MeO"/>
                         <outlet property="ModActMenu" destination="OFi-jy-8Gt" id="FD2-sh-iR1"/>
+                        <outlet property="ModAct_ConfirmButton" destination="eK9-PB-nur" id="Rdm-Vs-PWU"/>
+                        <outlet property="ModAct_DurationTextBox" destination="OIM-VJ-1ca" id="cF6-dd-eQu"/>
+                        <outlet property="ModAct_EETField" destination="wZR-Mj-grh" id="xwg-uZ-r6h"/>
+                        <outlet property="ModAct_ESTField" destination="fhM-yJ-OTu" id="e8L-3j-I89"/>
+                        <outlet property="ModAct_LETField" destination="r3h-g6-9ly" id="kpy-t8-aOO"/>
+                        <outlet property="ModAct_LSTField" destination="6nQ-Ug-ZpA" id="bzU-Dh-4sw"/>
                         <outlet property="ModifyActView" destination="KXY-Db-k8W" id="jFf-r9-MaR"/>
                         <outlet property="SideMenu" destination="L5m-7S-MKr" id="qJc-PY-kqB"/>
                         <outlet property="WarningImage" destination="O9X-nJ-DO1" id="6rt-82-ioh"/>

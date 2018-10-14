@@ -41,14 +41,26 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
     // Modify Activty View that appears when user selects sidemenu 'modify activity'
     var modActMenuDelegate = ModActTableController(style: .grouped)
     @IBOutlet weak var ModActMenu: UITableView!
+    @IBOutlet weak var ModifyActView: ActivityEditView!
+    @IBOutlet weak var ModAct_ESTField: AvailTextBox!
+    @IBOutlet weak var ModAct_LSTField: AvailTextBox!
+    @IBOutlet weak var ModAct_EETField: AvailTextBox!
+    @IBOutlet weak var ModAct_LETField: AvailTextBox!
+    @IBOutlet weak var ModAct_DurationTextBox: UITextView!
+    @IBOutlet weak var ModAct_ConfirmButton: UIButton!
     
-    @IBOutlet weak var ModifyActView: ModifyActivityView!
-    @IBOutlet weak var ESTField: AvailTextBox!
-    @IBOutlet weak var LSTField: AvailTextBox!
-    @IBOutlet weak var EETField: AvailTextBox!
-    @IBOutlet weak var LETField: AvailTextBox!
-    @IBOutlet weak var DurationTextBox: UITextView!
-    @IBOutlet weak var ConfirmModificationButton: UIButton!
+    
+    // Add Activity View that appears when user selects sidemenu 'add activity'
+    @IBOutlet weak var AddActView: ActivityEditView!
+    @IBOutlet weak var AddAct_ActNameField: AvailTextBox!
+    @IBOutlet weak var AddAct_ESTField: AvailTextBox!
+    @IBOutlet weak var AddAct_LSTField: AvailTextBox!
+    @IBOutlet weak var AddAct_EETField: AvailTextBox!
+    @IBOutlet weak var AddAct_LETField: AvailTextBox!
+    @IBOutlet weak var AddAct_DurationTextBox: UITextView!
+    @IBOutlet weak var AddAct_ConfirmButton: UIButton!
+    
+    // clickable image to warn user why their system has locked them from actions
     @IBOutlet weak var WarningImage: UIImageView!
     
     
@@ -93,6 +105,7 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
         ModActMenu.dataSource = modActMenuDelegate
         
         ModifyActView.isHidden = true
+        AddActView.isHidden = true
         
         // Set the sideMenu tableView as a child view and Set the sideMenu delegate and dataSource to MenuController (sublass of TableViewController)
         addChildViewController(menuDelegate)
@@ -105,16 +118,17 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
         // testing to see how addTarget works and then see its feasibility for handeling actions inside of modifyAct view
 //        menuDelegate.picker.addTarget(self, action: #selector(testTarg(sender:)), for: .valueChanged)
         
-        ESTField.availConstraint = "EST";
-        LSTField.availConstraint = "LST";
-        EETField.availConstraint = "EET";
-        LETField.availConstraint = "LET";
+        ModAct_ESTField.availConstraint = "EST";
+        ModAct_LSTField.availConstraint = "LST";
+        ModAct_EETField.availConstraint = "EET";
+        ModAct_LETField.availConstraint = "LET";
         
-        self.DurationTextBox.delegate = self
+        self.ModAct_DurationTextBox.delegate = self
         
         drawMenuRightLine()
         drawModActMenuRightLine()
         ModifyActView.addBackgroundShape()
+        AddActView.addBackgroundShape()
 
 //        // create a pop-up requesting the IP of the server
 //        var serverIP: String? = nil
@@ -139,7 +153,7 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
         // make sure the advSystemTimeButton is always above the scale
         
         
-        advSysClockButton.frame = CGRect(x: SideMenu.frame.width + 20.0, y: self.view.frame.height - GanttChart.scaleSpace - advSysClockButton.frame.height - 20.0, width: 200, height: 72)
+        advSysClockButton.frame = CGRect(x: SideMenu.frame.width + 120.0, y: self.view.frame.height - GanttChart.scaleSpace - advSysClockButton.frame.height - 20.0, width: 200, height: 72)
         
         // initialize client
         self.aClient = client(serverIP!, agentNumber!)
@@ -201,10 +215,24 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
                 }
                 
                 // if the section selected has changed
-                if self.menuDelegate.sectSelectionChanged == true {
+                if self.menuDelegate.otherSelectionChanged == true {
                     
                     
                     DispatchQueue.main.async() {
+                        
+                        // if 'add activity' selected, display modAct screen
+                        if (self.SideMenu.indexPathForSelectedRow?.section == 1 && self.SideMenu.indexPathForSelectedRow?.row == 0) {
+                            self.AddActView.isHidden = false
+                        }
+                        
+                        // if 'add activity' screen is showing but not selected on side menu, hide it
+                        if ( self.AddActView.isHidden == false && ( self.SideMenu.indexPathForSelectedRow?.section != 1 || self.SideMenu.indexPathForSelectedRow?.row != 0 ) ) {
+                            self.AddActView.isHidden = true
+                            if self.ModActMenu.indexPathForSelectedRow != nil {
+                                self.ModActMenu.deselectRow(at: self.ModActMenu.indexPathForSelectedRow!, animated: false)
+                            }
+                        }
+                        
                         
                         // if 'modify activity' selected, display modAct screen
                         if (self.SideMenu.indexPathForSelectedRow?.section == 1 && self.SideMenu.indexPathForSelectedRow?.row == 1) {
@@ -220,10 +248,11 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
                             }
                         }
                         
+                        
                     }
                     
                     // reset sectChanged flag
-                    self.menuDelegate.sectSelectionChanged = false
+                    self.menuDelegate.otherSelectionChanged = false
                 }
                 
                 
@@ -314,16 +343,20 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
                                 // set the bar color (for tentative selections) based on how much the availability has
                                 //  been restricted relative to the last confirmed act
                                 // lower restrict values => more restricted
-                                // if lastConfirmedBars has not been set yet (which also implies this is not a tentative choice, therefore everything will be green 'non-restricted')
-                                if (self.lastConfirmedBars != nil) {
-                                    // if it has been restricted twice as much as previous:
-                                    // 50% threshold
-                                    if (self.lastConfirmedBars![actNum].restrict > 1.5 * Double(actRestricts[actNum])!) {
-                                        barColor = self.stronglyRestrictColor
-                                    } // if it has been restricted any more than previous but less than double:
-                                    else if (self.lastConfirmedBars![actNum].restrict > Double(actRestricts[actNum])!) {
-                                        barColor = self.weaklyRestrictedColor
-                                    }
+                                // if the side menu has something selected in section 0, this is a tent selection
+//                                NOTE: THIS BAR COLOR SELECTION SYSTEM WAS REPLACED WITH A SIMPLER SYSTEM INSIDE OF GanttChartView
+                                if (self.SideMenu.indexPathForSelectedRow?.section == 0) {
+//                                    // if it has been restricted twice as much as previous:
+//                                    // 50% threshold
+//                                    if (self.lastConfirmedBars![actNum].restrict > 1.5 * Double(actRestricts[actNum])!) {
+//                                        barColor = self.stronglyRestrictColor
+//                                    } // if it has been restricted any more than previous but less than double:
+//                                    else if (self.lastConfirmedBars![actNum].restrict > Double(actRestricts[actNum])!) {
+//                                        barColor = self.weaklyRestrictedColor
+//                                    }
+                                    self.GanttChart.tentGantt = true;
+                                } else {
+                                    self.GanttChart.tentGantt = false;
                                 }
                                 
                                 
@@ -332,28 +365,35 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
                                     gotBars.append( GanttChartView.BarEntry(
                                         color: barColor,
                                         ID:  Int(actIDs[actNum])!,
+                                        isTentAct: false,
                                         EST: Int(actESTs[actNum])!,
                                         LET: Int(actLETs[actNum])!,
                                         minDuration: Int( actLETs[actNum] )! - Int( actESTs[actNum] )!,
                                         maxDuration: Int( actLETs[actNum] )! - Int( actESTs[actNum] )!,
-                                        restrict: Double( actRestricts[actNum] )!,
+                                        restrict: 0.0,
                                         activityName: actNames[actNum],
                                         title: "test" ) )
                                 } else {
+                                    var thisActTent = false
+                                    if self.GanttChart.tentGantt {
+                                        thisActTent = actNames[actNum] == self.SideMenu.cellForRow(at: self.SideMenu.indexPathForSelectedRow!)?.textLabel?.text!
+                                    }
                                     gotBars.append( GanttChartView.BarEntry(
                                         color: barColor,
                                         ID:  Int(actIDs[actNum])!,
+                                        isTentAct: thisActTent,
                                         EST: Int(actESTs[actNum])!,
                                         LET: Int(actLETs[actNum])!,
                                         minDuration: Int(actMinDurs[actNum])!,
                                         maxDuration: Int(actMaxDurs[actNum])!,
-                                        restrict: Double( actRestricts[actNum] )!,
+                                        restrict: 0.0,
                                         activityName: actNames[actNum],
                                         title: "test" ) )
                                 }
                             }
                             
                             self.GanttChart.currTime = Int(currentTime)!
+                            self.GanttChart.lastConfirmedBars = self.lastConfirmedBars
                             self.GanttChart.dataEntries = gotBars
                             
                             // if it has not yet been set, then this is the first gantt displayed after startup
@@ -384,15 +424,15 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
                             }
                             
                             if (self.viewInInfo.actDetails!.actName != "") {
-                                self.ESTField.text = self.mmmmTOhhmm(mmmm: self.viewInInfo.actDetails!.EST! )
-                                self.LSTField.text = self.mmmmTOhhmm(mmmm: self.viewInInfo.actDetails!.LST! )
-                                self.EETField.text = self.mmmmTOhhmm(mmmm: self.viewInInfo.actDetails!.EET! )
-                                self.LETField.text = self.mmmmTOhhmm(mmmm: self.viewInInfo.actDetails!.LET! )
+                                self.ModAct_ESTField.text = self.mmmmTOhhmm(mmmm: self.viewInInfo.actDetails!.EST! )
+                                self.ModAct_LSTField.text = self.mmmmTOhhmm(mmmm: self.viewInInfo.actDetails!.LST! )
+                                self.ModAct_EETField.text = self.mmmmTOhhmm(mmmm: self.viewInInfo.actDetails!.EET! )
+                                self.ModAct_LETField.text = self.mmmmTOhhmm(mmmm: self.viewInInfo.actDetails!.LET! )
                                 
-                                self.ESTField.validValue = true
-                                self.LSTField.validValue = true
-                                self.EETField.validValue = true
-                                self.LETField.validValue = true
+                                self.ModAct_ESTField.validValue = true
+                                self.ModAct_LSTField.validValue = true
+                                self.ModAct_EETField.validValue = true
+                                self.ModAct_LETField.validValue = true
                                 self.validDurationValue = true
                                 
                                 self.origEST = String(Int(Float(self.viewInInfo.actDetails!.EST!)!))
@@ -405,7 +445,7 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
                                     durStr = durStr + self.mmmmTOhhmm(mmmm: self.viewInInfo.actDetails!.minDurs![i]) + " - "
                                         + self.mmmmTOhhmm(mmmm: self.viewInInfo.actDetails!.maxDurs![i]) + "\n"
                                 }
-                                self.DurationTextBox.text = durStr
+                                self.ModAct_DurationTextBox.text = durStr
                                 self.origDur = durStr
                             }
                         }
@@ -555,28 +595,28 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
             // if constraint loosened instead of tightened or has illegal value or is larger than LST
             if ( Int(hhmmTOmmmm(hhmm: sender.text!))! <  Int(self.origEST!)! ) { return }
             if (tempHours! < 0 || tempHours! > 24 || tempMins! < 0 || tempMins! > 59) { return }
-            if ( Int(hhmmTOmmmm(hhmm: sender.text!))! > Int(hhmmTOmmmm(hhmm: LSTField.text!))! ) {return}
+            if ( Int(hhmmTOmmmm(hhmm: sender.text!))! > Int(hhmmTOmmmm(hhmm: ModAct_LSTField.text!))! ) {return}
             if ( Int(hhmmTOmmmm(hhmm: sender.text!))! == Int(self.origEST!)! ) {sender.textColor = UIColor.black}
             
         } else if (sender.availConstraint == "LST") {
             // if constraint loosened instead of tightened or has illegal value or is smaller than EST
             if ( Int(hhmmTOmmmm(hhmm: sender.text!))! >  Int(self.origLST!)! ) { return }
             if (tempHours! < 0 || tempHours! > 24 || tempMins! < 0 || tempMins! > 59) { return }
-            if ( Int(hhmmTOmmmm(hhmm: sender.text!))! < Int(hhmmTOmmmm(hhmm: ESTField.text!))! ) {return}
+            if ( Int(hhmmTOmmmm(hhmm: sender.text!))! < Int(hhmmTOmmmm(hhmm: ModAct_ESTField.text!))! ) {return}
             if ( Int(hhmmTOmmmm(hhmm: sender.text!))! == Int(self.origLST!)! ) {sender.textColor = UIColor.black}
             
         } else if (sender.availConstraint == "EET") {
             // if constraint loosened instead of tightened or has illegal value or is larger than LET
             if ( Int(hhmmTOmmmm(hhmm: sender.text!))! <  Int(self.origEET!)! ) { return }
             if (tempHours! < 0 || tempHours! > 24 || tempMins! < 0 || tempMins! > 59) { return }
-            if ( Int(hhmmTOmmmm(hhmm: sender.text!))! > Int(hhmmTOmmmm(hhmm: LETField.text!))! ) {return}
+            if ( Int(hhmmTOmmmm(hhmm: sender.text!))! > Int(hhmmTOmmmm(hhmm: ModAct_LETField.text!))! ) {return}
             if ( Int(hhmmTOmmmm(hhmm: sender.text!))! == Int(self.origEET!)! ) {sender.textColor = UIColor.black}
             
         } else if (sender.availConstraint == "LET") {
             // if constraint loosened instead of tightened or has illegal value or is smaller than EET
             if ( Int(hhmmTOmmmm(hhmm: sender.text!))! >  Int(self.origLET!)! ) { return }
             if (tempHours! < 0 || tempHours! > 24 || tempMins! < 0 || tempMins! > 59) { return }
-            if ( Int(hhmmTOmmmm(hhmm: sender.text!))! < Int(hhmmTOmmmm(hhmm: EETField.text!))! ) {return}
+            if ( Int(hhmmTOmmmm(hhmm: sender.text!))! < Int(hhmmTOmmmm(hhmm: ModAct_EETField.text!))! ) {return}
             if ( Int(hhmmTOmmmm(hhmm: sender.text!))! == Int(self.origLET!)! ) {sender.textColor = UIColor.black}
             
         }
@@ -598,16 +638,19 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
         if textView.text! == "" {return}
         
         // if new duration is longer than old (loosened constraint), so here get orig max dur
+        // only check this for mod activity
         var maxOrigDur = 0
         var minOrigDur = 999999999
-        let origLines = self.origDur!.components(separatedBy: CharacterSet.newlines)
-        for oLine in origLines {
-            if oLine != "" {
-                var oSplitLine = oLine.components(separatedBy: " - " )
-                let tempOmins1 = hhmmTOmmmm(hhmm: oSplitLine[0])
-                let tempOmins2 = hhmmTOmmmm(hhmm: oSplitLine[1])
-                if Int(tempOmins1)! < minOrigDur { minOrigDur = Int(tempOmins1)! }
-                if Int(tempOmins2)! > maxOrigDur { maxOrigDur = Int(tempOmins2)! }
+        if textView == ModAct_DurationTextBox {
+            let origLines = self.origDur!.components(separatedBy: CharacterSet.newlines)
+            for oLine in origLines {
+                if oLine != "" {
+                    var oSplitLine = oLine.components(separatedBy: " - " )
+                    let tempOmins1 = hhmmTOmmmm(hhmm: oSplitLine[0])
+                    let tempOmins2 = hhmmTOmmmm(hhmm: oSplitLine[1])
+                    if Int(tempOmins1)! < minOrigDur { minOrigDur = Int(tempOmins1)! }
+                    if Int(tempOmins2)! > maxOrigDur { maxOrigDur = Int(tempOmins2)! }
+                }
             }
         }
         
@@ -646,13 +689,16 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
                 }
                 
                 // if max duration greater than max max orig duration or min less than
-                if ( Int(hhmmTOmmmm(hhmm: splitLine[1]))! > maxOrigDur || minOrigDur > Int(hhmmTOmmmm(hhmm: splitLine[0]))! ) {
-                    return
-                }
+                // only check this for Mod Act
+                if textView == ModAct_DurationTextBox {
+                    if ( Int(hhmmTOmmmm(hhmm: splitLine[1]))! > maxOrigDur || minOrigDur > Int(hhmmTOmmmm(hhmm: splitLine[0]))! ) {
+                        return
+                    }
                 
-                // if duration hasnt been changed
-                if (self.origDur == textView.text!) {
-                    textView.textColor = UIColor.black
+                    // if duration hasnt been changed
+                    if (self.origDur == textView.text!) {
+                        textView.textColor = UIColor.black
+                    }
                 }
                 
                 validDurationValue = true;
@@ -673,19 +719,45 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
         }
         
         // make sure all box values are valid - need this if user goes straight from editing to button
-        textViewDidEndEditing(DurationTextBox)
-        AvailTextBox_EditingEnded(ESTField)
-        AvailTextBox_EditingEnded(LSTField)
-        AvailTextBox_EditingEnded(EETField)
-        AvailTextBox_EditingEnded(LETField)
+        textViewDidEndEditing(ModAct_DurationTextBox)
+        AvailTextBox_EditingEnded(ModAct_ESTField)
+        AvailTextBox_EditingEnded(ModAct_LSTField)
+        AvailTextBox_EditingEnded(ModAct_EETField)
+        AvailTextBox_EditingEnded(ModAct_LETField)
         
         // if all user entered values are legal
-        if (ESTField.validValue && LSTField.validValue && EETField.validValue && LETField.validValue && validDurationValue!) {
+        if (ModAct_ESTField.validValue && ModAct_LSTField.validValue && ModAct_EETField.validValue && ModAct_LETField.validValue && validDurationValue!) {
             modifyActivity()
             return;
         } // else show a popup warning
         else {
             let alert = UIAlertController(title: "Error", message: "Some entered modifcation fields are illegal. New values must have hh:mm format and tighten constraints (no loosening).", preferredStyle: .alert)
+            
+            alert.addAction(UIAlertAction(title: "Okay", style: .default, handler: nil))
+            
+            self.present(alert, animated: true)
+        }
+        
+        
+    }
+    
+    @IBAction func ConfirmAddButtonClick(_ sender: UIButton) {
+        
+        
+        // make sure all box values are valid - need this if user goes straight from editing to button
+        textViewDidEndEditing(AddAct_DurationTextBox)
+        AvailTextBox_EditingEnded(AddAct_ESTField)
+        AvailTextBox_EditingEnded(AddAct_LSTField)
+        AvailTextBox_EditingEnded(AddAct_EETField)
+        AvailTextBox_EditingEnded(AddAct_LETField)
+        
+        // if all user entered values are legal
+        if (AddAct_ESTField.validValue && AddAct_LSTField.validValue && AddAct_EETField.validValue && AddAct_LETField.validValue && validDurationValue! && AddAct_ActNameField.text! != "") {
+            addActivity()
+            return;
+        } // else show a popup warning
+        else {
+            let alert = UIAlertController(title: "Error", message: "Some entered activity addition fields are illegal. New values must have hh:mm format.", preferredStyle: .alert)
             
             alert.addAction(UIAlertAction(title: "Okay", style: .default, handler: nil))
             
@@ -910,17 +982,22 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
         self.aClient!.sendStructToServer(aPut)
     }
     
-    func modifyActivity() {
+    func addActivity() {
         var aPut = putCMD()
         aPut.clientID = self.aClient!.ID
-        aPut.infoType = "modifyActivity"
+        aPut.infoType = "addActivity"
         aPut.agentNum = agentNumber!
-        aPut.activityName = modActMenuDelegate.allModifiableActivities![ ModActMenu.indexPathForSelectedRow!.row ]
+        aPut.activityName = AddAct_ActNameField.text!
         
         var newActDetails = activityDefinition()
         
-        newActDetails.actName = modActMenuDelegate.allModifiableActivities![ ModActMenu.indexPathForSelectedRow!.row ]
-        let durLines = DurationTextBox.text!.components(separatedBy: CharacterSet.newlines)
+        newActDetails.actName = AddAct_ActNameField.text!
+        newActDetails.EST = AddAct_ESTField.text!
+        newActDetails.LST = AddAct_LSTField.text!
+        newActDetails.EET = AddAct_EETField.text!
+        newActDetails.LET = AddAct_LETField.text!
+        
+        let durLines = AddAct_DurationTextBox.text!.components(separatedBy: CharacterSet.newlines)
         for line in durLines {
             
             // if not an empty line, append its durations to the newActDetails
@@ -931,10 +1008,53 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
                 newActDetails.maxDurs?.append( splitLine[1].trimmingCharacters(in: .whitespaces) )
             }
         }
-        newActDetails.EST = ESTField.text! // format:  hh:mm
-        newActDetails.LST = LSTField.text! // format:  hh:mm
-        newActDetails.EET = EETField.text! // format:  hh:mm
-        newActDetails.LET = LETField.text! // format:  hh:mm
+
+//        Allow users to constrain this activity on pre-existing activities
+//        newActDetails.constraintTypes
+//        newActDetails.constraintSource
+//        newActDetails.constraintDest
+        
+        
+        aPut.actDetails = newActDetails
+        
+        // send request to server
+        self.aClient!.sendStructToServer(aPut)
+        
+        // clear the list until new activity options are provided
+        self.menuDelegate.activityOptions = []
+        self.menuDelegate.startTime = 0
+        ConfirmActButton.isEnabled = false
+        self.SideMenu.reloadData()
+        
+        // deselect 'Add Activity' option in left menu
+        self.AddActView.isHidden = true
+    }
+    
+    func modifyActivity() {
+        var aPut = putCMD()
+        aPut.clientID = self.aClient!.ID
+        aPut.infoType = "modifyActivity"
+        aPut.agentNum = agentNumber!
+        aPut.activityName = modActMenuDelegate.allModifiableActivities![ ModActMenu.indexPathForSelectedRow!.row ]
+        
+        var newActDetails = activityDefinition()
+        
+        newActDetails.actName = modActMenuDelegate.allModifiableActivities![ ModActMenu.indexPathForSelectedRow!.row ]
+        let durLines = ModAct_DurationTextBox.text!.components(separatedBy: CharacterSet.newlines)
+        for line in durLines {
+            
+            // if not an empty line, append its durations to the newActDetails
+            if line != "" {
+                var splitLine = line.components(separatedBy: " - " )
+                // trim off white space and append to min/max duration lists
+                newActDetails.minDurs?.append( splitLine[0].trimmingCharacters(in: .whitespaces) )
+                newActDetails.maxDurs?.append( splitLine[1].trimmingCharacters(in: .whitespaces) )
+            }
+        }
+        newActDetails.EST = ModAct_ESTField.text! // format:  hh:mm
+        newActDetails.LST = ModAct_LSTField.text! // format:  hh:mm
+        newActDetails.EET = ModAct_EETField.text! // format:  hh:mm
+        newActDetails.LET = ModAct_LETField.text! // format:  hh:mm
         
         aPut.actDetails = newActDetails
         

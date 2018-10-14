@@ -78,7 +78,8 @@ public class Timepoint implements Comparable<Timepoint>, java.io.Serializable{
 	}
 	
 	public int getLocalIndex(int agentId){
-		if(agentId > localIndices.size()){
+//		if(agentId > localIndices.size()){
+		if(agentId > localIndices.size()-1){  // Drew: should be size()-1
 			System.out.println("AgentID is: " + agentId + " but len localIndices is: " + localIndices + " when timepoint is " + this.name);
 		}
 		return localIndices.get(agentId);

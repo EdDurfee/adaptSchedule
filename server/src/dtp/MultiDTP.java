@@ -7,6 +7,7 @@ import interval.IntervalSet;
 import stp.TemporalDifference;
 import stp.Timepoint;
 
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.*;
@@ -450,9 +451,10 @@ public class MultiDTP implements DisjunctiveTemporalProblem, java.io.Serializabl
 	
 	@Override
 	public void addAdditionalConstraint(String tpS, String tpE, IntervalSet dtc, int time, boolean resolve, boolean pushSelection){
+		Timepoint source, dest;
 		SimpleEntry<Integer,Integer> se = getIdxAndCheck(tpS,tpE);
 //		System.out.println("In addAdditionalConstraint subDTPs the tp belongs to is "+ se);
-		Timepoint source, dest;
+		
 		if(se.getKey() != -1) source = subDTPs[se.getKey()].getTimepoint(tpS);
 		else source = zero;
 		if(se.getValue() != -1) dest = subDTPs[se.getValue()].getTimepoint(tpE);
@@ -531,6 +533,7 @@ public class MultiDTP implements DisjunctiveTemporalProblem, java.io.Serializabl
 			if(idxS != -1) result.add(idxS);
 			if(idxD != -1) result.add(idxD);
 		}
+		System.out.println(cons.toString());
 		if(result.size() == 0) throw new java.lang.IllegalArgumentException("Constraint "+cons.toString()+" has bad timepoint indices");
 		return result;
 	}
@@ -1020,6 +1023,13 @@ public class MultiDTP implements DisjunctiveTemporalProblem, java.io.Serializabl
 	@Override
 	public void addTimepoint(Timepoint tp) {
 		// TODO Auto-generated method stub
+		// DREW: This subclass function code was not written, below is my attempt based off of simpleDTP
+
+//		tp.setLocalIndex(id, numTimepoints++);
+//		localTimepoints.add(tp);
+//		timepoints.put(tp.getName(), dtpIdx);
+//		subDTPs[dtpIdx].addTimepoint(tp);
+//		updateInternalData();
 		
 	}
 

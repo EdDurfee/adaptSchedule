@@ -19,7 +19,7 @@
 		3A6081DA214AAA9900BEA91B /* Exclamation_in_a_circle.svg.png in Resources */ = {isa = PBXBuildFile; fileRef = 3A6081D9214AAA9800BEA91B /* Exclamation_in_a_circle.svg.png */; };
 		3A7A72A720DD3D7300A8EA55 /* IPEnterViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A7A72A620DD3D7300A8EA55 /* IPEnterViewController.swift */; };
 		3AB21BC920D2CF73008CADF5 /* MenuController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AB21BC820D2CF73008CADF5 /* MenuController.swift */; };
-		3AD15F43210792A300F30C23 /* ModifyActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD15F42210792A300F30C23 /* ModifyActivityView.swift */; };
+		3AD15F43210792A300F30C23 /* ActivityEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD15F42210792A300F30C23 /* ActivityEditView.swift */; };
 		3AD15F472107BB6300F30C23 /* ModActTableController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD15F462107BB6300F30C23 /* ModActTableController.swift */; };
 		3AD7719F20B45F6700948C2A /* ServerInteraction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD7719E20B45F6700948C2A /* ServerInteraction.swift */; };
 /* End PBXBuildFile section */
@@ -60,7 +60,7 @@
 		3A6081D9214AAA9800BEA91B /* Exclamation_in_a_circle.svg.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Exclamation_in_a_circle.svg.png; path = Assets.xcassets/Exclamation_in_a_circle.svg.png; sourceTree = "<group>"; };
 		3A7A72A620DD3D7300A8EA55 /* IPEnterViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IPEnterViewController.swift; sourceTree = "<group>"; };
 		3AB21BC820D2CF73008CADF5 /* MenuController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MenuController.swift; sourceTree = "<group>"; };
-		3AD15F42210792A300F30C23 /* ModifyActivityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModifyActivityView.swift; sourceTree = "<group>"; };
+		3AD15F42210792A300F30C23 /* ActivityEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityEditView.swift; sourceTree = "<group>"; };
 		3AD15F462107BB6300F30C23 /* ModActTableController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModActTableController.swift; sourceTree = "<group>"; };
 		3AD7719E20B45F6700948C2A /* ServerInteraction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerInteraction.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -118,7 +118,7 @@
 				3AD7719E20B45F6700948C2A /* ServerInteraction.swift */,
 				3AB21BC820D2CF73008CADF5 /* MenuController.swift */,
 				3A5365BB20B3564F0057B451 /* AppDelegate.swift */,
-				3AD15F42210792A300F30C23 /* ModifyActivityView.swift */,
+				3AD15F42210792A300F30C23 /* ActivityEditView.swift */,
 				3AD15F462107BB6300F30C23 /* ModActTableController.swift */,
 				3A5365C220B356510057B451 /* Assets.xcassets */,
 				3A6081D9214AAA9800BEA91B /* Exclamation_in_a_circle.svg.png */,
@@ -283,7 +283,7 @@
 			files = (
 				3AD7719F20B45F6700948C2A /* ServerInteraction.swift in Sources */,
 				3AD15F472107BB6300F30C23 /* ModActTableController.swift in Sources */,
-				3AD15F43210792A300F30C23 /* ModifyActivityView.swift in Sources */,
+				3AD15F43210792A300F30C23 /* ActivityEditView.swift in Sources */,
 				3A5365BE20B3564F0057B451 /* ViewController.swift in Sources */,
 				3A51297F210F7AEA0046D019 /* AvailTextBox.swift in Sources */,
 				3A7A72A720DD3D7300A8EA55 /* IPEnterViewController.swift in Sources */,
