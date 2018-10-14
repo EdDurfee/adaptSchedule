@@ -1,0 +1,147 @@
+<simpleDTP>
+<activity>
+	<name> wakeup </name>
+	<duration>
+		<min> 10 </min>
+		<max> 10 </max>	
+	</duration>
+<availability>
+	<est> 300 </est>
+</availability>
+</activity>
+<constraint>
+	<type> ordering </type>
+	<source> wakeup </source>
+	<destination> shower </destination>
+	<min_duration> 0 </min_duration>
+</constraint>
+<constraint>
+	<type> ordering </type>
+	<source> wakeup </source>
+	<destination> breakfast </destination>
+	<min_duration> 0 </min_duration>
+</constraint>
+<constraint>
+	<type> ordering </type>
+	<source> wakeup </source>
+	<destination> orgTimeM </destination>
+	<min_duration> 0 </min_duration>
+</constraint>
+
+<activity>
+	<name> shower </name>
+	<duration>
+		<min> 20 </min>
+		<max> 20 </max>	
+	</duration>
+<availability>
+	<est> 300 </est>
+	<let> 460 </let>
+</availability>
+</activity>
+<constraint>
+	<type> ordering </type>
+	<source> shower </source>
+	<destination> dressing </destination>
+	<min_duration> 0 </min_duration>
+</constraint>
+<constraint>
+	<type> nonconcurrent </type>
+	<source> shower </source>
+	<destination> breakfast </destination>
+	<min_duration> 0 </min_duration>
+</constraint>
+<constraint>
+	<type> nonconcurrent </type>
+	<source> shower </source>
+	<destination> orgTimeM </destination>
+	<min_duration> 0 </min_duration>
+</constraint>
+
+<activity>
+	<name> dressing </name>
+	<duration>
+		<min> 45 </min>
+		<max> 45 </max>	
+	</duration>
+<availability>
+	<est> 300 </est>
+	<let> 460 </let>
+</availability>
+</activity>
+<constraint>
+	<type> ordering </type>
+	<source> dressing </source>
+	<destination> toSchool </destination>
+	<min_duration> 0 </min_duration>
+</constraint>
+<constraint>
+	<type> nonconcurrent </type>
+	<source> dressing </source>
+	<destination> breakfast </destination>
+	<min_duration> 0 </min_duration>
+</constraint>
+<constraint>
+	<type> nonconcurrent </type>
+	<source> dressing </source>
+	<destination> orgTimeM </destination>
+	<min_duration> 0 </min_duration>
+</constraint>
+
+<activity>
+	<name> breakfast </name>
+	<duration>
+		<min> 15 </min>
+		<max> 15 </max>	
+	</duration>
+<availability>
+	<est> 300 </est>
+	<lst> 370 </lst>
+	<let> 460 </let>
+</availability>
+</activity>
+<constraint>
+	<type> ordering </type>
+	<source> breakfast </source>
+	<destination> toSchool </destination>
+	<min_duration> 0 </min_duration>
+</constraint>
+<constraint>
+	<type> nonconcurrent </type>
+	<source> breakfast </source>
+	<destination> orgTimeM </destination>
+	<min_duration> 0 </min_duration>
+</constraint>
+
+<activity>
+	<name> orgTimeM </name>
+	<duration>
+		<min> 10 </min>
+		<max> 10 </max>	
+	</duration>
+<availability>
+	<est> 300 </est>
+	<let> 460 </let>
+</availability>
+</activity>
+<constraint>
+	<type> ordering </type>
+	<source> orgTimeM </source>
+	<destination> toSchool </destination>
+	<min_duration> 0 </min_duration>
+</constraint>
+
+<activity>
+	<name> toSchool </name>
+	<duration>
+		<min> 30 </min>
+		<max> 30 </max>	
+	</duration>
+
+<availability>
+	<est> 330 </est>
+	<eet> 420 </eet>
+	<let> 460 </let>
+</availability>
+</activity>
+</simpleDTP>

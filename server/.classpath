@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="src" path="httpsever"/>
+	<classpathentry kind="src" path="server_samples"/>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="lib" path="2017dtp5max.jar"/>
+	<classpathentry kind="lib" path="2017dtp5MAXtake2.jar"/>
+	<classpathentry kind="lib" path="2017test.jar"/>
+	<classpathentry kind="lib" path="2017testmins.jar"/>
+	<classpathentry kind="lib" path="2017testnew.jar"/>
+	<classpathentry kind="lib" path="2017testtake3.jar"/>
+	<classpathentry kind="lib" path="gojo210exp1.jar"/>
+	<classpathentry kind="lib" path="gojo210exp2.jar"/>
+	<classpathentry kind="lib" path="testerror.jar"/>
+	<classpathentry kind="lib" path="testFramework.jar"/>
+	<classpathentry kind="lib" path="testnullerror.jar"/>
+	<classpathentry kind="lib" path="testsamerror.jar"/>
+	<classpathentry kind="lib" path="/Users/drew/Programs/eclipse-workspace/Schedule_App/server/lib/commons-codec-1.11/commons-codec-1.11.jar"/>
+	<classpathentry kind="lib" path="/Users/drew/Programs/eclipse-workspace/Schedule_App/server/lib/commons-codec-1.11/commons-codec-1.11-test-sources.jar"/>
+	<classpathentry kind="lib" path="/Users/drew/Programs/eclipse-workspace/Schedule_App/server/lib/commons-codec-1.11/commons-codec-1.11-tests.jar"/>
+	<classpathentry kind="lib" path="/Users/drew/Programs/eclipse-workspace/Schedule_App/server/lib/commons-codec-1.11/commons-codec-1.11-sources.jar"/>
+	<classpathentry kind="lib" path="/Users/drew/Programs/eclipse-workspace/Schedule_App/server/lib/commons-codec-1.11/commons-codec-1.11-javadoc.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

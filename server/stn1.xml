@@ -1,0 +1,156 @@
+<simpleDTP>
+
+  <activity>
+    <name> wakeup </name>
+    <duration> 
+      <min> 30 </min>
+      <max> 30 </max>
+    </duration>
+    <availability>
+      <est> 300 </est>
+      <let> 330 </let>
+    </availability>
+  </activity>
+
+
+  <activity> 
+    <name> Aa </name>
+    <duration>
+      <min> 60 </min>
+      <max> 60 </max>
+    </duration>
+    <availability>
+      <est> 330 </est>
+      <let> 500 </let>
+    </availability>
+  </activity>
+
+  <activity>
+    <name> Bb </name>
+    <duration>
+      <min> 45 </min>
+      <max> 45 </max>
+    </duration>
+    <availability> 
+      <est> 300 </est>
+      <let> 700 </let>
+    </availability>
+  </activity>
+
+  <activity>
+    <name> Cc </name>
+    <duration> 
+      <min> 30 </min>
+      <max> 45 </max>
+    </duration>
+    <availability> 
+      <let> 700 </let>
+    </availability>
+  </activity>
+
+  <activity>
+    <name> bedtime </name>
+    <duration> 
+      <min> 10 </min>
+      <max> 10 </max>
+    </duration>
+    <availability>
+      <lst> 730 </lst>
+    </availability>
+  </activity>
+
+  
+
+  <constraint>
+    <type> ordering </type>
+    <source> Aa </source>
+    <destination> Bb </destination>
+    <min_duration> 0 </min_duration>
+  </constraint>
+
+  <constraint>
+    <type> ordering </type>
+    <source> Bb </source>
+    <destination> Cc </destination> 
+    <min_duration> 0 </min_duration>
+  </constraint>
+
+  <constraint>
+    <type> ordering </type>
+    <source> wakeup </source>
+    <destination> Aa </destination> 
+    <min_duration> 0 </min_duration>
+  </constraint>
+
+  <constraint>
+    <type> ordering </type>
+    <source> wakeup </source>
+    <destination> Bb </destination> 
+    <min_duration> 0 </min_duration>
+  </constraint>
+  <constraint>
+    <type> ordering </type>
+    <source> wakeup </source>
+    <destination> Cc </destination> 
+    <min_duration> 0 </min_duration>
+  </constraint>
+
+  <constraint>
+    <type> ordering </type>
+    <source> wakeup </source>
+    <destination> bedtime </destination> 
+    <min_duration> 0 </min_duration>
+  </constraint>
+
+  <constraint>
+    <type> ordering </type>
+    <source> Aa </source>
+    <destination> bedtime </destination> 
+    <min_duration> 0 </min_duration>
+  </constraint>
+  <constraint>
+    <type> ordering </type>
+    <source> Bb </source>
+    <destination> bedtime </destination> 
+    <min_duration> 0 </min_duration>
+  </constraint>
+  <constraint>
+    <type> ordering </type>
+    <source> Cc </source>
+    <destination> bedtime </destination> 
+    <min_duration> 0 </min_duration>
+  </constraint>
+
+
+  <constraint> 
+    <type> nonconcurrent </type>
+    <source> Aa </source>
+    <destination> Cc </destination>
+    <min_duration> 0  </min_duration>
+  </constraint>
+
+  <constraint>
+    <type> nonconcurrent </type>
+    <source> Bb  </source>
+    <destination> Cc </destination>
+    <min_duration> 0  </min_duration>
+  </constraint>  
+  <constraint>
+    <type> nonconcurrent </type>
+    <source> Aa </source>
+    <destination> wakeup </destination>
+    <min_duration> 0  </min_duration>
+  </constraint>
+  <constraint>
+    <type> nonconcurrent </type>
+    <source> wakeup </source>
+    <destination> Bb </destination>
+    <min_duration> 0  </min_duration>
+  </constraint>  
+  <constraint>
+    <type> nonconcurrent </type>
+    <source> wakeup  </source>
+    <destination> Cc </destination>
+    <min_duration> 0  </min_duration>
+  </constraint>
+</simpleDTP>

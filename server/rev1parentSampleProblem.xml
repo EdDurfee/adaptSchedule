@@ -1,0 +1,183 @@
+<simpleDTP>
+<activity>
+  <name> wakeup </name>
+  <duration> 
+    <min> 30 </min>
+    <max> 30 </max>
+  </duration>
+  <availability>
+  <est> 390 </est>
+  <let> 435 </let>
+  </availability>
+</activity>
+<activity>
+	<name> test </name>
+	<dtpIdx> 0 </dtpIdx>
+<duration>
+	<min> 15 </min>
+	<max> 15 </max>
+</duration>
+<availability>
+	<est> 420 </est>
+	<let> 435 </let>
+</availability>
+</activity>
+<constraint> 
+  <type> ordering </type>
+  <source> wakeup </source>
+  <destination> brushTeeth </destination>
+  <min_duration> 0 </min_duration>
+</constraint>
+
+<activity>
+  <name> breakfast </name>
+  <duration> 
+    <min> 20 </min>
+    <max> 30 </max>
+  </duration>
+  <availability>
+  <est> 420 </est>
+  <let> 540 </let>
+  </availability>
+</activity>
+
+
+<constraint> 
+  <type> ordering </type>
+  <source> wakeup </source>
+  <destination> breakfast </destination> 
+  <min_duration> 0 </min_duration>
+</constraint>
+
+<activity> 
+  <name> brushTeeth </name>
+  <duration> 
+    <min> 5 </min>
+    <max> 5 </max> 
+  </duration>
+  <availability>
+    <est> 420 </est>
+    <let> 540 </let>
+  </availability>
+</activity> 
+
+<constraint> 
+  <type> ordering </type>
+  <source> breakfast </source> 
+  <destination> brushTeeth </destination>
+  <min_duration> 0 </min_duration> 
+</constraint> 
+
+<activity> 
+  <name> amBowelAndBladder </name> 
+  <duration> 
+    <min> 20 </min>
+    <max> 20 </max>
+  </duration>
+  <availability>
+    <est> 420 </est>
+    <let> 540 </let>
+  </availability>
+</activity>
+
+<constraint>
+  <type> ordering </type>
+  <source> wakeup </source>
+  <destination> amBowelAndBladder </destination>
+  <min_duration> 0 </min_duration>
+</constraint>
+
+<activity>
+  <name> medicationAM </name>
+  <duration>
+    <min> 5 </min>
+    <max> 5 </max>
+  </duration>
+  <availability>
+    <est> 420 </est>
+    <let> 540 </let>
+  </availability>
+</activity>
+
+<constraint>
+  <type> ordering </type>
+  <source> medicationAM </source>
+  <destination> breakfast </destination>
+  <min_duration> 30 </min_duration> 
+</constraint> 
+
+<constraint> 
+  <type> ordering </type>
+  <source> wakeup </source> 
+  <destination> medicationAM </destination>
+  <min_duration> 0 </min_duration>
+</constraint> 
+
+<activity> 
+  <name> dressing </name> 
+  <duration> 
+    <min> 10 </min>
+    <max> 15 </max>
+  </duration>
+  <availability>
+    <est> 420 </est>
+    <let> 540 </let>
+  </availability>
+</activity>
+
+<constraint> 
+  <type> ordering </type>
+  <source> wakeup </source> 
+  <destination> dressing </destination> 
+  <min_duration> 0 </min_duration> 
+</constraint> 
+
+<activity>
+  <name> toCampus </name> 
+  <duration> 
+    <min> 30 </min>
+    <max> 30 </max> 
+  </duration> 
+  <availability>
+    <est> 540 </est> 
+    <lst> 540 </lst>
+  </availability>
+</activity> 
+
+<constraint> 
+  <type> ordering </type>
+  <source> wakeup </source>
+  <destination> toCampus </destination> 
+  <min_duration> 0 </min_duration> 
+</constraint> 
+<constraint> 
+  <type> ordering </type> 
+  <source> breakfast </source>
+  <destination> toCampus </destination> 
+  <min_duration> 0 </min_duration> 
+</constraint> 
+<constraint> 
+  <type> ordering </type> 
+  <source> brushTeeth </source> 
+  <destination> toCampus </destination> 
+  <min_duration> 0 </min_duration> 
+</constraint> 
+<constraint> 
+  <type> ordering </type>
+  <source> amBowelAndBladder </source>
+  <destination> toCampus </destination> 
+  <min_duration> 0 </min_duration> 
+</constraint>
+<constraint>
+  <type> ordering </type>
+  <source> medicationAM </source>
+  <destination> toCampus </destination> 
+  <min_duration> 0 </min_duration> 
+</constraint> 
+<constraint> 
+  <type> ordering </type>
+  <source> dressing </source> 
+  <destination> toCampus </destination> 
+  <min_duration> 0 </min_duration> 
+</constraint> 
+</simpleDTP>

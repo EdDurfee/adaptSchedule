@@ -1,0 +1,34 @@
+<simpleDTP>
+
+<activity>
+	<name> Aa </name>
+	<duration>
+		<min> 40 </min>
+		<max> 40 </max>
+	</duration>
+	<availability>
+      		<est> 0 </est>
+      		<let> 100 </let>
+	</availability>
+</activity>
+
+<activity>
+	<name> Bb </name>
+	<duration>
+		<min> 40 </min>
+		<max> 40 </max>
+	</duration>
+	<availability>
+      		<est> 0 </est>
+      		<let> 100 </let>
+	</availability>
+</activity>
+
+
+<constraint>
+    <type> nonconcurrent </type>
+    <source> Aa </source>
+    <destination> Bb </destination>
+  </constraint>
+
+</simpleDTP>

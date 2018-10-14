@@ -1,0 +1,317 @@
+0,0,31,31,31,31
+0,176,0,0,0,0
+0,266,29,29,29,29
+0,415,0,0,0,0
+0,585,0,0,0,0
+0,590,0,0,0,0
+0,600,0,0,0,0
+0 PASS false
+Total activities offered: 8 performed: 6
+Calls to Solver: 31
+TIME: 8767
+1,0,51,60,55,55
+1,70,5,5,5,5
+1 FAIL true
+Total activities offered: 3 performed: 2
+Calls to Solver: 28
+TIME: 32387
+2,0,32,32,32,32
+2,112,28,28,28,28
+2,245,0,0,0,0
+2,395,0,0,0,0
+2,440,0,0,0,0
+2,500,0,0,0,0
+2,600,0,0,0,0
+2 PASS false
+Total activities offered: 7 performed: 6
+Calls to Solver: 24
+TIME: 4814
+3,0,17,17,17,17
+3,202,43,43,43,43
+3 FAIL true
+Total activities offered: 4 performed: 2
+Calls to Solver: 46
+TIME: 27319
+4,0,22,22,22,22
+4,87,38,38,38,38
+4 FAIL true
+Total activities offered: 2 performed: 2
+Calls to Solver: 10
+TIME: 2334
+5,0,60,60,60,60
+5,195,0,0,0,0
+5,305,0,0,0,0
+5,370,0,0,0,0
+5,410,0,0,0,0
+5,565,0,0,0,0
+5,600,0,0,0,0
+5 PASS false
+Total activities offered: 9 performed: 6
+Calls to Solver: 49
+TIME: 51615
+6,0,60,60,60,60
+6 FAIL true
+Total activities offered: 2 performed: 1
+Calls to Solver: 22
+TIME: 28744
+7,0,58,60,59,59
+7,119,1,1,1,1
+7,240,0,0,0,0
+7,320,0,0,0,0
+7,345,0,0,0,0
+7 FAIL true
+Total activities offered: 9 performed: 5
+Calls to Solver: 98
+TIME: 191543
+8,0,60,60,60,60
+8,75,0,0,0,0
+8,100,0,0,0,0
+8,110,0,0,0,0
+8,505,0,0,0,0
+8,580,0,0,0,0
+8,600,0,0,0,0
+8 PASS false
+Total activities offered: 9 performed: 6
+Calls to Solver: 27
+TIME: 14699
+9,0,12,22,17,17
+9,42,5,5,5,5
+9,102,38,38,38,38
+9 FAIL true
+Total activities offered: 4 performed: 3
+Calls to Solver: 22
+TIME: 5729
+10,0,38,60,49,49
+10,124,11,11,11,11
+10 FAIL true
+Total activities offered: 4 performed: 2
+Calls to Solver: 22
+TIME: 12064
+11,0,11,29,20,20
+11,80,9,9,9,9
+11 FAIL true
+Total activities offered: 3 performed: 2
+Calls to Solver: 18
+TIME: 5504
+12,0,5,25,15,15
+12,115,25,25,25,25
+12,285,0,0,0,0
+12,305,0,0,0,0
+12,550,0,0,0,0
+12,565,0,0,0,0
+12,600,0,0,0,0
+12 PASS true
+Total activities offered: 8 performed: 6
+Calls to Solver: 40
+TIME: 9784
+13,0,60,60,60,60
+13,90,0,0,0,0
+13,125,0,0,0,0
+13,240,0,0,0,0
+13,340,0,0,0,0
+13 FAIL true
+Total activities offered: 10 performed: 5
+Calls to Solver: 63
+TIME: 110494
+14,0,29,60,44,44
+14,59,16,16,16,16
+14,275,0,0,0,0
+14,430,0,0,0,0
+14 FAIL true
+Total activities offered: 5 performed: 4
+Calls to Solver: 30
+TIME: 28980
+15,0,60,60,60,60
+15 FAIL true
+Total activities offered: 1 performed: 1
+Calls to Solver: 21
+TIME: 15425
+16,0,59,60,59,59
+16,114,1,1,1,1
+16,150,0,0,0,0
+16 FAIL true
+Total activities offered: 5 performed: 3
+Calls to Solver: 36
+TIME: 55635
+17,0,1,60,30,30
+17,35,1,30,15,15
+17,270,9,15,12,12
+17 FAIL true
+Total activities offered: 6 performed: 3
+Calls to Solver: 75
+TIME: 76299
+18,0,48,60,54,54
+18 FAIL true
+Total activities offered: 1 performed: 1
+Calls to Solver: 23
+TIME: 23857
+19,0,31,60,45,45
+19,70,15,15,15,15
+19,120,0,0,0,0
+19,175,0,0,0,0
+19 FAIL true
+Total activities offered: 10 performed: 4
+Calls to Solver: 142
+TIME: 454117
+20,0,31,46,38,38
+20,158,22,22,22,22
+20,195,0,0,0,0
+20,295,0,0,0,0
+20,350,0,0,0,0
+20,475,0,0,0,0
+20,600,0,0,0,0
+20 PASS false
+Total activities offered: 7 performed: 6
+Calls to Solver: 27
+TIME: 9190
+21,0,60,60,60,60
+21,95,0,0,0,0
+21 FAIL true
+Total activities offered: 2 performed: 2
+Calls to Solver: 11
+TIME: 6177
+22,0,43,60,51,51
+22,141,9,9,9,9
+22,265,0,0,0,0
+22,360,0,0,0,0
+22,405,0,0,0,0
+22,430,0,0,0,0
+22,600,0,0,0,0
+22 PASS false
+Total activities offered: 11 performed: 6
+Calls to Solver: 113
+TIME: 277827
+23,0,60,60,60,60
+23,125,0,0,0,0
+23 FAIL true
+Total activities offered: 2 performed: 2
+Calls to Solver: 28
+TIME: 18057
+24,0,12,22,17,17
+24,117,43,43,43,43
+24 FAIL true
+Total activities offered: 3 performed: 2
+Calls to Solver: 15
+TIME: 5470
+25,0,60,60,60,60
+25,85,0,0,0,0
+25,190,0,0,0,0
+25,220,0,0,0,0
+25,455,0,0,0,0
+25,530,0,0,0,0
+25,600,0,0,0,0
+25 PASS false
+Total activities offered: 9 performed: 6
+Calls to Solver: 65
+TIME: 167137
+26,0,60,60,60,60
+26 FAIL true
+Total activities offered: 3 performed: 1
+Calls to Solver: 63
+TIME: 161986
+27,0,27,60,43,43
+27,98,17,17,17,17
+27,130,0,0,0,0
+27,230,0,0,0,0
+27,525,0,0,0,0
+27 FAIL true
+Total activities offered: 8 performed: 5
+Calls to Solver: 74
+TIME: 163574
+28,0,60,60,60,60
+28,70,0,0,0,0
+28,330,0,0,0,0
+28,355,0,0,0,0
+28,480,0,0,0,0
+28,515,0,0,0,0
+28,600,0,0,0,0
+28 PASS false
+Total activities offered: 10 performed: 6
+Calls to Solver: 65
+TIME: 119515
+29,0,60,60,60,60
+29,75,0,0,0,0
+29,130,0,0,0,0
+29 FAIL true
+Total activities offered: 6 performed: 3
+Calls to Solver: 25
+TIME: 22495
+30,0,60,60,60,60
+30,210,0,0,0,0
+30 FAIL true
+Total activities offered: 3 performed: 2
+Calls to Solver: 17
+TIME: 10165
+31,0,47,60,53,53
+31,203,4,4,4,4
+31 FAIL true
+Total activities offered: 3 performed: 2
+Calls to Solver: 34
+TIME: 76979
+32,0,60,60,60,60
+32 FAIL true
+Total activities offered: 4 performed: 1
+Calls to Solver: 126
+TIME: 488412
+33,0,37,60,48,48
+33,78,12,12,12,12
+33,125,0,0,0,0
+33,220,0,0,0,0
+33,435,0,0,0,0
+33 FAIL true
+Total activities offered: 10 performed: 5
+Calls to Solver: 59
+TIME: 55993
+34,0,24,60,42,42
+34,162,18,18,18,18
+34,190,0,0,0,0
+34,290,0,0,0,0
+34 FAIL true
+Total activities offered: 7 performed: 4
+Calls to Solver: 52
+TIME: 67049
+35,0,4,45,24,24
+35,69,16,16,16,16
+35,135,0,0,0,0
+35,245,0,0,0,0
+35,400,0,0,0,0
+35,540,0,0,0,0
+35,600,0,0,0,0
+35 PASS true
+Total activities offered: 6 performed: 6
+Calls to Solver: 26
+TIME: 6039
+36,0,22,22,22,22
+36,157,36,36,36,36
+36,228,0,0,0,0
+36 FAIL true
+Total activities offered: 3 performed: 3
+Calls to Solver: 15
+TIME: 3346
+37,0,60,60,60,60
+37,65,0,0,0,0
+37,75,0,0,0,0
+37 FAIL true
+Total activities offered: 6 performed: 3
+Calls to Solver: 21
+TIME: 14831
+38,0,4,60,32,32
+38,157,8,8,8,8
+38,190,0,0,0,0
+38,240,0,0,0,0
+38,425,0,0,0,0
+38,445,0,0,0,0
+38,600,0,0,0,0
+38 PASS true
+Total activities offered: 9 performed: 6
+Calls to Solver: 51
+TIME: 44626
+39,0,53,53,53,53
+39,133,0,0,0,0
+39,313,2,2,2,2
+39,320,5,5,5,5
+39 FAIL true
+Total activities offered: 4 performed: 4
+Calls to Solver: 16
+TIME: 2384
+Number of contingent events: 32

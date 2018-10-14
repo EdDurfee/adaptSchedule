@@ -1,0 +1,73 @@
+<simpleDTP>
+
+<activity>
+	<name> Aa </name>
+	<duration>
+		<min> 20 </min>
+		<max> 20 </max>
+	</duration>
+	<availability>
+      		<est> 0 </est>
+      		<let> 100 </let>
+	</availability>
+</activity>
+
+<activity>
+	<name> Bb </name>
+	<duration>
+		<min> 20 </min>
+		<max>20 </max>
+	</duration>
+	<availability>
+      		<est> 0 </est>
+      		<let> 100 </let>
+	</availability>
+</activity>
+
+<activity>
+	<name> Cc </name>
+	<duration>
+		<min> 20 </min>
+		<max>20 </max>
+	</duration>
+	<availability>
+      		<est> 0 </est>
+      		<let> 100 </let>
+	</availability>
+</activity>
+
+<activity>
+	<name> Dd </name>
+	<duration>
+		<min> 20 </min>
+		<max>20 </max>
+	</duration>
+	<availability>
+      		<est> 0 </est>
+      		<let> 100 </let>
+	</availability>
+</activity>
+
+
+<constraint>
+    <type> ordering </type>
+    <source> Aa </source>
+    <destination> Bb </destination>
+    <min_duration> 0 </min_duration>
+  </constraint>
+
+<constraint>
+    <type> ordering </type>
+    <source> Bb </source>
+    <destination> Cc </destination>
+    <min_duration> 0 </min_duration>
+  </constraint>
+
+<constraint>
+    <type> ordering </type>
+    <source> Cc </source>
+    <destination> Dd </destination>
+    <min_duration> 0 </min_duration>
+  </constraint>
+
+</simpleDTP>

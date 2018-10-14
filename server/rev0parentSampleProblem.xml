@@ -1,0 +1,97 @@
+<simpleDTP>
+  <name> wakeup </name>
+    <min> 30 </min>
+  </duration>
+  <est> 390 </est>
+  </availability>
+<constraint> 
+  <source> wakeup </source>
+  <min_duration> 0 </min_duration>
+
+  <name> breakfast </name>
+    <min> 20 </min>
+  </duration>
+  <est> 420 </est>
+  </availability>
+
+  <type> ordering </type>
+  <destination> breakfast </destination> 
+</constraint>
+<activity> 
+  <duration> 
+    <max> 5 </max> 
+  <availability>
+    <let> 540 </let>
+</activity> 
+<activity>
+	<name> test </name>
+	<dtpIdx> 1 </dtpIdx>
+	<duration>
+		<min> 15 </min>
+		<max> 15 </max>
+	</duration>
+	<availability>
+		<est> 420 </est>
+		<let> 435 </let>
+	</availability>
+</activity>
+<constraint> 
+  <source> breakfast </source> 
+  <min_duration> 0 </min_duration> 
+
+  <name> amBowelAndBladder </name> 
+    <min> 20 </min>
+  </duration>
+    <est> 420 </est>
+  </availability>
+
+  <type> ordering </type>
+  <destination> amBowelAndBladder </destination>
+</constraint>
+<activity>
+  <duration>
+    <max> 5 </max>
+  <availability>
+    <let> 540 </let>
+</activity>
+<constraint>
+  <source> medicationAM </source>
+  <min_duration> 30 </min_duration> 
+
+  <type> ordering </type>
+  <destination> medicationAM </destination>
+</constraint> 
+<activity> 
+  <duration> 
+    <max> 15 </max>
+  <availability>
+    <let> 540 </let>
+</activity>
+<constraint> 
+  <source> wakeup </source> 
+  <min_duration> 0 </min_duration> 
+
+  <name> toCampus </name> 
+    <min> 30 </min>
+  </duration> 
+    <est> 540 </est> 
+  </availability>
+
+  <type> ordering </type>
+  <destination> toCampus </destination> 
+</constraint> 
+  <type> ordering </type> 
+  <destination> toCampus </destination> 
+</constraint> 
+  <type> ordering </type> 
+  <destination> toCampus </destination> 
+</constraint> 
+  <type> ordering </type>
+  <destination> toCampus </destination> 
+</constraint>
+  <type> ordering </type>
+  <destination> toCampus </destination> 
+</constraint> 
+  <type> ordering </type>
+  <destination> toCampus </destination> 
+</constraint> 
