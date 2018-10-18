@@ -275,10 +275,16 @@ public abstract class SimpleDTP implements DisjunctiveTemporalProblem, java.io.S
 		
 		// check each timepoint. If the EST of that timepoint is < time, adjust the EST to be = time
 		for(Timepoint tp: timepoints.values()){
+			if(tp.name.equals("showerM_E")) {
+				// do nothing but debug breakpoint
+				System.out.println("showerM");
+			}
 			if(tp.name.equals("zero") || tp.isAssigned()) continue;
 //			System.out.println(tp.toString()+" "+minimalNetwork[0][getIndex(tp)].getLowerBound());
 			if(minimalNetwork[0][getIndex(tp)].getLowerBound() > time) continue;
 //			System.out.println("Adding "+zero.toString()+" - "+tp.toString()+" <= "+time);
+			
+			// DREW: This line adds a new constraint forcing EST of act to be time later - I think? <- was in og code
 			this.addNewTemporalBound(zero, tp, time);
 			count++;
 		}
@@ -314,8 +320,16 @@ public abstract class SimpleDTP implements DisjunctiveTemporalProblem, java.io.S
 
 		int count = 0;
 		for(Timepoint tp: timepoints.values()){
+			
 			if(tp.name.equals("zero") || tp.isAssigned() || tp.equals(tpS) || tp.equals(tpE)) continue;
 			if(minimalNetwork[0][getIndex(tp)].getLowerBound() > timeE) continue;
+			
+			// DREW: Attempt to fix shower bug by forcefully setting its EST to end of tlast act
+			if( tp.getTime() < timeE && !tp.equals(tpS) && ! tp.equals(tpE)) {//tp.name.equals("showerM_S")) {
+				this.addNewTemporalBound(zero, tp, timeE); // set this timepoint time to be next free time
+				//this.addNewTemporalBound(tp, zero, -timeE);
+			}
+			
 			count++;
 		}
 		
@@ -334,6 +348,9 @@ public abstract class SimpleDTP implements DisjunctiveTemporalProblem, java.io.S
 //		if(resolve){
 //			enumerateSolutions(timeE);
 //		}
+		
+		// DREW ATTEMPT TO FIX SHOWER BUG
+		//advanceToTime(timeE, deltaT, true);
 	}
 
 	
@@ -482,6 +499,7 @@ public abstract class SimpleDTP implements DisjunctiveTemporalProblem, java.io.S
 		for(int j = 1; j < minimalNetwork[0].length; j++){
 			if(-minimalNetwork[0][j].getUpperBound() < min && !isFixed(j)){
 //				System.out.println("For j "+ j +" oldMin: "+Generics.toTimeFormat(min)+"\tnewMin: "+Generics.toTimeFormat((int) -minimalNetwork[0][j].getUpperBound()));
+				
 				min = (int) -minimalNetwork[0][j].getUpperBound();
 			}
 		}
@@ -1993,7 +2011,7 @@ public abstract class SimpleDTP implements DisjunctiveTemporalProblem, java.io.S
 		for(Delta delt : allDeltas){
 			
 			// we want to add this to the return set if the ratio of prevDiff / currDiff is >= relative threshold.
-			if (delt.getRelativeDifference() >= relThreshold) deltas.add(delt); System.out.println(delt.getRelativeDifference());
+			if (delt.getRelativeDifference() >= relThreshold) deltas.add(delt); System.out.println("relative diff: " + delt.getRelativeDifference());
 		}
 		return deltas;
 	}
@@ -2056,7 +2074,7 @@ public abstract class SimpleDTP implements DisjunctiveTemporalProblem, java.io.S
 		Collections.sort(allDeltas, Delta.AbsoluteDifferenceComparator);
 		ArrayList<Delta> returnDeltas = new ArrayList<Delta>();
 		//System.out.println("In rank deltas");
-		for(Delta elm: allDeltas) System.out.println(elm.getAbsoluteDifference());
+		for(Delta elm: allDeltas) System.out.println("abs diff: " + elm.getAbsoluteDifference());
 		for(int i=0; i < rankLim; i++){
 			
 			if(i < allDeltas.size()) returnDeltas.add(allDeltas.get(i));

@@ -296,11 +296,13 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
                             self.menuDelegate.minDurs = self.viewInInfo.nextActsMinDur!
                             self.menuDelegate.maxDurs = self.viewInInfo.nextActsMaxDur!
                             self.SideMenu.reloadData()
-                            if self.viewInInfo.nextActivities!.count > 0 && self.viewInInfo.clearToConfirm == "true" {
+                            /*if self.viewInInfo.nextActivities!.count > 0 && self.viewInInfo.clearToConfirm == "true" {
                                 self.ConfirmActButton.isEnabled = true
+                                //self.ConfirmActButton.backgroundColor = UIColor(red: 76/255, green: 217/255, blue: 100/255, alpha: 1.0)
                             } else {
                                 self.ConfirmActButton.isEnabled = false
-                            }
+                                //self.ConfirmActButton.backgroundColor = UIColor.white
+                            }*/
                             self.lastConfirmedBars = self.GanttChart.dataEntries
                             
                             // if the user needs to wait for a higher priority user to make a decision first, display the
@@ -318,7 +320,6 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
                     
                         // save the bars of the confirmed acts so that ratios can be compared when evaluating tentative choices
                         if (self.viewInInfo.infoType == "ganttImage") {
-                            
                             
                             
                             // temp info to test gantt with
@@ -354,9 +355,11 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
 //                                    else if (self.lastConfirmedBars![actNum].restrict > Double(actRestricts[actNum])!) {
 //                                        barColor = self.weaklyRestrictedColor
 //                                    }
-                                    self.GanttChart.tentGantt = true;
+                                    self.GanttChart.tentGantt = true
+                                    self.ConfirmActButton.isEnabled = true
                                 } else {
-                                    self.GanttChart.tentGantt = false;
+                                    self.GanttChart.tentGantt = false
+                                    self.ConfirmActButton.isEnabled = false
                                 }
                                 
                                 

@@ -533,7 +533,7 @@ public class MultiDTP implements DisjunctiveTemporalProblem, java.io.Serializabl
 			if(idxS != -1) result.add(idxS);
 			if(idxD != -1) result.add(idxD);
 		}
-		System.out.println(cons.toString());
+		// System.out.println(cons.toString());
 		if(result.size() == 0) throw new java.lang.IllegalArgumentException("Constraint "+cons.toString()+" has bad timepoint indices");
 		return result;
 	}

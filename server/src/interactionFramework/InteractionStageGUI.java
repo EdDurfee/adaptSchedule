@@ -155,6 +155,9 @@ public class InteractionStageGUI implements Runnable {
 			System.out.println("Failed to load file. Double check that file is in project directory.");
 			return;
 		}
+		
+		
+		
 		dtp = new ProblemLoader().loadDTPFromFile(problemFile);
 		System.out.println(problemFile + " loaded succesfully.\n\n"); // file loaded correctly
 
@@ -332,6 +335,7 @@ public class InteractionStageGUI implements Runnable {
 					else dtp.printDeltas(dtp.getDeltas(prevDTP));
 				}
 
+				
 				// gets universal minTime for all agents
 				// minTime == time of next decision point, AKA earliest EST of remaining activities
 				int minTime = dtp.getMinTime(); 
@@ -397,16 +401,28 @@ public class InteractionStageGUI implements Runnable {
 				// first index is agent num, second index is act ind that coordinates to activities vector
 				ArrayList<ArrayList<String>> nextActsMinDur = new ArrayList<ArrayList<String>>(); for (int i=0;i<numAgents;i++) nextActsMinDur.add(new ArrayList<String>());
 				ArrayList<ArrayList<String>> nextActsMaxDur = new ArrayList<ArrayList<String>>(); for (int i=0;i<numAgents;i++) nextActsMaxDur.add(new ArrayList<String>());
+				// keep a list of activity names that have zero duration and need to be auto performed
+				ArrayList<ArrayList<String>> zeroDurActsToPerform = new ArrayList<ArrayList<String>>(); for (int i=0;i<numAgents;i++) nextActsMaxDur.add(new ArrayList<String>());
 				for (int agent = 0; agent < numAgents; agent++) {
 					for (int act = 0; act < activities.get(agent).size(); act++) {
 						if (activities.get(agent).get(act).equals("idle")) {
 							nextActsMinDur.get(agent).add("5"); // min idle time is no less than 5 minutes
 							nextActsMaxDur.get(agent).add(String.valueOf(maxSlack.get(agent)));
+							
 							continue;
 						}
+
 						IntervalSet interval = dtp.getInterval(activities.get(agent).get(act)+"_S", activities.get(agent).get(act)+"_E").inverse().subtract(zeroInterval);
 						nextActsMinDur.get(agent).add(String.valueOf( (int) interval.getLowerBound()));
 						nextActsMaxDur.get(agent).add(String.valueOf( (int) interval.getUpperBound()));
+
+						// if this activity has zero max duration, force it to be performed and back to top
+						if (nextActsMaxDur.get(agent).get(nextActsMaxDur.get(agent).size() - 1) == "0") {
+							//zeroDurActsToPerform.get(agent).add(activities.get(agent).get(act));
+							int dur = 0;
+							dtp.executeAndAdvance(-getSystemTime(), activities.get(agent).get(act)+"_S",-getSystemTime(), activities.get(agent).get(act)+"_E",true, dur, true);
+							dtp.simplifyMinNetIntervals();
+						}
 						
 					}
 				}		
@@ -469,6 +485,7 @@ public class InteractionStageGUI implements Runnable {
 				// wait for the client to send a POST request
 				inJSON = getNextRequest();
 				
+				
 				agentNum = String.valueOf(inJSON.get("agentNum"));
 				actName = String.valueOf(inJSON.get("activityName"));
 				actDur = String.valueOf(inJSON.get("activityDuration"));
@@ -519,6 +536,7 @@ public class InteractionStageGUI implements Runnable {
 								idle = 0;
 							}
 							
+							
 							// interval from current time to end of selected duration
 							Interval curr_int = new Interval(getSystemTime() + idle, getSystemTime() + idle + time);
 							ongoingActs.add(new SimpleEntry<String,Interval>(actName, curr_int));
@@ -528,6 +546,15 @@ public class InteractionStageGUI implements Runnable {
 								if (agentNum.equals("0")) agent0CurrentConfirmedActs.add(new SimpleEntry(actName, getSystemTime() + idle + time)); // minutes + minutes ?
 								if (agentNum.equals("1")) agent1CurrentConfirmedActs.add(new SimpleEntry(actName, getSystemTime() + idle + time));
 							}
+							
+							// if there are any zero duration activities to perform, automatically perform them
+							/*for (int a = 0; a < zeroDurActsToPerform.size(); a++) {
+								for (int act = 0; act < zeroDurActsToPerform.get(a).size(); act++) {
+									int dur = 0;
+									dtp.executeAndAdvance(-getSystemTime(), zeroDurActsToPerform.get(a).get(act)+"_S",-getSystemTime(), zeroDurActsToPerform.get(a).get(act)+"_E",true, dur, true);
+									dtp.simplifyMinNetIntervals();
+								}
+							}*/
 							
 							// internal to the corresponding dtp, perform the activity and adjust the internal clock
 							dtp.executeAndAdvance(-( getSystemTime() + idle), actName+"_S",-(getSystemTime() + idle + time),actName+"_E",true, time, true);
@@ -1278,7 +1305,7 @@ public class InteractionStageGUI implements Runnable {
 //		Viz.createAndSaveDTPDiagram(dtp, initialDTP, getSystemTime(),1);
 		
 		
-		// retreive all of the data needed to create a plot from the timepoints inside viz
+		// retrieve all of the data needed to create a plot from the timepoints inside viz
 		ArrayList< HashMap< String, ArrayList< String > > > plotData = Viz.retrievePlotData( dtp, initialDTP, getSystemTime() );
 		for (int i = 0; i < plotData.size(); i++) {plotData.get(i).get("currentTime").add( String.valueOf(getSystemTime()) );} // add system current time to each agent
 		

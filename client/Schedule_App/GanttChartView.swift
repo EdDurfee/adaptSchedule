@@ -30,7 +30,7 @@ class GanttChartView: UIView, UITextViewDelegate {
     let scaleSpace: CGFloat = 60.0
     
     // how wide the names bar on the left should be
-    let namesWidth: CGFloat = 100.0
+    let namesWidth: CGFloat = 120.0
     
     // how many minutes the plot repreents horizontally
     private let minutesDisplayedInPlot: CGFloat = 1440.0
@@ -47,11 +47,15 @@ class GanttChartView: UIView, UITextViewDelegate {
     // keep track of what the bars were before any tentative choice - set in ViewController
     var lastConfirmedBars: [BarEntry]? = []
     
+    // the label that displays current system time to the user
+    var timeLabel: UILabel = UILabel()
+    
     // the coloring of the duration and availability bars
-    let blueGradStart: UIColor = UIColor.init(red: 128.0/255.0, green: 191.0/255.0, blue: 255.0/255.0, alpha: 1.0)
+    let availGradStart: UIColor = UIColor.init(red: 105/255.0, green: 153/255.0, blue: 93/255.0, alpha: 1.0)
+    let availGradEnd: UIColor = UIColor.init(red: 221/255.0, green: 185/255.0, blue: 103/255.0, alpha: 1.0)
     let durDefaultColor: UIColor = UIColor.init(red: 150.0/255.0, green: 150.0/255.0, blue: 150.0/255.0, alpha: 1.0)
-    let availDefaultColor: UIColor = UIColor.init(red: 200.0/255.0, green: 200.0/255.0, blue: 200.0/255.0, alpha: 1.0)
-    let currentTentActColor: UIColor = UIColor(red: 65.0/255.0, green: 135.0/255.0, blue: 65.0/255.0, alpha: 1.0)
+    //let availDefaultColor: UIColor = UIColor.init(red: 200.0/255.0, green: 200.0/255.0, blue: 200.0/255.0, alpha: 1.0)
+    let currentTentActColor: UIColor = UIColor(red: 190/255.0, green: 229/255.0, blue: 191/255.0, alpha: 1.0)
     let finishedColor: UIColor         = UIColor.init(red: 100.0/255.0,  green: 100.0/255.0, blue: 100.0/255.0, alpha: 1.0)
     
     // if the new availability is < threshold*oldAvailability then we can say it is strongly restricted by this choice
@@ -96,6 +100,8 @@ class GanttChartView: UIView, UITextViewDelegate {
         namesScrollView.layer.addSublayer(namesDrawLayer)
         self.addSubview(namesScrollView)
         namesScrollView.delegate = self
+        
+        drawClock(xPos_left: self.frame.size.width - 160.0, yPos_top: 5.0, time: 0)
     }
     
     // Force the x coordinates synchronized so that scaleScroll always lines up with barsScroll
@@ -165,6 +171,7 @@ class GanttChartView: UIView, UITextViewDelegate {
                 
                 drawScale()
                 
+                
                 // sort the entries based on their ID (which was sorted in the server based on act time)
                 var tempDataEntries = dataEntries.sorted(by: { $0.ID < $1.ID })
                 if tentGantt { sortedLastConfirmedBars = lastConfirmedBars!.sorted(by: { $0.ID < $1.ID }) }
@@ -173,13 +180,13 @@ class GanttChartView: UIView, UITextViewDelegate {
                 var i = -1
                 while i < tempDataEntries.count-1 {
                     i+=1
-                    // if max duration == 0, this is an optinal acitvity that cannot be performed, so skip it:
-                    if (tempDataEntries[i].maxDuration == 0) {
+                    // if max duration is zero, this is an optinal acitvity that cannot be performed, so skip it:
+                    /*if (tempDataEntries[i].maxDuration == 0) {
                         tempDataEntries.remove(at: i)
                         sortedLastConfirmedBars!.remove(at: i)
                         i -= 1
                         continue
-                    }
+                    }*/
                     
                     if (tentGantt && sortedLastConfirmedBars![i].minDuration == 0) {
                         sortedLastConfirmedBars![i].minDuration = sortedLastConfirmedBars![i].maxDuration
@@ -193,6 +200,8 @@ class GanttChartView: UIView, UITextViewDelegate {
             barsScrollView.contentOffset.x  = minsToX(mins: self.currTime ) - minsToX(mins: 180 )
             scaleScrollView.contentOffset.x = minsToX(mins: self.currTime ) - minsToX(mins: 180 )
             
+            // update the user displayed clock time
+            updateClock(self.currTime)
         }
     }
     
@@ -213,11 +222,17 @@ class GanttChartView: UIView, UITextViewDelegate {
         // color that will appear behind the activity names
         var nameColor: UIColor = UIColor.clear
         
+        
         // if this activity is already completed
         if (entry.LET <= currentTime) {
             // draw activity participation time
             barLength = minsToX ( mins: entry.LET - entry.EST )
-            drawBar(xPos_left: xPos, yPos_top: yPos, barLength: barLength, color: finishedColor, type: "default")
+            // if this activity was not skipped, draw its bar
+            //if (entry.maxDuration != 0) {
+                drawBar(xPos_left: xPos, yPos_top: yPos, barLength: barLength, color: finishedColor, type: "default")
+            //}
+            if tentGantt { nameColor = UIColor(red: 238.0/255, green: 238.0/255, blue: 238/255.0, alpha: 1.0) }
+            else { nameColor = UIColor.clear}
         }
         // if this activity is not yet completed, draw duration & availibility
         else {
@@ -232,21 +247,49 @@ class GanttChartView: UIView, UITextViewDelegate {
             if tentGantt {
                 let oldEntry = sortedLastConfirmedBars![index]
                 
+                // if this activity has zero duration, do not show the bar. But do color the name accordingly
+                /*if (entry.maxDuration == 0) {
+                    if oldEntry.maxDuration != 0 { nameColor = UIColor.red }
+                    else { nameColor = UIColor.clear }
+                }*/
+                
                 // draw availability
                 // if availability has shrunk, color it darker
-                let avail = entry.LET - entry.EST
-                let oldAvail = oldEntry.LET - oldEntry.EST
+                let avail: Int
+                let oldAvail: Int
+                if entry.maxDuration == 0 { avail = 0; oldAvail = 0; }
+                else { avail = entry.LET - entry.EST; oldAvail = oldEntry.LET - oldEntry.EST; }
                 barLength = minsToX ( mins: avail )
                 
-                var red: CGFloat = 0
-                var green: CGFloat = 0
-                var blue: CGFloat = 0
-                var alpha: CGFloat = 0
-                blueGradStart.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+                var startRed: CGFloat = 0
+                var startGreen: CGFloat = 0
+                var startBlue: CGFloat = 0
+                var startAlpha: CGFloat = 0
+                availGradStart.getRed(&startRed, green: &startGreen, blue: &startBlue, alpha: &startAlpha)
                 
-                let restrictRatio = Double(avail) / Double(oldAvail)
+                var endRed: CGFloat = 0
+                var endGreen: CGFloat = 0
+                var endBlue: CGFloat = 0
+                var endAlpha: CGFloat = 0
+                availGradEnd.getRed(&endRed, green: &endGreen, blue: &endBlue, alpha: &endAlpha)
                 
-                let barColor = UIColor(red: red, green: green*CGFloat(restrictRatio), blue: blue, alpha: 1.0)
+                let restrictRatio: CGFloat = CGFloat(avail) / CGFloat(oldAvail) // ratio (0 < r <= 1) gets smaller as new avail shrinks
+                var colorChangeRatio: CGFloat = 0.0
+                if restrictRatio == 1.0 { colorChangeRatio = 0 }
+                else { colorChangeRatio = min(1.0,1-restrictRatio*2) } // gets larger as avail shrinks
+//                let greenRangeToMax: CGFloat = 255-(startGreen*255) // how much can the green color chang before max green level (255)
+//                green = startGreen + ((1-restrictRatio) * greenRangeToMax)/255.0 // increase green level up to max of 255
+//                startGreen = startGreen - (80 * (1-restrictRatio))/255
+//                startBlue = startBlue - (80 * (1-restrictRatio))/255
+//                let red = startRed + (endRed - startRed)*colorChangeRatio
+//                let green = startGreen + (endGreen-startGreen)*colorChangeRatio
+//                let blue = startBlue + (endBlue-startBlue)*colorChangeRatio
+                let red = startRed + (startRed - endRed) * colorChangeRatio
+                let blue = startBlue + (startBlue - endBlue) * colorChangeRatio
+                let green = startGreen + (startGreen - endGreen) * colorChangeRatio
+                
+                
+                let barColor = UIColor(red: red, green: green, blue: blue, alpha: 1.0)
                 drawBar(xPos_left: xPos, yPos_top: yPos, barLength: barLength, color: barColor, type: "default")
                 
                 // draw min duration
@@ -263,7 +306,7 @@ class GanttChartView: UIView, UITextViewDelegate {
                 let oldxPos: CGFloat = leftSpace + minsToX(mins: oldEntry.EST)
                 
                 // draw old availability
-                barLength = minsToX ( mins: oldEntry.LET - oldEntry.EST )
+                barLength = minsToX ( mins: oldAvail )
                 drawBar(xPos_left: oldxPos, yPos_top: yPos, barLength: barLength, color: UIColor.darkGray, type: "hollow")
                 
                 // draw old min duration
@@ -273,8 +316,10 @@ class GanttChartView: UIView, UITextViewDelegate {
                 // adjust the coloring behind the name to match the bar coloring level
                 if (entry.isTentAct) { // if this is the tentative activity being investigated
                     nameColor = currentTentActColor
+                } else if (avail == oldAvail && entry.minDuration == oldEntry.minDuration) {
+                    nameColor = UIColor(red: 238.0/255, green: 238.0/255, blue: 238/255.0, alpha: 1.0) //UIColor.clear
                 } else {
-                    nameColor = UIColor(red: red, green: green*CGFloat(restrictRatio), blue: blue, alpha: 1.0)
+                    nameColor = UIColor(red: red, green: green, blue: blue, alpha: 1.0)
                 }
             
             } // else if not a tentative gantt, do not color things relative to previous entries
@@ -282,9 +327,11 @@ class GanttChartView: UIView, UITextViewDelegate {
                 
                 // draw availability w/ outline
                 // if availability has shrunk, paint it red
-                let avail = entry.LET - entry.EST
+                var avail: Int
+                if entry.maxDuration == 0 { avail = 0 }
+                else { avail = entry.LET - entry.EST }
                 barLength = minsToX ( mins: avail )
-                drawBar(xPos_left: xPos, yPos_top: yPos, barLength: barLength, color: blueGradStart, type: "default")
+                drawBar(xPos_left: xPos, yPos_top: yPos, barLength: barLength, color: availGradStart, type: "default")
                 drawBar(xPos_left: xPos, yPos_top: yPos, barLength: barLength, color: UIColor.darkGray, type: "hollow")
                 
                 // draw min duration w/ outline
@@ -317,6 +364,9 @@ class GanttChartView: UIView, UITextViewDelegate {
     // color: UIColor of bar
     private func drawBar(xPos_left: CGFloat, yPos_top: CGFloat, barLength: CGFloat, color: UIColor, type: String) {
         
+        // if the duration is 0, then this is an optinal activity that was not performed. Keep the chart row, but dont show a bar
+        if barLength == 0 { return; }
+        
         let barLength = max(barLength, 0)
         
         let xPos_left = xPos_left
@@ -325,7 +375,7 @@ class GanttChartView: UIView, UITextViewDelegate {
         
         let cornerRadius = CGFloat(5)
         
-
+        
         // draw side lines and corner curves
         path.move(to: CGPoint(x: xPos_left + cornerRadius, y: yPos_top))
 
@@ -405,7 +455,7 @@ class GanttChartView: UIView, UITextViewDelegate {
     }
     
     private func drawScale() {
-        drawHorzLine(y: barsScrollView.frame.height, color: UIColor.gray, lineType: "solid" )
+        drawHorzLine(y: barsScrollView.frame.height, color: UIColor.black, lineType: "solid" )
         // mark each hour in the day
         for i in 1..<Int(minutesDisplayedInPlot / 60) {
             drawVertLine(x: minsToX(mins: i*60) + leftSpace, color: UIColor.gray, lineType: "dashed")
@@ -441,7 +491,7 @@ class GanttChartView: UIView, UITextViewDelegate {
         if lineType == "dashed" {
             lineLayer.lineDashPattern = [4, 4]
         }
-        lineLayer.strokeColor = UIColor.black.cgColor
+        lineLayer.strokeColor = color.cgColor
         self.layer.insertSublayer(lineLayer, at: 0)
         
     }
@@ -486,20 +536,20 @@ class GanttChartView: UIView, UITextViewDelegate {
     }
     
     
-    // Draw a rectangle box with rounded corners
+    // Draw a rectangle box behind activity names
     func drawNameRect(topY: CGFloat, color: UIColor) {
         let width = namesWidth
         let height = barHeight + barSpace + 1
         
         let path: UIBezierPath = UIBezierPath()
         
-        path.move(to: CGPoint(x: 0.0, y: topY))
+        path.move(to: CGPoint(x: 0.0-1, y: topY))
         
-        path.addLine(to: CGPoint(x: width,  y: topY))
+        path.addLine(to: CGPoint(x: width-1,  y: topY))
         
-        path.addLine(to: CGPoint(x: width,  y: topY + height))
+        path.addLine(to: CGPoint(x: width-1,  y: topY + height))
         
-        path.addLine(to: CGPoint(x: 0.0,  y: topY + height))
+        path.addLine(to: CGPoint(x: 0.0-1,  y: topY + height))
         
         path.close()
         
@@ -517,15 +567,12 @@ class GanttChartView: UIView, UITextViewDelegate {
     // draw a clock display as a box with a simple text display of time inside
     private func drawClock(xPos_left: CGFloat, yPos_top: CGFloat, time: Int) {
         
-        let boxWidth: CGFloat = 100
+        let boxWidth: CGFloat = 140
         let boxHeight: CGFloat = 50
-        
         let xPos_left = xPos_left
-        
-        let path: UIBezierPath = UIBezierPath()
-        
         let cornerRadius = CGFloat(5)
         
+        let path: UIBezierPath = UIBezierPath()
         
         // draw side lines and corner curves
         path.move(to: CGPoint(x: xPos_left + cornerRadius, y: yPos_top))
@@ -564,12 +611,32 @@ class GanttChartView: UIView, UITextViewDelegate {
         
         self.layer.addSublayer(pathLayer)
         
+        
+        let clockHeadTextHeight: CGFloat = 16
+        let clockHeadTextWidth: CGFloat = boxWidth - 20
+        
+        let headerLabel = UILabel(frame: CGRect(x: 0, y: 0, width: clockHeadTextWidth, height: clockHeadTextHeight))
+        headerLabel.center = CGPoint(x: xPos_left + boxWidth/2.0, y: yPos_top + clockHeadTextHeight/2.0 + 5.0)
+        headerLabel.textAlignment = .center
+        headerLabel.text = "Current Time"
+        headerLabel.font = UIFont(name: "ArialHebrew-Light", size: 14.0)!
+        self.addSubview(headerLabel)
+        
+        let clockTimeTextHeight: CGFloat = 25
+        let clockTimeTextWidth: CGFloat = boxWidth - 20
+        
+        timeLabel = UILabel(frame: CGRect(x: 0, y: 0, width: clockTimeTextWidth, height: clockTimeTextHeight+clockHeadTextHeight+5))
+        timeLabel.center = CGPoint(x: xPos_left + boxWidth/2.0, y: yPos_top + clockHeadTextHeight + 5 + clockTimeTextHeight/2.0)
+        timeLabel.textAlignment = .center
+        timeLabel.text = minsToStrTime(time)
+        timeLabel.font = UIFont(name: "ArialRoundedMTBold", size: 20.0)!
+        self.addSubview(timeLabel)
     }
     
     // update the displayed clock time
     // input: time in minutes since start of day
-    private func updateClock(newTime: Int) {
-        
+    private func updateClock(_ newTime: Int) {
+        timeLabel.text = minsToStrTime(newTime)
         
     }
     
@@ -586,6 +653,19 @@ class GanttChartView: UIView, UITextViewDelegate {
         textLayer.string = String(mins / 60) + ":00"
         
         scaleDrawLayer.insertSublayer(textLayer, at: 0)
+    }
+    
+    // Convert from minutes to "hh:mm pm/am" format
+    private func minsToStrTime(_ mins: Int) -> String {
+        var dayHalf = "AM"
+        var adjMins = mins
+        if (adjMins > 780) { // if it is the afternoon
+            adjMins = mins - 780
+            dayHalf = "PM"
+        }
+        let strHours = String(adjMins / 60) // interger division
+        let strMins = String(format: "%02d", adjMins % 60)
+        return strHours + ":" + strMins + " " + dayHalf
     }
     
     // Convert from minutes to the X pixel coordinate from left side of plot
