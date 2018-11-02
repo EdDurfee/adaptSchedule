@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		3A19879320FE3777003C3D91 /* GanttChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A19879220FE3777003C3D91 /* GanttChartView.swift */; };
+		3A47AB31218B659A00DBD035 /* DelActTableController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A47AB30218B659A00DBD035 /* DelActTableController.swift */; };
 		3A51297F210F7AEA0046D019 /* AvailTextBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A51297E210F7AEA0046D019 /* AvailTextBox.swift */; };
 		3A5365BC20B3564F0057B451 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A5365BB20B3564F0057B451 /* AppDelegate.swift */; };
 		3A5365BE20B3564F0057B451 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A5365BD20B3564F0057B451 /* ViewController.swift */; };
@@ -43,6 +44,7 @@
 
 /* Begin PBXFileReference section */
 		3A19879220FE3777003C3D91 /* GanttChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GanttChartView.swift; sourceTree = "<group>"; };
+		3A47AB30218B659A00DBD035 /* DelActTableController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DelActTableController.swift; sourceTree = "<group>"; };
 		3A51297E210F7AEA0046D019 /* AvailTextBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvailTextBox.swift; sourceTree = "<group>"; };
 		3A5365B820B3564F0057B451 /* Schedule_App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Schedule_App.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3A5365BB20B3564F0057B451 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -120,6 +122,7 @@
 				3A5365BB20B3564F0057B451 /* AppDelegate.swift */,
 				3AD15F42210792A300F30C23 /* ActivityEditView.swift */,
 				3AD15F462107BB6300F30C23 /* ModActTableController.swift */,
+				3A47AB30218B659A00DBD035 /* DelActTableController.swift */,
 				3A5365C220B356510057B451 /* Assets.xcassets */,
 				3A6081D9214AAA9800BEA91B /* Exclamation_in_a_circle.svg.png */,
 				3A19879220FE3777003C3D91 /* GanttChartView.swift */,
@@ -290,6 +293,7 @@
 				3A19879320FE3777003C3D91 /* GanttChartView.swift in Sources */,
 				3AB21BC920D2CF73008CADF5 /* MenuController.swift in Sources */,
 				3A5365BC20B3564F0057B451 /* AppDelegate.swift in Sources */,
+				3A47AB31218B659A00DBD035 /* DelActTableController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

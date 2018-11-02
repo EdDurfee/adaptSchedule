@@ -51,8 +51,9 @@ class GanttChartView: UIView, UITextViewDelegate {
     var timeLabel: UILabel = UILabel()
     
     // the coloring of the duration and availability bars
-    let availGradStart: UIColor = UIColor.init(red: 105/255.0, green: 153/255.0, blue: 93/255.0, alpha: 1.0)
-    let availGradEnd: UIColor = UIColor.init(red: 221/255.0, green: 185/255.0, blue: 103/255.0, alpha: 1.0)
+    let availDefault: UIColor = UIColor.init(red: 154/255.0, green: 196/255.0, blue: 248/255.0, alpha: 1.0)
+//    let availGradStart: UIColor = UIColor.init(red: 255/255.0, green: 255/255.0, blue: 150/255.0, alpha: 1.0)
+    let availGradReduced: UIColor = UIColor.init(red: 255/255.0, green: 255/255.0, blue: 110/255.0, alpha: 1.0)
     let durDefaultColor: UIColor = UIColor.init(red: 150.0/255.0, green: 150.0/255.0, blue: 150.0/255.0, alpha: 1.0)
     //let availDefaultColor: UIColor = UIColor.init(red: 200.0/255.0, green: 200.0/255.0, blue: 200.0/255.0, alpha: 1.0)
     let currentTentActColor: UIColor = UIColor(red: 190/255.0, green: 229/255.0, blue: 191/255.0, alpha: 1.0)
@@ -261,22 +262,31 @@ class GanttChartView: UIView, UITextViewDelegate {
                 else { avail = entry.LET - entry.EST; oldAvail = oldEntry.LET - oldEntry.EST; }
                 barLength = minsToX ( mins: avail )
                 
-                var startRed: CGFloat = 0
-                var startGreen: CGFloat = 0
-                var startBlue: CGFloat = 0
-                var startAlpha: CGFloat = 0
-                availGradStart.getRed(&startRed, green: &startGreen, blue: &startBlue, alpha: &startAlpha)
+//                var startRed: CGFloat = 0
+//                var startGreen: CGFloat = 0
+//                var startBlue: CGFloat = 0
+//                var startAlpha: CGFloat = 0
+//                availGradStart.getRed(&startRed, green: &startGreen, blue: &startBlue, alpha: &startAlpha)
+//
+//                var endRed: CGFloat = 0
+//                var endGreen: CGFloat = 0
+//                var endBlue: CGFloat = 0
+//                var endAlpha: CGFloat = 0
+//                availGradEnd.getRed(&endRed, green: &endGreen, blue: &endBlue, alpha: &endAlpha)
                 
-                var endRed: CGFloat = 0
-                var endGreen: CGFloat = 0
-                var endBlue: CGFloat = 0
-                var endAlpha: CGFloat = 0
-                availGradEnd.getRed(&endRed, green: &endGreen, blue: &endBlue, alpha: &endAlpha)
+                let barColor: UIColor
                 
                 let restrictRatio: CGFloat = CGFloat(avail) / CGFloat(oldAvail) // ratio (0 < r <= 1) gets smaller as new avail shrinks
                 var colorChangeRatio: CGFloat = 0.0
-                if restrictRatio == 1.0 { colorChangeRatio = 0 }
-                else { colorChangeRatio = min(1.0,1-restrictRatio*2) } // gets larger as avail shrinks
+                if restrictRatio == 1.0 {
+                    barColor = availDefault
+                } else {
+//                    colorChangeRatio = min(1.0,1-restrictRatio*2)
+//                    let red = startRed + (startRed - endRed) * colorChangeRatio
+//                    let blue = startBlue + (startBlue - endBlue) * colorChangeRatio
+//                    let green = startGreen + (startGreen - endGreen) * colorChangeRatio
+                    barColor = availGradReduced // UIColor(red: red, green: green, blue: blue, alpha: 1.0)
+                } // gets larger as avail shrinks
 //                let greenRangeToMax: CGFloat = 255-(startGreen*255) // how much can the green color chang before max green level (255)
 //                green = startGreen + ((1-restrictRatio) * greenRangeToMax)/255.0 // increase green level up to max of 255
 //                startGreen = startGreen - (80 * (1-restrictRatio))/255
@@ -284,12 +294,11 @@ class GanttChartView: UIView, UITextViewDelegate {
 //                let red = startRed + (endRed - startRed)*colorChangeRatio
 //                let green = startGreen + (endGreen-startGreen)*colorChangeRatio
 //                let blue = startBlue + (endBlue-startBlue)*colorChangeRatio
-                let red = startRed + (startRed - endRed) * colorChangeRatio
-                let blue = startBlue + (startBlue - endBlue) * colorChangeRatio
-                let green = startGreen + (startGreen - endGreen) * colorChangeRatio
+//                let red = startRed + (startRed - endRed) * colorChangeRatio
+//                let blue = startBlue + (startBlue - endBlue) * colorChangeRatio
+//                let green = startGreen + (startGreen - endGreen) * colorChangeRatio
                 
                 
-                let barColor = UIColor(red: red, green: green, blue: blue, alpha: 1.0)
                 drawBar(xPos_left: xPos, yPos_top: yPos, barLength: barLength, color: barColor, type: "default")
                 
                 // draw min duration
@@ -319,7 +328,7 @@ class GanttChartView: UIView, UITextViewDelegate {
                 } else if (avail == oldAvail && entry.minDuration == oldEntry.minDuration) {
                     nameColor = UIColor(red: 238.0/255, green: 238.0/255, blue: 238/255.0, alpha: 1.0) //UIColor.clear
                 } else {
-                    nameColor = UIColor(red: red, green: green, blue: blue, alpha: 1.0)
+                    nameColor = availGradReduced //UIColor(red: red, green: green, blue: blue, alpha: 1.0)
                 }
             
             } // else if not a tentative gantt, do not color things relative to previous entries
@@ -331,7 +340,7 @@ class GanttChartView: UIView, UITextViewDelegate {
                 if entry.maxDuration == 0 { avail = 0 }
                 else { avail = entry.LET - entry.EST }
                 barLength = minsToX ( mins: avail )
-                drawBar(xPos_left: xPos, yPos_top: yPos, barLength: barLength, color: availGradStart, type: "default")
+                drawBar(xPos_left: xPos, yPos_top: yPos, barLength: barLength, color: availDefault, type: "default")
                 drawBar(xPos_left: xPos, yPos_top: yPos, barLength: barLength, color: UIColor.darkGray, type: "hollow")
                 
                 // draw min duration w/ outline

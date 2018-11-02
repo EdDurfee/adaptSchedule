@@ -27,6 +27,10 @@ class MenuController: UITableViewController {
     var actSelectionChanged = false
     var otherSelectionChanged = false
     
+    // These are only used to track if a user selects an item that is already selected (AKA deslecting)
+    var currentCellSect = -1
+    var currentCellRow  = -1
+    
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -143,6 +147,16 @@ class MenuController: UITableViewController {
     // If an attempt to selct something else, show a popup informing the user it is not yet implemented
     override public func tableView(_ tableView: UITableView, willSelectRowAt indexPath: IndexPath) -> IndexPath? {
         
+        // if this is the section/row already selected, deselect it
+        if indexPath.section == currentCellSect && indexPath.row == currentCellRow {
+            tableView.deselectRow(at: indexPath, animated: true)
+            otherSelectionChanged = true
+            actSelectionChanged = true
+            currentCellSect = -1
+            currentCellRow = -1
+            return nil
+        }
+        
         // if in activity section
         if indexPath.section == 0 {
             
@@ -176,8 +190,15 @@ class MenuController: UITableViewController {
             selectionSectNum = 1
         }
             
-            // if 'modify activity' is selected
+        // if 'modify activity' is selected
         else if (indexPath.section == 1 && indexPath.row == 1) {
+            
+            otherSelectionChanged = true
+            selectionSectNum = 1
+        }
+            
+        // if 'delete activity' is selected
+        else if (indexPath.section == 1 && indexPath.row == 2) {
             
             otherSelectionChanged = true
             selectionSectNum = 1
@@ -198,6 +219,11 @@ class MenuController: UITableViewController {
         return indexPath
     }
     
+    // This function is called after a cell has been selected
+    override public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        currentCellSect = indexPath.section
+        currentCellRow = indexPath.row
+    }
     
     //optional func tableView(_ tableView: UITableView, accessoryButtonTappedForRowWith indexPath: IndexPath)
  

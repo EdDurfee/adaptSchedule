@@ -156,8 +156,23 @@ public class InteractionStageGUI implements Runnable {
 			return;
 		}
 		
+		// this is a vector of vectors that contains that sequence of confirmed activities and their details
+		ArrayList< HashMap< String, String >> actHistory = new ArrayList<HashMap<String,String>>();
+		
+		// this is queue where server can place requests that it wants to process later
+		LinkedBlockingQueue<JSONObject> internalRequestQueue    = new LinkedBlockingQueue<JSONObject>();
+
+		// this is where JSON requests from clients will be put
+		JSONObject jsonIN = new JSONObject();
+
+		// hardcoded to 2 agents. Will still work with 1 agent though
+		agent0CurrentConfirmedActs = new ArrayList<SimpleEntry<String, Integer>>(0);
+		agent1CurrentConfirmedActs = new ArrayList<SimpleEntry<String, Integer>>(0);
+
+
 		
 		
+		// set up dtp
 		dtp = new ProblemLoader().loadDTPFromFile(problemFile);
 		System.out.println(problemFile + " loaded succesfully.\n\n"); // file loaded correctly
 
@@ -166,10 +181,6 @@ public class InteractionStageGUI implements Runnable {
 		dtp.enumerateSolutions(0);	
 		dtp.simplifyMinNetIntervals();
 		
-		// MAX_LET == the largest of the latest end times of all activities
-		MAX_LET = (int) Math.ceil(getMaxLatestEndTime(dtp));
-		// Drew: Trying to temp patch a bug
-		MAX_LET = 1440;
 		
 		numAgents = dtp.getNumAgents();
 		systemTime = new ArrayList<Integer>(numAgents);
@@ -186,16 +197,16 @@ public class InteractionStageGUI implements Runnable {
 		}
 		dtp.setCurrentAgent(currentAgent);
 		
-		// hardcoded to 2 agents. Will still work with 1 agent though
-		agent0CurrentConfirmedActs = new ArrayList<SimpleEntry<String, Integer>>(0);
-		agent1CurrentConfirmedActs = new ArrayList<SimpleEntry<String, Integer>>(0);
+		
+		// MAX_LET == the largest of the latest end times of all activities
+		MAX_LET = (int) Math.ceil(getMaxLatestEndTime(dtp));
+		// Drew: Trying to temp patch a bug
+		MAX_LET = 1440;
 		
 		initialDTP = dtp.clone();
 		
 		oldPlotData = new ArrayList< HashMap< String, ArrayList< String > > >();
 		
-		// this is where JSON requests from clients will be put
-		JSONObject jsonIN = new JSONObject();
 		
 		
 		
@@ -213,7 +224,70 @@ public class InteractionStageGUI implements Runnable {
 		 * before they get a chance to select activities. This is theoretically the simplest place to add a new activity, and if it can be
 		 * first done here, it should be easier to expand out to the future case 
 		 */
+	
+/*
+		// THE APPROACH BELOW ATTEMPTS TO HANDLE DELETING/ADDING ACT BY MODIFYING AN XML
+		File modifiedXML = null;
+		String xmlModString = "";
+		try {
+			File originalXML = new File(problemFile);
+			String newXMLFileName = "tempModifiedXML.xml";
+			modifiedXML = new File(newXMLFileName);
+			modifiedXML.delete();
+			Files.copy(originalXML.toPath(), modifiedXML.toPath());
+			
+		} catch (Exception e) {
+			System.err.println("Error is creating new modified XML file.\n"+e.toString()+"\n"+Arrays.toString(e.getStackTrace()) + "\n");
+			System.err.flush();
+		}
+		
+		try{
+			Scanner scan = new Scanner(modifiedXML);
+			xmlModString = scan.useDelimiter("\\Z").next();
+			scan.close();
+		}
+		catch(IOException e){
+			System.err.println(e.getMessage()+"\n"+e.getStackTrace().toString());
+		}
+		
+		// remove this activity from the modified xml file string
+		xmlModString = XMLParser.removeSpecificActivity(xmlModString, "breakfast");
+		
+		// put new xml string into file
+		try {
+		    BufferedWriter writer = new BufferedWriter(new FileWriter("tempModifiedXML.xml"));
+		    writer.write(xmlModString);
+		    writer.close();
+		} catch(IOException e){
+			System.err.println(e.getMessage()+"\n"+e.getStackTrace().toString());
+		}
+		
+		// save old state of the system, in case new system fails
+		DisjunctiveTemporalProblem beforeModDTP = dtp.clone();
+		
+		
+		// load this xml string to a dtp and put it in main dtp variable
+		// set up dtp
+		dtp = new ProblemLoader().loadDTPFromFile("tempModifiedXML.xml");
+		System.out.println("tempModifiedXML.xml" + " loaded succesfully.\n\n"); // file loaded correctly
+
+		// initialize variables and the DTP
+		dtp.updateInternalData();
+		dtp.enumerateSolutions(0);	
+		dtp.simplifyMinNetIntervals();
+		
+		systemTime = new ArrayList<Integer>(numAgents);
+		prevSystemTime = new ArrayList<Integer>(numAgents);
+		previousDTPs = new ArrayList< Stack<SimpleEntry<Integer, DisjunctiveTemporalProblem>> >(numAgents);
+		for(int i = 0; i < numAgents; i++) previousDTPs.add( new Stack<SimpleEntry<Integer, DisjunctiveTemporalProblem>>() );
+		for(int i = 0; i < numAgents; i++) systemTime.add(0); prevSystemTime.add(0);
+		
+		dtp.setCurrentAgent(currentAgent);
+*/		
+		
 /*		
+ * 		// THE APPROACH BELOW ATTEMPTS TO HANDLE ADDING ACT BY ADDING AND MODYFING TIMEPOINTS
+ * 
 		String addActName = "TestAddAct";
 		int newMinDurs_add = 30;   //new ArrayList<String>(); newMinDurs_add.add("00:30");
 		int newMaxDurs_add = 240;  //new ArrayList<String>(); newMinDurs_add.add("02:00");
@@ -402,7 +476,7 @@ public class InteractionStageGUI implements Runnable {
 				ArrayList<ArrayList<String>> nextActsMinDur = new ArrayList<ArrayList<String>>(); for (int i=0;i<numAgents;i++) nextActsMinDur.add(new ArrayList<String>());
 				ArrayList<ArrayList<String>> nextActsMaxDur = new ArrayList<ArrayList<String>>(); for (int i=0;i<numAgents;i++) nextActsMaxDur.add(new ArrayList<String>());
 				// keep a list of activity names that have zero duration and need to be auto performed
-				ArrayList<ArrayList<String>> zeroDurActsToPerform = new ArrayList<ArrayList<String>>(); for (int i=0;i<numAgents;i++) nextActsMaxDur.add(new ArrayList<String>());
+//				ArrayList<ArrayList<String>> zeroDurActsToPerform = new ArrayList<ArrayList<String>>(); for (int i=0;i<numAgents;i++) nextActsMaxDur.add(new ArrayList<String>());
 				for (int agent = 0; agent < numAgents; agent++) {
 					for (int act = 0; act < activities.get(agent).size(); act++) {
 						if (activities.get(agent).get(act).equals("idle")) {
@@ -482,8 +556,14 @@ public class InteractionStageGUI implements Runnable {
 				}
 			
 				
-				// wait for the client to send a POST request
-				inJSON = getNextRequest();
+				// in order to enable system to reset and catch up properly, pull activities out of internalRequestQueue
+				//  this queue will be populated with activities that were already completed on previous systems
+				if (internalRequestQueue.size() > 0) {
+					inJSON = internalRequestQueue.poll();
+				} else {
+					// wait for the client to send a POST request
+					inJSON = getNextRequest();
+				}
 				
 				
 				agentNum = String.valueOf(inJSON.get("agentNum"));
@@ -542,9 +622,17 @@ public class InteractionStageGUI implements Runnable {
 							ongoingActs.add(new SimpleEntry<String,Interval>(actName, curr_int));
 							
 							// if a confirmed activity, add the activity to the corresponding list of confirmedActs
+							// also add this act info to the history list
 							if ( ((String) inJSON.get("infoType")).equals("confirmActivity") ) {
 								if (agentNum.equals("0")) agent0CurrentConfirmedActs.add(new SimpleEntry(actName, getSystemTime() + idle + time)); // minutes + minutes ?
 								if (agentNum.equals("1")) agent1CurrentConfirmedActs.add(new SimpleEntry(actName, getSystemTime() + idle + time));
+							
+								HashMap<String,String> thisAct = new HashMap<String,String>();
+								thisAct.put("agentNum",          agentNum);
+								thisAct.put("activityName",      actName);
+								thisAct.put("activityDuration",  actDur);
+								
+								actHistory.add(thisAct);
 							}
 							
 							// if there are any zero duration activities to perform, automatically perform them
@@ -707,6 +795,25 @@ public class InteractionStageGUI implements Runnable {
 							
 							break;
 						
+					// delete an activity that has not yet been performed
+					// populate internalRequestQueue with all activities that have already been completed
+					//  the items in the internalRequestQueue will be processed by the main loop
+					case "deleteActivity":
+						
+						// set up historical sequence of events that led up to current time in system before deletion
+						for (HashMap<String,String> h : actHistory) {
+							JSONObject temp = createInternalJSON(h);
+							internalRequestQueue.add(temp);
+						}
+						actHistory.clear();
+						
+						
+						// remove the selected activity from the system
+						deleteActFromXML(actName);
+						
+						
+						break;
+					
 					// temporary demo system to allow a client to trigger an advancing of time to the next decision point (minTime)
 					case "advSysTime":
 						int temp = minTime - getSystemTime();
@@ -1201,6 +1308,74 @@ public class InteractionStageGUI implements Runnable {
 //		}
 //	}
 	
+	/*
+	 * This function deletes the activity from the XML file so that it will be deleted from the user schedule
+	 * It also modifies the global dtp and refreshes it
+	 */
+	private void deleteActFromXML(String delActName) {
+		
+		File modifiedXML = null;
+		String xmlModString = "";
+		try {
+			File originalXML = new File(problemFile);
+			String newXMLFileName = "tempModifiedXML.xml";
+			modifiedXML = new File(newXMLFileName);
+			modifiedXML.delete();
+			Files.copy(originalXML.toPath(), modifiedXML.toPath());
+			
+		} catch (Exception e) {
+			System.err.println("Error is creating new modified XML file.\n"+e.toString()+"\n"+Arrays.toString(e.getStackTrace()) + "\n");
+			System.err.flush();
+		}
+		
+		try{
+			Scanner scan = new Scanner(modifiedXML);
+			xmlModString = scan.useDelimiter("\\Z").next();
+			scan.close();
+		}
+		catch(IOException e){
+			System.err.println(e.getMessage()+"\n"+e.getStackTrace().toString());
+		}
+		
+		// remove this activity from the modified xml file string
+		xmlModString = XMLParser.removeSpecificActivity(xmlModString, delActName);
+		
+		// put new xml string into file
+		try {
+		    BufferedWriter writer = new BufferedWriter(new FileWriter("tempModifiedXML.xml"));
+		    writer.write(xmlModString);
+		    writer.close();
+		} catch(IOException e){
+			System.err.println(e.getMessage()+"\n"+e.getStackTrace().toString());
+		}
+		
+		// save old state of the system, in case new system fails
+		DisjunctiveTemporalProblem beforeModDTP = dtp.clone();
+		
+		
+		// load this xml string to a dtp and put it in main dtp variable
+		// set up dtp
+		dtp = new ProblemLoader().loadDTPFromFile("tempModifiedXML.xml");
+		System.out.println("tempModifiedXML.xml" + " loaded succesfully.\n\n"); // file loaded correctly
+
+		// initialize variables and the DTP
+		dtp.updateInternalData();
+		dtp.enumerateSolutions(0);	
+		dtp.simplifyMinNetIntervals();
+		
+		systemTime = new ArrayList<Integer>(numAgents);
+		prevSystemTime = new ArrayList<Integer>(numAgents);
+		previousDTPs = new ArrayList< Stack<SimpleEntry<Integer, DisjunctiveTemporalProblem>> >(numAgents);
+		for(int i = 0; i < numAgents; i++) previousDTPs.add( new Stack<SimpleEntry<Integer, DisjunctiveTemporalProblem>>() );
+		for(int i = 0; i < numAgents; i++) systemTime.add(0); prevSystemTime.add(0);
+		
+		dtp.setCurrentAgent(currentAgent);
+		
+		
+		
+		
+	}
+	
 	@SuppressWarnings("unchecked")
 	private void sendJSONToClient( String toAgentNum,
 			String infoType, String startTime, String lastActivity, String clearToConfirm, List<String> nextActivities,
@@ -1312,7 +1487,7 @@ public class InteractionStageGUI implements Runnable {
 		// wait until gantt is made, saved, and loaded into system
 //		ganttDir = new File("forClient_image.png");
 //		String imageString = "";
-		try {
+		//try {
 //			while(!ganttDir.exists()) { // while it does not exist
 //				Thread.sleep(100);
 //				ganttDir = new File("forClient_image.png");
@@ -1338,32 +1513,32 @@ public class InteractionStageGUI implements Runnable {
 			int totalStrongCount = 0;
 			
 			// if this is the first choice (no oldPlotData), then fill the restrictCount arrays with 0's
-			if (oldPlotData.size() == 0) {
-				for (int i = 0; i < Integer.valueOf(numAgents); i++) {
-					weakRestrictCounts.add(0);
-					strongRestrictCounts.add(0);
-				}
-			}
-			
-			for (int a = 0; a < oldPlotData.size(); a++) {
-				weakRestrictCounts.add(0);
-				strongRestrictCounts.add(0);
-				for (int i = 0; i < oldPlotData.get(a).get("actRestricts").size(); i++) {
-					double newRatio =  Double.parseDouble( plotData.get(a).get("actRestricts").get(i) );
-					double oldRatio =  Double.parseDouble( oldPlotData.get(a).get("actRestricts").get(i) );
-					double ratioOfRatios = newRatio / oldRatio;
-					
-					// if there has been a change over the threshold, increment strong restriction count
-					if (ratioOfRatios < 0.7) {
-						strongRestrictCounts.set(a, strongRestrictCounts.get(a)+1);
-						totalStrongCount++;
-					} // if there has been a change less than the threshold, increment weak restriction count
-					else if (ratioOfRatios < 1.0) {
-						weakRestrictCounts.set(a, weakRestrictCounts.get(a)+1);
-						totalWeakCount++;
-					}
-				};
-			}
+//			if (oldPlotData.size() == 0) {
+//				for (int i = 0; i < Integer.valueOf(numAgents); i++) {
+//					weakRestrictCounts.add(0);
+//					strongRestrictCounts.add(0);
+//				}
+//			}
+//			
+//			for (int a = 0; a < oldPlotData.size(); a++) {
+//				weakRestrictCounts.add(0);
+//				strongRestrictCounts.add(0);
+//				for (int i = 0; i < oldPlotData.get(a).get("actRestricts").size(); i++) {
+//					double newRatio =  Double.parseDouble( plotData.get(a).get("actRestricts").get(i) );
+//					double oldRatio =  Double.parseDouble( oldPlotData.get(a).get("actRestricts").get(i) );
+//					double ratioOfRatios = newRatio / oldRatio;
+//					
+//					// if there has been a change over the threshold, increment strong restriction count
+//					if (ratioOfRatios < 0.7) {
+//						strongRestrictCounts.set(a, strongRestrictCounts.get(a)+1);
+//						totalStrongCount++;
+//					} // if there has been a change less than the threshold, increment weak restriction count
+//					else if (ratioOfRatios < 1.0) {
+//						weakRestrictCounts.set(a, weakRestrictCounts.get(a)+1);
+//						totalWeakCount++;
+//					}
+//				};
+//			}
 			
 			// send JSON file with infoType and image as encoded String
 			// if agentNum is set to "ALL", send the JSON to all clients/agents
@@ -1384,8 +1559,8 @@ public class InteractionStageGUI implements Runnable {
 							plotData.get(a).get("actESTs"),    // actESTs
 							plotData.get(a).get("actLETs"),    // actLETs
 							plotData.get(a).get("actRestricts"), // actRestricts
-							String.valueOf( totalWeakCount - weakRestrictCounts.get(a) ),     // otherWeakRestrictCount
-							String.valueOf( totalStrongCount - strongRestrictCounts.get(a) ), // otherStrongRestrictCount
+							"", // String.valueOf( totalWeakCount - weakRestrictCounts.get(a) ),     // otherWeakRestrictCount
+							"", // String.valueOf( totalStrongCount - strongRestrictCounts.get(a) ), // otherStrongRestrictCount
 							plotData.get(a).get("currentTime").get(0),			 // currentTime
 							"",   // imgStr
 //							imageString,			    // imgStr
@@ -1412,8 +1587,8 @@ public class InteractionStageGUI implements Runnable {
 						plotData.get(Integer.valueOf(agentNum)).get("actESTs"),    // actESTs
 						plotData.get(Integer.valueOf(agentNum)).get("actLETs"),    // actLETs
 						plotData.get(Integer.valueOf(agentNum)).get("actRestricts"), // actRestricts
-						String.valueOf( totalWeakCount - weakRestrictCounts.get(Integer.valueOf(agentNum)) ),     // otherWeakRestrictCount
-						String.valueOf( totalStrongCount - strongRestrictCounts.get(Integer.valueOf(agentNum)) ), // otherStrongRestrictCount
+						"", //String.valueOf( totalWeakCount - weakRestrictCounts.get(Integer.valueOf(agentNum)) ),     // otherWeakRestrictCount
+						"", //String.valueOf( totalStrongCount - strongRestrictCounts.get(Integer.valueOf(agentNum)) ), // otherStrongRestrictCount
 						plotData.get(Integer.valueOf(agentNum)).get("currentTime").get(0),			 // currentTime
 						"",   // imgStr
 //						imageString,			 // imgStr
@@ -1422,23 +1597,32 @@ public class InteractionStageGUI implements Runnable {
 				);
 				
 
-				System.out.println("totalStrongCount: " + String.valueOf(totalStrongCount));
-				System.out.println("totalWeakCount: " + String.valueOf(totalWeakCount));
-				System.out.println("this agent strong count: " + String.valueOf(strongRestrictCounts.get(Integer.valueOf(agentNum))) );
+//				System.out.println("totalStrongCount: " + String.valueOf(totalStrongCount));
+//				System.out.println("totalWeakCount: " + String.valueOf(totalWeakCount));
+//				System.out.println("this agent strong count: " + String.valueOf(strongRestrictCounts.get(Integer.valueOf(agentNum))) );
 			}
 			
 			oldPlotData = plotData;
 			
-		} catch (Exception e) {
-			System.err.println("sendGanttToAgent Error: "+e.toString());
-			System.err.flush();
-		}
+//		} catch (Exception e) {
+//			System.err.println("sendGanttToAgent Error: "+e.toString());
+//			System.err.flush();
+//		}
 		
 		// delete the gantt image after it has been sent
 //		ganttDir.delete();
 	}
 	
-	
+	private JSONObject createInternalJSON(HashMap<String, String> actHistDetails) {
+		JSONObject tempJSON = new JSONObject();
+
+		tempJSON.put("agentNum", actHistDetails.get("agentNum"));
+		tempJSON.put("activityName", actHistDetails.get("activityName"));
+		tempJSON.put("activityDuration", actHistDetails.get("activityDuration"));
+		tempJSON.put("infoType", "confirmActivity");
+		
+		return tempJSON;
+	}
 
 	/*
 	 * Drew: We need a method that acts in replacement of the stdin
@@ -1463,43 +1647,6 @@ public class InteractionStageGUI implements Runnable {
 			System.err.flush();
 		}
 		return jsonIN;
-			
-//			try {
-//				// the server thread will be constantly running in the background looking for
-//				// requests from the client
-//				// Once it receives one, it will save the JSON as a file called JSON_from_client.json
-//				// wait until the server gets a response from the client before continuing
-//				File tmpDir = new File("JSON_from_client.json");
-//				while( !tmpDir.exists() ) {
-//					Thread.sleep(100);
-//					tmpDir = new File("JSON_from_client.json");
-//				}
-//				if (tmpDir.length() == 0) {
-//					tmpDir.delete();
-//					continue;
-//				}
-//				
-//				JSONParser parser = new JSONParser();
-//				Object fileIN = parser.parse(new FileReader("JSON_from_client.json"));
-//				if (!tmpDir.delete()) { // delete the JSON file after receiving it
-//					System.out.println("Error: Failed to delete file.");
-//				}
-//				
-//				jsonIN = (JSONObject) fileIN;
-//				
-//			} catch (Exception e) {
-//				System.err.println("Error while waiting in getNextRequest()");
-//				System.err.println(e);
-//				System.err.flush();
-//			}
-//			
-//			if (!jsonIN.isEmpty()) {
-//				// if (jsonIN.get("value").equals("RESTART")) {Thread.currentThread().interrupt();} // no longer needed with GUI interface
-//				System.out.println("User command type: " + (String)jsonIN.get("infoType"));
-//				return jsonIN;
-//			}
-//		}
-		
 	}
 	
 }

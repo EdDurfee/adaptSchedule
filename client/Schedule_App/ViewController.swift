@@ -60,6 +60,11 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
     @IBOutlet weak var AddAct_DurationTextBox: UITextView!
     @IBOutlet weak var AddAct_ConfirmButton: UIButton!
     
+    // Delete activity table that appears when user selects "remove activity"
+    var delActMenuDelegate = DelActTableController(style: .grouped)
+    @IBOutlet weak var DelActMenu: UITableView!
+    @IBOutlet weak var DeleteActButton: UIButton!
+    
     // clickable image to warn user why their system has locked them from actions
     @IBOutlet weak var WarningImage: UIImageView!
     
@@ -103,6 +108,13 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
 //        modActMenuDelegate.didMove(toParentViewController: self)
         ModActMenu.delegate = modActMenuDelegate
         ModActMenu.dataSource = modActMenuDelegate
+        
+        DelActMenu.delegate = delActMenuDelegate
+        DelActMenu.dataSource = delActMenuDelegate
+        DelActMenu.isHidden = true
+        DeleteActButton.isHidden = true
+        let delRightBorderLine = drawDelActMenuRightLine()
+        delRightBorderLine.isHidden = true
         
         ModifyActView.isHidden = true
         AddActView.isHidden = true
@@ -248,6 +260,29 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
                             }
                         }
                         
+                        // if 'delete activity' selected, .....
+                        if (self.SideMenu.indexPathForSelectedRow?.section == 1 && self.SideMenu.indexPathForSelectedRow?.row == 2) {
+                            self.delActMenuDelegate.allDeletableActivities.removeAll()
+                            for a in self.viewInInfo.actNames! {
+                                if !(self.confirmedActsList.contains(a)) {
+                                    self.delActMenuDelegate.allDeletableActivities.append(a)
+                                }
+                            }
+                            self.DelActMenu.reloadData()
+                            
+                            self.DelActMenu.isHidden = false
+                            self.DeleteActButton.isHidden = false
+                            delRightBorderLine.isHidden = false
+                            
+//                            self.deleteActivity()
+                        }
+                        
+                        // if 'delete activity' menu is showing but not selected on side menu, hide it
+                        if ( self.DelActMenu.isHidden == false && ( self.SideMenu.indexPathForSelectedRow?.section != 1 || self.SideMenu.indexPathForSelectedRow?.row != 2 ) ) {
+                            self.DelActMenu.isHidden = true
+                            self.DeleteActButton.isHidden = true
+                            delRightBorderLine.isHidden = true
+                        }
                         
                     }
                     
@@ -562,6 +597,18 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
         
     }
     
+    // Clicking this button sends a delete act request to the server
+    @IBAction func DeleteActButtonClick(_ sender: Any) {
+        
+        if DelActMenu.indexPathForSelectedRow == nil {
+            return
+        }
+        let actNameToDel = delActMenuDelegate.allDeletableActivities[(DelActMenu.indexPathForSelectedRow!.row)]
+        deleteActivity(actNameToDel)
+    }
+    
+    
+    
     @IBAction func AvailTextBox_EditingEnded(_ sender: AvailTextBox) {
         var tempHours : Int?
         var tempMins  : Int?
@@ -791,7 +838,7 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
     
     func drawMenuRightLine() {
     
-        var lineView : UIView = {
+        let lineView : UIView = {
             let view = UIView()
             view.backgroundColor = UIColor.black
             view.translatesAutoresizingMaskIntoConstraints = false
@@ -805,6 +852,23 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
     
     }
     
+    // Draw a vertical line (and return it) on the right side of the del menu
+    func drawDelActMenuRightLine() -> UIView {
+        
+        let lineView : UIView = {
+            let view = UIView()
+            view.backgroundColor = UIColor.black
+            view.translatesAutoresizingMaskIntoConstraints = false
+            return view
+        }()
+        
+        // use VFL to define where to draw the line
+        self.view.addSubview(lineView)
+        self.view.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:|-20-[view]|", options: NSLayoutFormatOptions(), metrics: nil, views: ["view": lineView]))
+        self.view.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|-398-[view(1)]", options: NSLayoutFormatOptions(), metrics: nil, views: ["view": lineView]))
+        
+        return lineView
+    }
     
     // Draw a vertical line on the right side of the activity selection table in the mod activity view
     func drawModActMenuRightLine() {
@@ -821,7 +885,7 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
         let bottOfLine = String(Double(ModifyActView.frame.size.height - 100))
         ModifyActView.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:|-100-[view]-100-|", options: NSLayoutFormatOptions(), metrics: nil, views: ["view": lineView]))
         ModifyActView.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|-230-[view(1)]", options: NSLayoutFormatOptions(), metrics: nil, views: ["view": lineView]))
-
+        
     }
     
     
@@ -1074,6 +1138,27 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
 //        self.SideMenu.deselectRow(at: SideMenu.indexPathForSelectedRow!, animated: false)
         self.ModifyActView.isHidden = true
         self.ModActMenu.deselectRow(at: self.ModActMenu.indexPathForSelectedRow!, animated: false)
+    }
+    
+    
+    // Use this function to delete an activity on the server that the client has not yet performed. For now it will only delete breakfast
+    func deleteActivity(_ actNameToDel: String) {
+        var aPut = putCMD()
+        aPut.clientID = self.aClient!.ID
+        aPut.infoType = "deleteActivity"
+        aPut.agentNum = agentNumber!
+        aPut.activityName = actNameToDel
+        
+        
+        // send request to server
+        self.aClient!.sendStructToServer(aPut)
+        
+        // clear the list until new activity options are provided
+        self.menuDelegate.activityOptions = []
+        self.menuDelegate.startTime = 0
+        ConfirmActButton.isEnabled = false
+        self.SideMenu.reloadData()
+        
     }
     
     

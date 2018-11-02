@@ -54,8 +54,8 @@ class ModActTableController: UITableViewController {
     // this function sets the number of rows in each section
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // #warning Incomplete implementation, return the number of rows
-        print("allActivities: ")
-        print(allModifiableActivities)
+//        print("allActivities: ")
+//        print(allModifiableActivities)
         if (allModifiableActivities == nil) {return 1}
         return allModifiableActivities!.count
     }
