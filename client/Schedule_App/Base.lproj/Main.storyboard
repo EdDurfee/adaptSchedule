@@ -323,13 +323,6 @@
                                         <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                         <textInputTraits key="textInputTraits" keyboardType="numbersAndPunctuation"/>
                                     </textField>
-                                    <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" fixedFrame="YES" textAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="dgh-uX-i1n">
-                                        <rect key="frame" x="299" y="259" width="240" height="50"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                        <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
-                                    </textView>
                                     <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ams-o6-WSK">
                                         <rect key="frame" x="339" y="535" width="161" height="39"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
@@ -339,8 +332,8 @@
                                             <action selector="ConfirmAddButtonClick:" destination="BYZ-38-t0r" eventType="touchUpInside" id="hjJ-a8-QtF"/>
                                         </connections>
                                     </button>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Duration Ranges" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="7ZT-ip-efK">
-                                        <rect key="frame" x="341" y="227" width="144" height="24"/>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Min Duration" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="7ZT-ip-efK">
+                                        <rect key="frame" x="219" y="236" width="112" height="24"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="20"/>
                                         <nil key="textColor"/>
@@ -360,6 +353,27 @@
                                         <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                         <textInputTraits key="textInputTraits"/>
                                     </textField>
+                                    <textField opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="GFG-2y-a6d" customClass="AvailTextBox" customModule="Schedule_App" customModuleProvider="target">
+                                        <rect key="frame" x="227" y="268" width="97" height="30"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <nil key="textColor"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                        <textInputTraits key="textInputTraits"/>
+                                    </textField>
+                                    <textField opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="R0p-FU-SCj" customClass="AvailTextBox" customModule="Schedule_App" customModuleProvider="target">
+                                        <rect key="frame" x="504" y="268" width="97" height="30"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <nil key="textColor"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                        <textInputTraits key="textInputTraits"/>
+                                    </textField>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Max Duration" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="7GC-ur-rPC">
+                                        <rect key="frame" x="494" y="236" width="116" height="24"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="20"/>
+                                        <nil key="textColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
                                 </subviews>
                                 <color key="backgroundColor" white="0.0" alpha="0.54387654050000001" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <edgeInsets key="layoutMargins" top="40" left="40" bottom="40" right="40"/>
@@ -379,11 +393,12 @@
                         <outlet property="AddActView" destination="liH-E5-Won" id="JTL-wA-im5"/>
                         <outlet property="AddAct_ActNameField" destination="djy-y0-FP1" id="ndQ-ZM-H1J"/>
                         <outlet property="AddAct_ConfirmButton" destination="ams-o6-WSK" id="gXg-l7-rKd"/>
-                        <outlet property="AddAct_DurationTextBox" destination="dgh-uX-i1n" id="ybn-t2-Lo2"/>
                         <outlet property="AddAct_EETField" destination="8Pn-wJ-4yf" id="oPq-8C-1HU"/>
                         <outlet property="AddAct_ESTField" destination="GGw-Uy-OsJ" id="2yM-Kc-O9p"/>
                         <outlet property="AddAct_LETField" destination="EhK-qk-ABo" id="fhb-8p-gYU"/>
                         <outlet property="AddAct_LSTField" destination="elA-AE-rdK" id="dbt-Gm-nuh"/>
+                        <outlet property="AddAct_MaxDurField" destination="R0p-FU-SCj" id="qWe-cy-PqZ"/>
+                        <outlet property="AddAct_MinDurField" destination="GFG-2y-a6d" id="EiU-nB-dWp"/>
                         <outlet property="ConfirmActButton" destination="E7I-8t-cU8" id="uH9-3s-ZuN"/>
                         <outlet property="DelActMenu" destination="Ibk-5X-Lqj" id="sHA-rV-olk"/>
                         <outlet property="DeleteActButton" destination="Mmd-KI-OhI" id="EeX-ZL-H0Z"/>

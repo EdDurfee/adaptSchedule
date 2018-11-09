@@ -984,7 +984,8 @@ public abstract class SimpleDTP implements DisjunctiveTemporalProblem, java.io.S
 		solutionNoGood = new StringBuffer();
 		maxSlack = 0;
 		//System.out.println("About to enter while loop");
-		while(solveSTN()){
+		// limit loop to 11 seconds
+		while(solveSTN() && time/1000000000 < 11){
 			//System.out.println("In while(solveSTN()");
 			String result = stpToSMT(temporalNetwork,timepointsToConsider);
 			numSolutions++;

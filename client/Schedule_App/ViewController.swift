@@ -57,13 +57,15 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
     @IBOutlet weak var AddAct_LSTField: AvailTextBox!
     @IBOutlet weak var AddAct_EETField: AvailTextBox!
     @IBOutlet weak var AddAct_LETField: AvailTextBox!
-    @IBOutlet weak var AddAct_DurationTextBox: UITextView!
+    @IBOutlet weak var AddAct_MinDurField: AvailTextBox!
+    @IBOutlet weak var AddAct_MaxDurField: AvailTextBox!
     @IBOutlet weak var AddAct_ConfirmButton: UIButton!
     
     // Delete activity table that appears when user selects "remove activity"
     var delActMenuDelegate = DelActTableController(style: .grouped)
     @IBOutlet weak var DelActMenu: UITableView!
     @IBOutlet weak var DeleteActButton: UIButton!
+    var delRightBorderLine: UIView!
     
     // clickable image to warn user why their system has locked them from actions
     @IBOutlet weak var WarningImage: UIImageView!
@@ -113,7 +115,7 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
         DelActMenu.dataSource = delActMenuDelegate
         DelActMenu.isHidden = true
         DeleteActButton.isHidden = true
-        let delRightBorderLine = drawDelActMenuRightLine()
+        delRightBorderLine = drawDelActMenuRightLine()
         delRightBorderLine.isHidden = true
         
         ModifyActView.isHidden = true
@@ -272,7 +274,7 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
                             
                             self.DelActMenu.isHidden = false
                             self.DeleteActButton.isHidden = false
-                            delRightBorderLine.isHidden = false
+                            self.delRightBorderLine.isHidden = false
                             
 //                            self.deleteActivity()
                         }
@@ -281,7 +283,7 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
                         if ( self.DelActMenu.isHidden == false && ( self.SideMenu.indexPathForSelectedRow?.section != 1 || self.SideMenu.indexPathForSelectedRow?.row != 2 ) ) {
                             self.DelActMenu.isHidden = true
                             self.DeleteActButton.isHidden = true
-                            delRightBorderLine.isHidden = true
+                            self.delRightBorderLine.isHidden = true
                         }
                         
                     }
@@ -399,6 +401,7 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
                                 
                                 
                                 // if this activity has already been completed
+                                if (currentTime == "") {currentTime = "0"}
                                 if (Int(actLETs[actNum])! <= Int(currentTime)!) {
                                     gotBars.append( GanttChartView.BarEntry(
                                         color: barColor,
@@ -577,6 +580,9 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
             
             // unselect the selection from the list
             SideMenu.deselectRow(at: SideMenu.indexPathForSelectedRow!, animated:false)
+            menuDelegate.currentCellSect = -1
+            menuDelegate.currentCellRow  = -1
+            
             
             // clear the list until new activity options are provided
             self.menuDelegate.activityOptions = []
@@ -605,6 +611,13 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
         }
         let actNameToDel = delActMenuDelegate.allDeletableActivities[(DelActMenu.indexPathForSelectedRow!.row)]
         deleteActivity(actNameToDel)
+        
+        // hide remove activity menu and reset side menu
+        DelActMenu.isHidden = true
+        delRightBorderLine.isHidden = true
+        DeleteActButton.isHidden = true
+        menuDelegate.selectionSectNum = -1
+        menuDelegate.selectionActNum = -1
     }
     
     
@@ -617,7 +630,7 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
         sender.textColor = UIColor.red
         
         // if empty
-        if sender.text == nil {
+        if sender.text == nil || sender.text == "" {
             sender.validValue = true
             sender.textColor = UIColor.green
             return
@@ -795,14 +808,16 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
         
         
         // make sure all box values are valid - need this if user goes straight from editing to button
-        textViewDidEndEditing(AddAct_DurationTextBox)
+//        textViewDidEndEditing(AddAct_DurationTextBox)
+        AvailTextBox_EditingEnded(AddAct_MinDurField)
+        AvailTextBox_EditingEnded(AddAct_MaxDurField)
         AvailTextBox_EditingEnded(AddAct_ESTField)
         AvailTextBox_EditingEnded(AddAct_LSTField)
         AvailTextBox_EditingEnded(AddAct_EETField)
         AvailTextBox_EditingEnded(AddAct_LETField)
         
         // if all user entered values are legal
-        if (AddAct_ESTField.validValue && AddAct_LSTField.validValue && AddAct_EETField.validValue && AddAct_LETField.validValue && validDurationValue! && AddAct_ActNameField.text! != "") {
+        if (AddAct_ESTField.validValue && AddAct_LSTField.validValue && AddAct_EETField.validValue && AddAct_LETField.validValue && AddAct_MinDurField.validValue && AddAct_MaxDurField.validValue && AddAct_ActNameField.text! != "") {
             addActivity()
             return;
         } // else show a popup warning
@@ -1059,28 +1074,37 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
         var newActDetails = activityDefinition()
         
         newActDetails.actName = AddAct_ActNameField.text!
-        newActDetails.EST = AddAct_ESTField.text!
-        newActDetails.LST = AddAct_LSTField.text!
-        newActDetails.EET = AddAct_EETField.text!
-        newActDetails.LET = AddAct_LETField.text!
         
-        let durLines = AddAct_DurationTextBox.text!.components(separatedBy: CharacterSet.newlines)
-        for line in durLines {
-            
-            // if not an empty line, append its durations to the newActDetails
-            if line != "" {
-                var splitLine = line.components(separatedBy: " - " )
-                // trim off white space and append to min/max duration lists
-                newActDetails.minDurs?.append( splitLine[0].trimmingCharacters(in: .whitespaces) )
-                newActDetails.maxDurs?.append( splitLine[1].trimmingCharacters(in: .whitespaces) )
-            }
-        }
-
-//        Allow users to constrain this activity on pre-existing activities
-//        newActDetails.constraintTypes
-//        newActDetails.constraintSource
-//        newActDetails.constraintDest
+        // clear the gantt chart until a new one is ready
+        GanttChart.dataEntries = nil
         
+        // clear the act list until new activity options are provided
+        self.menuDelegate.activityOptions = []
+        self.menuDelegate.startTime = 0
+        ConfirmActButton.isEnabled = false
+        self.SideMenu.reloadData()
+        
+//        let durLines = AddAct_DurationTextBox.text!.components(separatedBy: CharacterSet.newlines)
+//        for line in durLines {
+//
+//            // if not an empty line, append its durations to the newActDetails
+//            if line != "" {
+//                var splitLine = line.components(separatedBy: " - " )
+//                // trim off white space and append to min/max duration lists
+//                newActDetails.minDurs?.append( hhmmTOmmmm(hhmm: splitLine[0].trimmingCharacters(in: .whitespaces)) ) // format:  mmmm
+//                newActDetails.maxDurs?.append( hhmmTOmmmm(hhmm: splitLine[1].trimmingCharacters(in: .whitespaces)) ) // format:  mmmm
+//            }
+//        }
+        
+        // minDurs and maxDurs are lists due to old implementation details
+        // see communication protocol outline for details
+        newActDetails.minDurs?.append(hhmmTOmmmm(hhmm: AddAct_MinDurField.text!))
+        newActDetails.maxDurs?.append(hhmmTOmmmm(hhmm: AddAct_MaxDurField.text!))
+        
+        newActDetails.EST = hhmmTOmmmm(hhmm: AddAct_ESTField.text!) // format:  mmmm
+        newActDetails.LST = hhmmTOmmmm(hhmm: AddAct_LSTField.text!) // format:  mmmm
+        newActDetails.EET = hhmmTOmmmm(hhmm: AddAct_EETField.text!) // format:  mmmm
+        newActDetails.LET = hhmmTOmmmm(hhmm: AddAct_LETField.text!) // format:  mmmm
         
         aPut.actDetails = newActDetails
         

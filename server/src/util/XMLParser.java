@@ -1,5 +1,7 @@
 package util;
 
+import java.util.AbstractMap.SimpleEntry;
+import java.util.ArrayList;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
@@ -32,7 +34,7 @@ public class XMLParser {
 		if(subStringEnd<=subStringStart){
 			throw new HSPFileFormatException("Invalid tag: <"+tag+">\n in: "+xmlString);
 		}
-		return xmlString.replaceFirst(xmlString.substring(subStringStart, subStringEnd), "").trim();
+		return xmlString.replaceFirst(xmlString.substring(subStringStart, subStringEnd), "").trim();	
 	}
 	
 	public static String removeAllTags(String xmlString, String tag){
@@ -122,6 +124,134 @@ public class XMLParser {
 		return finalXMLString;
 	}
 	
+	
+	/**
+	 * DREW
+	 * Adds an activity and returns new xml string
+	 * Returns NULL if error in adding
+	 */
+	public static String addActivity(String xmlString, int agentNum, String dtpIdx, String name, String est, String lst,
+			                                                            String eet, String let, String minDur, String maxDur){
+		
+		
+		// Holds pairs of (DTPname, startIdx)
+		ArrayList<SimpleEntry<String,Integer>> agentStarts = new ArrayList<SimpleEntry<String,Integer>>();
+		
+		int searchIdx = 1;
+		int dtpCount = 0;
+		while (true) {
+			// starting from last found DTP start, search for next dtp
+			searchIdx = xmlString.indexOf("DTP>",searchIdx+1);
+			if (searchIdx == -1) {break;}
+			
+			int dtpTypeStart = xmlString.lastIndexOf("<", searchIdx); // beginning of this DTP < >
+			String dtpTypeString = xmlString.substring(dtpTypeStart+1, searchIdx+3);
+			
+			// if this is the line denoting the end of the dtp, ignore it
+			if (dtpTypeString.indexOf("/") != -1) {continue;}
+			
+			// if this is the line declaring this is a multiagentDTP, ignore it
+			if (dtpTypeString.equals("multiagentDTP")) {continue;}
+			
+			// if this is a numDTP line of a multidtp, ignore it
+			if (dtpTypeString.equals("numDTP")) {continue;}
+			
+			// else add it to the array of DTP starts
+			agentStarts.add(new SimpleEntry<String,Integer>(dtpTypeString,dtpCount));
+			dtpCount++;
+		}
+		
+		int subStringStart;
+		int subStringEnd;
+		
+		
+		// not including the first line, each instance of "<...DTP>" indicates a new agent (and corresponding DTP)
+		// so idx of simpleDTPstarts corresponds to agent number
+		int agentStringStart = agentStarts.get(agentNum).getValue();
+		int agentStringEnd   = xmlString.indexOf("</"+agentStarts.get(agentNum).getKey());
+		
+		// this is the point where new details will be inserted before
+		int prependPoint = xmlString.substring(agentStringStart,agentStringEnd).indexOf("<activity>");
+		
+		// create full string that will be inserted
+		String insertStr = "";
+		insertStr += "\t\t<activity>\n";
+		insertStr += "\t\t\t<name> " +name+ " </name>\n";
+		if (agentStarts.get(agentNum).getKey().equals("multiDTP")) {insertStr += "\t\t\t<dtpIdx> "+ dtpIdx +" </dtpIdx>\n";}
+		insertStr += "\t\t\t<duration>\n";
+		insertStr += "\t\t\t\t<min> "+ minDur +" </min>\n";
+		insertStr += "\t\t\t\t<max> "+ maxDur +" </max>\n";
+		insertStr += "\t\t\t</duration>\n";
+		insertStr += "\t\t\t<availability>\n";
+		if (!est.equals("")) {insertStr += "\t\t\t\t<est> "+ est +" </est>\n";}
+		if (!lst.equals("")) {insertStr += "\t\t\t\t<lst> "+ lst +" </lst>\n";}
+		if (!eet.equals("")) {insertStr += "\t\t\t\t<eet> "+ eet +" </eet>\n";}
+		if (!let.equals("")) {insertStr += "\t\t\t\t<let> "+ let +" </let>\n";}
+		insertStr += "\t\t\t</availability>\n";
+		insertStr += "\t\t</activity>\n";
+		
+		
+		// because we are assuming all activities to be noncopncurrent, we need to add specific non-concurrency constraints for every act
+		// if this isnt a multidtp problem, the dtp is same as agent str
+		String dtpStr = "";
+		dtpStr = xmlString.substring(agentStringStart,agentStringEnd);
+		
+		int anActNameStart, anActNameEnd = -1;
+		int anActStart = dtpStr.indexOf("<activity>");
+		int anActEnd = dtpStr.indexOf("</activity>");
+		String anActStr = "";
+		while (anActStart != -1) {
+			anActStr = dtpStr.substring(anActStart,anActEnd);
+			
+			// if this agent is a multiDTP and not matching dtpIdx, do not add noncurrent constraint
+			if (agentStarts.get(agentNum).getKey().equals("multiDTP")
+				&& anActStr.indexOf("<dtpIdx> " +dtpIdx+ " </dtpIdx>") == -1) {
+					; // do nothing
+			} else {
+			
+				insertStr += "\t\t<constraint>\n";
+				insertStr += "\t\t\t<type> nonconcurrent </type>\n";
+				insertStr += "\t\t\t<source> " +name+ " </source>\n";
+				anActNameStart = anActStr.indexOf("<name> ")+7;
+				anActNameEnd   = anActStr.indexOf(" </name>");
+				insertStr += "\t\t\t<destination> " + anActStr.substring(anActNameStart,anActNameEnd) + " </destination>\n";
+				insertStr += "\t\t\t<min_duration> 0 </min_duration>\n";
+				insertStr += "\t\t</constraint>\n";
+			}
+			
+			// shift forward by cutting out this activity definition
+			dtpStr = dtpStr.substring(anActEnd+11);
+			anActStart = dtpStr.indexOf("<activity>");
+			anActEnd = dtpStr.indexOf("</activity>");
+			
+		}
+		
+		
+		// TODO add custom constraints to insertString
+		
+		// insert insertStr into the xml string and return it
+		return new StringBuffer(xmlString).insert(prependPoint, insertStr).toString();
+		
+		
+		/*
+		<activity>
+			<name> wakeup </name>
+			<dtpIdx> 0 </dtpIdx>
+			<duration>
+				<min> 10 </min>
+				<max> 10 </max>	
+			</duration>
+			<availability>
+				<est> 300 </est>
+			</availability>
+		</activity>
+		*/
+
+		
+		
+	}
+		
+		
 	
 	public static void main(String[] args){
 		String xml = "<tag>key word</tag>";

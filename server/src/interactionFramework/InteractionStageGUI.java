@@ -170,6 +170,17 @@ public class InteractionStageGUI implements Runnable {
 		agent1CurrentConfirmedActs = new ArrayList<SimpleEntry<String, Integer>>(0);
 
 
+		// copy master XML into tempModifiedXML.xml that can be used and modified by this instance of the server
+		try {
+			File originalXML = new File(problemFile);
+			String newXMLFileName = "tempModifiedXML.xml";
+			File modifiedXML = new File(newXMLFileName);
+			modifiedXML.delete();
+			Files.copy(originalXML.toPath(), modifiedXML.toPath());
+		} catch (IOException e) {
+			System.err.println("Error in original copy of XML.\n"+e.toString()+"\n");
+			System.err.flush();
+		}
 		
 		
 		// set up dtp
@@ -226,7 +237,8 @@ public class InteractionStageGUI implements Runnable {
 		 */
 	
 /*
-		// THE APPROACH BELOW ATTEMPTS TO HANDLE DELETING/ADDING ACT BY MODIFYING AN XML
+		// THE APPROACH BELOW ATTEMPTS TO HANDLE ADDING ACT BY MODIFYING AN XML
+		// Was DELETE, but now modified into ADD
 		File modifiedXML = null;
 		String xmlModString = "";
 		try {
@@ -251,7 +263,7 @@ public class InteractionStageGUI implements Runnable {
 		}
 		
 		// remove this activity from the modified xml file string
-		xmlModString = XMLParser.removeSpecificActivity(xmlModString, "breakfast");
+		xmlModString = XMLParser.addActivity(xmlModString, "BetterBreakfast");
 		
 		// put new xml string into file
 		try {
@@ -283,100 +295,10 @@ public class InteractionStageGUI implements Runnable {
 		for(int i = 0; i < numAgents; i++) systemTime.add(0); prevSystemTime.add(0);
 		
 		dtp.setCurrentAgent(currentAgent);
-*/		
-		
-/*		
- * 		// THE APPROACH BELOW ATTEMPTS TO HANDLE ADDING ACT BY ADDING AND MODYFING TIMEPOINTS
- * 
-		String addActName = "TestAddAct";
-		int newMinDurs_add = 30;   //new ArrayList<String>(); newMinDurs_add.add("00:30");
-		int newMaxDurs_add = 240;  //new ArrayList<String>(); newMinDurs_add.add("02:00");
-		int newEST_add 			= 0000;
-		int newLST_add 			= 540;
-		int newEET_add 			= 30;
-		int newLET_add 			= 660;
 
-
-		DisjunctiveTemporalProblem beforeAddDTP = dtp.clone();
-		
-		
-		//dtp = new ProblemLoader().loadDTPFromFile(problemFile);
-		System.out.println(problemFile + " loaded succesfully.\n\n"); // file loaded correctly
-
-		
-
-		
-		
-		// code chunk below is from inside simple dtp when initializing
-				// So, ignoring constraints, it appears all that needs to be done to create a dtp is add timepoints
-				// Can this be replaced by the addTimepoint() method?
-				//     ^^ addTimepoint does all of below 
-				//		^^ SO -> YES
-		Timepoint start = new Timepoint(addActName+"_S",0); //Drew: add timepoint to agent 0
-		Timepoint end = new Timepoint(addActName+"_E",0);
-		dtp.addTimepoint(start);   // Drew: zero timepoint is already added in the initialization
-		dtp.addTimepoint(end);
-		initialDTP.addTimepoint(start);
-		initialDTP.addTimepoint(end);
-		
-		
-		// next question: What are the constraints that need to be added?
-				// if constraints are ignored, just need timepoints that have actname_S and actname_E
-				// however, including constraints is necessary to set est, let, eet, lst, and min/max duration
-		
-		// get duration bounds
-		ArrayList<TemporalDifference> new_minDurs = new ArrayList<TemporalDifference>();
-		ArrayList<TemporalDifference> new_maxDurs = new ArrayList<TemporalDifference>();
-		int minDuration = newMinDurs_add;
-		int maxDuration = newMaxDurs_add;
-		new_minDurs.add(new TemporalDifference(start,end,-minDuration)); // Drew: Should minDuration be negative or positive coming into this line
-		new_maxDurs.add(new TemporalDifference(end,start,maxDuration));
-		ArrayList<ArrayList<TemporalDifference>> tdVec = new ArrayList<ArrayList<TemporalDifference>>();
-		tdVec.add(new_minDurs);
-		tdVec.add(new_maxDurs);
-		dtp.addAdditionalConstraints( DisjunctiveTemporalConstraint.crossProduct(tdVec) ); // Drew: Here we are adding 'additionalConstraints' as opposed to 'tempConstraints'
-		initialDTP.addAdditionalConstraints( DisjunctiveTemporalConstraint.crossProduct(tdVec) );																				// does it matter?
-		
-		// get avail bounds
-		//default values of 0 for earliest start-/end- times, infinite for latest start-/end-times
-		ArrayList<TemporalDifference> eStart = new ArrayList<TemporalDifference>();
-		ArrayList<TemporalDifference> lStart = new ArrayList<TemporalDifference>();
-		ArrayList<TemporalDifference> eEnd = new ArrayList<TemporalDifference>();
-		ArrayList<TemporalDifference> lEnd = new ArrayList<TemporalDifference>();
-			
-		Timepoint zero = dtp.getTimepoint("zero");
-		int est = newEST_add;
-		int lst = newLST_add;
-		int eet = newEET_add;
-		int let = newLET_add;
-		eStart.add(new TemporalDifference(zero,start,-est));
-		lStart.add(new TemporalDifference(start,zero,lst));
-		eEnd.add(new TemporalDifference(zero,end,-eet));
-		lEnd.add(new TemporalDifference(end,zero,let));
-
-		tdVec.clear();
-		tdVec.add(eStart);
-		tdVec.add(lStart);
-		tdVec.add(eEnd);
-		tdVec.add(lEnd);
-		dtp.addAdditionalConstraints( DisjunctiveTemporalConstraint.crossProduct(tdVec) );
-		initialDTP.addAdditionalConstraints( DisjunctiveTemporalConstraint.crossProduct(tdVec) );
-		
-		
-		
-		// reconfigure the DTP with new timepoints and constraints
-		dtp.updateInternalData();
-		dtp.enumerateSolutions(0);	
-		dtp.simplifyMinNetIntervals();
-		initialDTP.updateInternalData();
-		initialDTP.enumerateSolutions(0);	
-		initialDTP.simplifyMinNetIntervals(); // initialDTP also needs to be updated with added activities, although it will maintain its state of no confirmed acitivities
-		
-*/		
-		
-		
-		
-		
+		// for Add act (and NOT Delete act?), need to change original dtp to match new set of activities
+		initialDTP = dtp.clone();
+*/
 		
 		
 		
@@ -520,7 +442,7 @@ public class InteractionStageGUI implements Runnable {
 					
 					// if this is not a tentative activity selection, send new activity options to each client
 					if (!processingTentativeAct) {
-						sendCurrentChoicesToAllClients(activities, nextActsMinDur, nextActsMaxDur);
+						sendCurrentChoicesToAllClients(activities, nextActsMinDur, nextActsMaxDur, allactNames);
 						processingModify = false;
 						processingAdd = false;
 						processingAdvSysTime = false;
@@ -769,27 +691,16 @@ public class InteractionStageGUI implements Runnable {
 							previousDTPs.add( tempStack_add );
 							
 							JSONObject actJSON_add = (JSONObject) inJSON.get("actDetails");
+							String dtpIdx  = "0"; // TODO: Un-hardcode this
+							String name    = (String) actJSON_add.get("actName");
+							String est     = (String) actJSON_add.get("EST"); // format:  mmmm
+							String lst     = (String) actJSON_add.get("LST"); // format:  mmmm
+                            String eet     = (String) actJSON_add.get("EET"); // format:  mmmm
+                            String let     = (String) actJSON_add.get("LET"); // format:  mmmm
+                            String minDur  = ((ArrayList<String>) actJSON_add.get("minDurs")).get(0); // comes as list to handle multi ranges
+                            String maxDur  = ((ArrayList<String>) actJSON_add.get("maxDurs")).get(0); // comes as list to handle multi ranges
 							
-//							List<String> newMinDurs_add  = (ArrayList<String>) actJSON_add.get("minDurs"); // format:  hh:mm
-//							List<String> newMaxDurs_add  = (ArrayList<String>) actJSON_add.get("maxDurs"); // format:  hh:mm
-//							String newEST_add 			 = String.valueOf(actJSON_add.get("EST")); // format:  hh:mm
-//							String newLST_add 			 = String.valueOf(actJSON_add.get("LST")); // format:  hh:mm
-//							String newEET_add 			 = String.valueOf(actJSON_add.get("EET")); // format:  hh:mm
-//							String newLET_add 			 = String.valueOf(actJSON_add.get("LET")); // format:  hh:mm
-							
-							// Duration
-//							AddIntervalSet(actName+"_S", actName+"_E", getSystemTime(), Generics.stringToInterval( "[" + newMinDurs_add.get(0) + "," + newMaxDurs_add.get(0) + "]" ) );
-							
-							// if no value submitted for these, use default max value
-//							if (newEST_add.equals("")) {newEST_add = "00:00";}
-//							if (newLST_add.equals("")) {newLST_add = "24:00";}
-//							if (newEET_add.equals("")) {newEET_add = "00:00";}
-//							if (newLET_add.equals("")) {newLET_add = "24:00";}
-							
-//							// EST and LST
-//							AddIntervalSet("zero", actName+"_S", getSystemTime(), Generics.stringToInterval( "[" + newEST_add + "," + newLST_add + "]" ) );
-//							// EET and LET
-//							AddIntervalSet("zero", actName+"_E", getSystemTime(), Generics.stringToInterval( "[" + newEET_add + "," + newLET_add + "]" ) );
+							addActToXML(Integer.parseInt(agentNum), dtpIdx, name, est, lst, eet, let, minDur, maxDur);
 							
 							processingAdd = true;
 							
@@ -805,12 +716,17 @@ public class InteractionStageGUI implements Runnable {
 							JSONObject temp = createInternalJSON(h);
 							internalRequestQueue.add(temp);
 						}
-						actHistory.clear();
 						
+						// after all historical activities have been confirmed, advance the system time and update client display
+						JSONObject tempJSON = new JSONObject();
+						tempJSON.put("infoType", "advSysTime");
+						internalRequestQueue.add(tempJSON);
+						
+						// reset the history so it can be populated naturally again
+						actHistory.clear();
 						
 						// remove the selected activity from the system
 						deleteActFromXML(actName);
-						
 						
 						break;
 					
@@ -834,7 +750,10 @@ public class InteractionStageGUI implements Runnable {
 						
 						processingAdvSysTime = true;
 						
+						break;
+						
 					default:
+						System.out.println( "Illegal infoType found: " + (String) inJSON.get("infoType") );
 						break;
 					
 				}
@@ -1308,6 +1227,79 @@ public class InteractionStageGUI implements Runnable {
 //		}
 //	}
 	
+	
+	/*
+	 * This function adds the activity into the XML file
+	 * It also modifies the global dtp and refreshes it
+	 */
+	private void addActToXML(int agent, String dtpIdx, String name, String est, String lst,
+			                              String eet, String let, String minDur, String maxDur) {
+		
+		
+		File modifiedXML = null;
+		String xmlModString = "";
+		try {
+//			File originalXML = new File(problemFile);
+			String newXMLFileName = "tempModifiedXML.xml";
+			modifiedXML = new File(newXMLFileName);
+//			modifiedXML.delete();
+//			Files.copy(originalXML.toPath(), modifiedXML.toPath());
+			
+		} catch (Exception e) {
+			System.err.println("Error is creating new modified XML file in addActivity.\n"+e.toString()+"\n"+Arrays.toString(e.getStackTrace()) + "\n");
+			System.err.flush();
+		}
+		
+		try{
+			Scanner scan = new Scanner(modifiedXML);
+			xmlModString = scan.useDelimiter("\\Z").next();
+			scan.close();
+		}
+		catch(IOException e){
+			System.err.println(e.getMessage()+"\n"+e.getStackTrace().toString());
+		}
+		
+		// add this activity to the modified xml file string
+		xmlModString = XMLParser.addActivity(xmlModString, agent, dtpIdx, name, est, lst, eet, let, minDur, maxDur);
+		
+		// put new xml string into file
+		try {
+		    BufferedWriter writer = new BufferedWriter(new FileWriter("tempModifiedXML.xml"));
+		    writer.write(xmlModString);
+		    writer.close();
+		} catch(IOException e){
+			System.err.println(e.getMessage()+"\n"+e.getStackTrace().toString());
+		}
+		
+		// save old state of the system, in case new system fails
+		DisjunctiveTemporalProblem beforeModDTP = dtp.clone();
+		
+		
+		// load this xml string to a dtp and put it in main dtp variable
+		// set up dtp
+		dtp = new ProblemLoader().loadDTPFromFile("tempModifiedXML.xml");
+		System.out.println("tempModifiedXML.xml" + " loaded succesfully.\n\n"); // file loaded correctly
+
+		// initialize variables and the DTP
+		dtp.updateInternalData();
+		dtp.enumerateSolutions(0);	
+		dtp.simplifyMinNetIntervals();
+		
+		systemTime = new ArrayList<Integer>(numAgents);
+		prevSystemTime = new ArrayList<Integer>(numAgents);
+		previousDTPs = new ArrayList< Stack<SimpleEntry<Integer, DisjunctiveTemporalProblem>> >(numAgents);
+		for(int i = 0; i < numAgents; i++) previousDTPs.add( new Stack<SimpleEntry<Integer, DisjunctiveTemporalProblem>>() );
+		for(int i = 0; i < numAgents; i++) systemTime.add(0); prevSystemTime.add(0);
+		
+		dtp.setCurrentAgent(currentAgent);
+
+		// for Add act, need to change original dtp to match new set of activities (before re-performing any acts)
+		initialDTP = dtp.clone();
+
+		
+	}
+	
+	
 	/*
 	 * This function deletes the activity from the XML file so that it will be deleted from the user schedule
 	 * It also modifies the global dtp and refreshes it
@@ -1317,14 +1309,14 @@ public class InteractionStageGUI implements Runnable {
 		File modifiedXML = null;
 		String xmlModString = "";
 		try {
-			File originalXML = new File(problemFile);
+//			File originalXML = new File(problemFile);
 			String newXMLFileName = "tempModifiedXML.xml";
 			modifiedXML = new File(newXMLFileName);
-			modifiedXML.delete();
-			Files.copy(originalXML.toPath(), modifiedXML.toPath());
+//			modifiedXML.delete();
+//			Files.copy(originalXML.toPath(), modifiedXML.toPath());
 			
 		} catch (Exception e) {
-			System.err.println("Error is creating new modified XML file.\n"+e.toString()+"\n"+Arrays.toString(e.getStackTrace()) + "\n");
+			System.err.println("Error is creating new modified XML file in deleteActivity.\n"+e.toString()+"\n"+Arrays.toString(e.getStackTrace()) + "\n");
 			System.err.flush();
 		}
 		
@@ -1370,11 +1362,9 @@ public class InteractionStageGUI implements Runnable {
 		for(int i = 0; i < numAgents; i++) systemTime.add(0); prevSystemTime.add(0);
 		
 		dtp.setCurrentAgent(currentAgent);
-		
-		
-		
-		
+
 	}
+	
 	
 	@SuppressWarnings("unchecked")
 	private void sendJSONToClient( String toAgentNum,
@@ -1423,7 +1413,8 @@ public class InteractionStageGUI implements Runnable {
 	}
 	
 	
-	private void sendCurrentChoicesToAllClients(List<List<String>> acts, ArrayList<ArrayList<String>> minDurs, ArrayList<ArrayList<String>> maxDurs) {
+	private void sendCurrentChoicesToAllClients(List<List<String>> acts, ArrayList<ArrayList<String>> minDurs, ArrayList<ArrayList<String>> maxDurs, 
+			                                        List<List<String>> actNames) {
 		int lowestAgentReadyToConfirm = 99999;
 		String clearToConfirm = "true";
 		
@@ -1447,7 +1438,7 @@ public class InteractionStageGUI implements Runnable {
 					acts.get(a), 	 // nextActivities
 					minDurs.get(a), // nextActsMinDur
 					maxDurs.get(a), // nextActsMaxDur
-					new ArrayList<String>(), // actNames
+					actNames.get(a), // actNames
 					new ArrayList<String>(), // actIDs
 					new ArrayList<String>(), // actMinDurs
 					new ArrayList<String>(), // actMaxDurs
