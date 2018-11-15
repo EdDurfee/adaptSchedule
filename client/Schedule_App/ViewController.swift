@@ -1223,6 +1223,20 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
         return String( mmmm )
     }
     
+    
+    
+    
+    
+    
+    // segue code for transitioning view controller
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        // if segue to add activity screen, no info that needs to be passed in
+//        if let destinationViewController = segue.destination as? ViewController {
+//            destinationViewController.serverIP = IPaddress
+//        }
+    }
+    
 }
 
 

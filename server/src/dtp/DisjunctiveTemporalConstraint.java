@@ -81,7 +81,8 @@ public class DisjunctiveTemporalConstraint implements Comparable<DisjunctiveTemp
 				System.out.println(v);
 				System.out.println(diffs);
 				System.out.println("This is not a valid constraint to be added");
-				return constraints;
+				throw new IllegalArgumentException("This is not a valid constraint to be added");
+//				return constraints;
 			}
 			constraints.add(new DisjunctiveTemporalConstraint(v.get(0)));
 		}

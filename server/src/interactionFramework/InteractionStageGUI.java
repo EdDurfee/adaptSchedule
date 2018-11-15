@@ -509,7 +509,9 @@ public class InteractionStageGUI implements Runnable {
 						
 						// if activity requested is an idle, adjust the clock of the dtp idling and add idle to the current confirmed activities if necessary
 						if (actName.equals("idle")) {
-							getAndPerformIdle(minTime-getSystemTime(), maxSlack.get(Integer.valueOf(agentNum)), Integer.valueOf(actDur.substring(3)), Integer.valueOf(agentNum));
+//							getAndPerformIdle(minTime-getSystemTime(), maxSlack.get(Integer.valueOf(agentNum)), Integer.valueOf(actDur.substring(3)), Integer.valueOf(agentNum));
+							getAndPerformIdle(0, maxSlack.get(Integer.valueOf(agentNum)), Integer.valueOf(actDur.substring(3)), Integer.valueOf(agentNum), minTime);
+							
 							int idleTime = Integer.valueOf(actDur.substring(3));
 
 							if ( ((String) inJSON.get("infoType")).equals("confirmActivity") ) {
@@ -544,17 +546,9 @@ public class InteractionStageGUI implements Runnable {
 							ongoingActs.add(new SimpleEntry<String,Interval>(actName, curr_int));
 							
 							// if a confirmed activity, add the activity to the corresponding list of confirmedActs
-							// also add this act info to the history list
 							if ( ((String) inJSON.get("infoType")).equals("confirmActivity") ) {
 								if (agentNum.equals("0")) agent0CurrentConfirmedActs.add(new SimpleEntry(actName, getSystemTime() + idle + time)); // minutes + minutes ?
 								if (agentNum.equals("1")) agent1CurrentConfirmedActs.add(new SimpleEntry(actName, getSystemTime() + idle + time));
-							
-								HashMap<String,String> thisAct = new HashMap<String,String>();
-								thisAct.put("agentNum",          agentNum);
-								thisAct.put("activityName",      actName);
-								thisAct.put("activityDuration",  actDur);
-								
-								actHistory.add(thisAct);
 							}
 							
 							// if there are any zero duration activities to perform, automatically perform them
@@ -569,6 +563,17 @@ public class InteractionStageGUI implements Runnable {
 							// internal to the corresponding dtp, perform the activity and adjust the internal clock
 							dtp.executeAndAdvance(-( getSystemTime() + idle), actName+"_S",-(getSystemTime() + idle + time),actName+"_E",true, time, true);
 							dtp.simplifyMinNetIntervals();
+						}
+						
+						// if a confirmed activity, add this act info to the history list
+						if ( ((String) inJSON.get("infoType")).equals("confirmActivity") ) {
+							
+							HashMap<String,String> thisAct = new HashMap<String,String>();
+							thisAct.put("agentNum",          agentNum);
+							thisAct.put("activityName",      actName);
+							thisAct.put("activityDuration",  actDur);
+							
+							actHistory.add(thisAct);
 						}
 						
 						if ( ((String) inJSON.get("infoType")).equals("tentativeActivity")) { processingTentativeAct = true; }
@@ -691,18 +696,41 @@ public class InteractionStageGUI implements Runnable {
 							previousDTPs.add( tempStack_add );
 							
 							JSONObject actJSON_add = (JSONObject) inJSON.get("actDetails");
-							String dtpIdx  = "0"; // TODO: Un-hardcode this
 							String name    = (String) actJSON_add.get("actName");
 							String est     = (String) actJSON_add.get("EST"); // format:  mmmm
 							String lst     = (String) actJSON_add.get("LST"); // format:  mmmm
                             String eet     = (String) actJSON_add.get("EET"); // format:  mmmm
                             String let     = (String) actJSON_add.get("LET"); // format:  mmmm
+                            
+                            // TODO: This works with the current system split of morning / evening but is kind of a hardcode solution
+                            String dtpIdx = "";
+                            if (Integer.parseInt(est) < 720) {dtpIdx = "0";} 
+                            else {dtpIdx = "1";}
+                            
                             String minDur  = ((ArrayList<String>) actJSON_add.get("minDurs")).get(0); // comes as list to handle multi ranges
                             String maxDur  = ((ArrayList<String>) actJSON_add.get("maxDurs")).get(0); // comes as list to handle multi ranges
 							
-							addActToXML(Integer.parseInt(agentNum), dtpIdx, name, est, lst, eet, let, minDur, maxDur);
+							Boolean addSuccess = addActToXML(Integer.parseInt(agentNum), dtpIdx, name, est, lst, eet, let, minDur, maxDur);
 							
-							processingAdd = true;
+							// if the add succeeded, set up history to automatically repeat
+							// else if the add failed, the dtp will be unmodified and no need to rexecute history
+							if (addSuccess == true) { 
+								processingAdd = true;
+								
+								// set up historical sequence of events that led up to current time in system before deletion
+								for (HashMap<String,String> h : actHistory) {
+									JSONObject temp = createInternalJSON(h);
+									internalRequestQueue.add(temp);
+								}
+								
+								// reset the history so it can be populated naturally again
+								actHistory.clear();
+							}
+							
+							// automatically add request to advance the system time and update client display, either way
+							JSONObject tempAddJSON = new JSONObject();
+							tempAddJSON.put("infoType", "advSysTime");
+							internalRequestQueue.add(tempAddJSON);
 							
 							break;
 						
@@ -718,9 +746,9 @@ public class InteractionStageGUI implements Runnable {
 						}
 						
 						// after all historical activities have been confirmed, advance the system time and update client display
-						JSONObject tempJSON = new JSONObject();
-						tempJSON.put("infoType", "advSysTime");
-						internalRequestQueue.add(tempJSON);
+						JSONObject tempDelJSON = new JSONObject();
+						tempDelJSON.put("infoType", "advSysTime");
+						internalRequestQueue.add(tempDelJSON);
 						
 						// reset the history so it can be populated naturally again
 						actHistory.clear();
@@ -821,7 +849,7 @@ public class InteractionStageGUI implements Runnable {
 	}
 
 
-	private static void getAndPerformIdle(int minIdle, int maxIdle, int time, int subDTPNum){
+	private static void getAndPerformIdle(int minIdle, int maxIdle, int time, int subDTPNum, int minTime){
 		if(time < 0 || time > maxIdle+1){
 			System.out.println("Unexpected idle time response \""+Integer.toString(time)+"\"");
 			return;
@@ -829,7 +857,8 @@ public class InteractionStageGUI implements Runnable {
 		/// incrementSystemTime(time, currentAgent);
 		/// dtp.advanceToTime(-getSystemTime(), time, true);
 		
-		dtp.advanceSubDTPToTime(-(getSystemTime()+time), time, true, subDTPNum);
+		dtp.advanceSubDTPToTime(-(minTime+time), time, true, subDTPNum);
+		
 		
 		dtp.simplifyMinNetIntervals();
 	}
@@ -1231,13 +1260,15 @@ public class InteractionStageGUI implements Runnable {
 	/*
 	 * This function adds the activity into the XML file
 	 * It also modifies the global dtp and refreshes it
+	 * Return true/false bsased on if add failed or not
 	 */
-	private void addActToXML(int agent, String dtpIdx, String name, String est, String lst,
+	private Boolean addActToXML(int agent, String dtpIdx, String name, String est, String lst,
 			                              String eet, String let, String minDur, String maxDur) {
 		
 		
 		File modifiedXML = null;
 		String xmlModString = "";
+		String prevXMLModString = "";
 		try {
 //			File originalXML = new File(problemFile);
 			String newXMLFileName = "tempModifiedXML.xml";
@@ -1258,6 +1289,9 @@ public class InteractionStageGUI implements Runnable {
 		catch(IOException e){
 			System.err.println(e.getMessage()+"\n"+e.getStackTrace().toString());
 		}
+		
+		// save the xml string from before the modification
+		prevXMLModString = xmlModString;
 		
 		// add this activity to the modified xml file string
 		xmlModString = XMLParser.addActivity(xmlModString, agent, dtpIdx, name, est, lst, eet, let, minDur, maxDur);
@@ -1281,9 +1315,29 @@ public class InteractionStageGUI implements Runnable {
 		System.out.println("tempModifiedXML.xml" + " loaded succesfully.\n\n"); // file loaded correctly
 
 		// initialize variables and the DTP
-		dtp.updateInternalData();
-		dtp.enumerateSolutions(0);	
-		dtp.simplifyMinNetIntervals();
+		// if these initialization functions throw an exception, assume added activity was illegal and revert back to previous
+		try {
+			dtp.updateInternalData();
+			dtp.enumerateSolutions(0);	
+			dtp.simplifyMinNetIntervals();
+		} catch (Exception e) {
+			
+			System.out.println("Attempted to add illegal activity to dtp. Rejecting addition and reverting to previous dtp.");
+			
+			// revert the dtp to before changes
+			dtp = beforeModDTP.clone();
+			
+			// revert the xml file to before changes
+			try {
+			    BufferedWriter writer = new BufferedWriter(new FileWriter("tempModifiedXML.xml"));
+			    writer.write(prevXMLModString);
+			    writer.close();
+			} catch(IOException p){
+				System.err.println("Failure when reverting XML" + p.getMessage()+"\n"+p.getStackTrace().toString());
+			}
+			
+			return false; // return that this add failed
+		}
 		
 		systemTime = new ArrayList<Integer>(numAgents);
 		prevSystemTime = new ArrayList<Integer>(numAgents);
@@ -1296,6 +1350,7 @@ public class InteractionStageGUI implements Runnable {
 		// for Add act, need to change original dtp to match new set of activities (before re-performing any acts)
 		initialDTP = dtp.clone();
 
+		return true; // return that this add succeeded
 		
 	}
 	

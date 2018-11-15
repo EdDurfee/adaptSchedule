@@ -414,16 +414,34 @@
                         <outlet property="SideMenu" destination="L5m-7S-MKr" id="qJc-PY-kqB"/>
                         <outlet property="WarningImage" destination="O9X-nJ-DO1" id="6rt-82-ioh"/>
                         <outlet property="advSysClockButton" destination="2n3-US-Iw0" id="ldX-FG-hGe"/>
+                        <segue destination="3vh-fp-4UL" kind="popoverPresentation" identifier="AddActSegue" popoverAnchorView="8bC-Xf-vdC" id="SNv-ZB-uOY">
+                            <popoverArrowDirection key="popoverArrowDirection" up="YES" down="YES" left="YES" right="YES"/>
+                        </segue>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="32.8125" y="37.5"/>
+            <point key="canvasLocation" x="33" y="38"/>
         </scene>
-        <!--Enter View Controller-->
+        <!--Add Activity-->
+        <scene sceneID="b1Z-RC-qBs">
+            <objects>
+                <viewController title="Add Activity" modalTransitionStyle="flipHorizontal" id="3vh-fp-4UL" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="9Aq-1Q-Gvg">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <viewLayoutGuide key="safeArea" id="QGv-aX-aga"/>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="uXI-by-t3U" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="33" y="1098"/>
+        </scene>
+        <!--IP Setup-->
         <scene sceneID="idb-bK-Sqe">
             <objects>
-                <viewController id="m2T-Bl-iPw" customClass="IPEnterViewController" customModule="Schedule_App" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController title="IP Setup" id="m2T-Bl-iPw" customClass="IPEnterViewController" customModule="Schedule_App" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="c8T-1c-IcT">
                         <rect key="frame" x="0.0" y="0.0" width="1024" height="768"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
