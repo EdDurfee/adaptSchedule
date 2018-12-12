@@ -290,7 +290,7 @@ class MenuController: UITableViewController {
         picker = UIDatePicker(frame: pickerFrame);
         picker.datePickerMode = .countDownTimer;
         picker.minuteInterval = 5 // only show options at 5 minute intervals
-        picker.countDownDuration = 5 * 60.0
+//        picker.countDownDuration = 5 * 60.0
         picker.countDownDuration = Double(minDurs[selectionActNum])! * 60.0
         
         let calendar = Calendar(identifier: .gregorian)
@@ -359,6 +359,7 @@ class MenuController: UITableViewController {
         // We dismiss the alert. Here you can add your additional code to execute when cancel is pressed
     }
     
+    // force the picker to stay in a legal time range
     @objc func datePickerChanged(sender: UIDatePicker){
         if ( Int(sender.countDownDuration) < (60 * Int( minDurs[selectionActNum] )!) ) { // if picker value is less than min duration
             let calendar = Calendar(identifier: .gregorian)

@@ -10,7 +10,7 @@ import UIKit
 import QuartzCore
 
 // All elements in the main screen are contained in this view
-class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate {
+class MainViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate {
     
     var serverIP : String?
     
@@ -236,16 +236,20 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
                         
                         // if 'add activity' selected, display modAct screen
                         if (self.SideMenu.indexPathForSelectedRow?.section == 1 && self.SideMenu.indexPathForSelectedRow?.row == 0) {
-                            self.AddActView.isHidden = false
+                            
+                            // NEW SYSTEM: segue to full new add act view
+                            self.performSegue(withIdentifier: "AddActSegue", sender: self)
+                            
+//                            self.AddActView.isHidden = false
                         }
                         
-                        // if 'add activity' screen is showing but not selected on side menu, hide it
-                        if ( self.AddActView.isHidden == false && ( self.SideMenu.indexPathForSelectedRow?.section != 1 || self.SideMenu.indexPathForSelectedRow?.row != 0 ) ) {
-                            self.AddActView.isHidden = true
-                            if self.ModActMenu.indexPathForSelectedRow != nil {
-                                self.ModActMenu.deselectRow(at: self.ModActMenu.indexPathForSelectedRow!, animated: false)
-                            }
-                        }
+//                        // if 'add activity' screen is showing but not selected on side menu, hide it
+//                        if ( self.AddActView.isHidden == false && ( self.SideMenu.indexPathForSelectedRow?.section != 1 || self.SideMenu.indexPathForSelectedRow?.row != 0 ) ) {
+//                            self.AddActView.isHidden = true
+//                            if self.ModActMenu.indexPathForSelectedRow != nil {
+//                                self.ModActMenu.deselectRow(at: self.ModActMenu.indexPathForSelectedRow!, animated: false)
+//                            }
+//                        }
                         
                         
                         // if 'modify activity' selected, display modAct screen
@@ -402,7 +406,7 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
                                 
                                 // if this activity has already been completed
                                 if (currentTime == "") {currentTime = "0"}
-                                if (Int(actLETs[actNum])! <= Int(currentTime)!) {
+                                if (actLETs.count > 0 && Int(actLETs[actNum])! <= Int(currentTime)!) {
                                     gotBars.append( GanttChartView.BarEntry(
                                         color: barColor,
                                         ID:  Int(actIDs[actNum])!,
@@ -815,7 +819,7 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
         AvailTextBox_EditingEnded(AddAct_LSTField)
         AvailTextBox_EditingEnded(AddAct_EETField)
         AvailTextBox_EditingEnded(AddAct_LETField)
-        
+
         // if all user entered values are legal
         if (AddAct_ESTField.validValue && AddAct_LSTField.validValue && AddAct_EETField.validValue && AddAct_LETField.validValue && AddAct_MinDurField.validValue && AddAct_MaxDurField.validValue && AddAct_ActNameField.text! != "") {
             addActivity()
@@ -823,9 +827,9 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
         } // else show a popup warning
         else {
             let alert = UIAlertController(title: "Error", message: "Some entered activity addition fields are illegal. New values must have hh:mm format.", preferredStyle: .alert)
-            
+
             alert.addAction(UIAlertAction(title: "Okay", style: .default, handler: nil))
-            
+
             self.present(alert, animated: true)
         }
         
@@ -1064,6 +1068,8 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
         self.aClient!.sendStructToServer(aPut)
     }
     
+    // This is legacy addActivity(), which works with single screen activity description setup
+    // Is now replaced with add activity for slide system that takes in parameters
     func addActivity() {
         var aPut = putCMD()
         aPut.clientID = self.aClient!.ID
@@ -1120,6 +1126,54 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
         // deselect 'Add Activity' option in left menu
         self.AddActView.isHidden = true
     }
+    
+    
+    func addActivity(actName: String, minDur: String, maxDur: String, EST: String, LET: String, precConstraints: [String], succConstraints: [String] ) {
+        var aPut = putCMD()
+        aPut.clientID = self.aClient!.ID
+        aPut.infoType = "addActivity"
+        aPut.agentNum = agentNumber!
+        aPut.activityName = actName
+        
+        var newActDetails = activityDefinition()
+        
+        newActDetails.actName = actName
+        
+        // clear the gantt chart until a new one is ready
+        GanttChart.dataEntries = nil
+        
+        // clear the act list until new activity options are provided
+        self.menuDelegate.activityOptions = []
+        self.menuDelegate.startTime = 0
+        ConfirmActButton.isEnabled = false
+        self.SideMenu.reloadData()
+        
+        
+        // minDurs and maxDurs are lists due to old implementation details
+        // see communication protocol outline for details
+        newActDetails.minDurs?.append(minDur)
+        newActDetails.maxDurs?.append(maxDur)
+        
+        newActDetails.EST = EST // format:  mmmm
+        newActDetails.LST = ""
+        newActDetails.EET = ""
+        newActDetails.LET = LET // format:  mmmm
+        
+        // add activity ordering constraints
+        newActDetails.constraintSource = precConstraints  // preceeding constraints
+        newActDetails.constraintDest = succConstraints    // succeeding constraints
+        
+        
+        aPut.actDetails = newActDetails
+        
+        // send request to server
+        self.aClient!.sendStructToServer(aPut)
+        
+        // deselect 'Add Activity' option in left menu
+        // TODO
+    }
+    
+    
     
     func modifyActivity() {
         var aPut = putCMD()
@@ -1230,12 +1284,42 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate 
     
     // segue code for transitioning view controller
     
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+//    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         // if segue to add activity screen, no info that needs to be passed in
 //        if let destinationViewController = segue.destination as? ViewController {
 //            destinationViewController.serverIP = IPaddress
 //        }
+//    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        
+        if segue.identifier == "AddActSegue" {
+            let popoverViewController = segue.destination as! AddActivityViewController
+            popoverViewController.didMove(toParentViewController: self)
+            
+            // set up popover
+            popoverViewController.modalPresentationStyle = UIModalPresentationStyle.popover
+            popoverViewController.popoverPresentationController!.delegate = self as? UIPopoverPresentationControllerDelegate
+            
+            // set the position of the popover
+            popoverViewController.popoverPresentationController!.sourceView = self.view
+            popoverViewController.popoverPresentationController!.sourceRect = CGRect(x: 500,y: self.view.bounds.midY-200,width:0,height:0)
+            
+            // do not use any popover arrows with this popover
+            popoverViewController.popoverPresentationController!.permittedArrowDirections = []
+            
+            // set the size of the popover
+            popoverViewController.preferredContentSize = CGSize(width: 704, height: 680)
+            
+            popoverViewController.popoverPresentationController!.backgroundColor = UIColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 0.8)
+        }
+        
     }
+    
+//    func adaptivePresentationStyle(for controller: UIPresentationController) -> UIModalPresentationStyle {
+//        return UIModalPresentationStyle.none
+//    }
+
     
 }
 

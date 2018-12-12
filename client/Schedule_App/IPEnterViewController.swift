@@ -61,7 +61,7 @@ class IPEnterViewController: UIViewController {
     
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        if let destinationViewController = segue.destination as? ViewController {
+        if let destinationViewController = segue.destination as? MainViewController {
             destinationViewController.serverIP = IPaddress
             destinationViewController.agentNumber = agentNum
         }

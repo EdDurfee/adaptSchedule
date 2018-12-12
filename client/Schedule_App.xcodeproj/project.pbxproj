@@ -23,6 +23,7 @@
 		3AD15F43210792A300F30C23 /* ActivityEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD15F42210792A300F30C23 /* ActivityEditView.swift */; };
 		3AD15F472107BB6300F30C23 /* ModActTableController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD15F462107BB6300F30C23 /* ModActTableController.swift */; };
 		3AD7719F20B45F6700948C2A /* ServerInteraction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD7719E20B45F6700948C2A /* ServerInteraction.swift */; };
+		3ADC3ABD219E03AD00774EB6 /* AddActivityViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ADC3ABC219E03AD00774EB6 /* AddActivityViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -65,6 +66,7 @@
 		3AD15F42210792A300F30C23 /* ActivityEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityEditView.swift; sourceTree = "<group>"; };
 		3AD15F462107BB6300F30C23 /* ModActTableController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModActTableController.swift; sourceTree = "<group>"; };
 		3AD7719E20B45F6700948C2A /* ServerInteraction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerInteraction.swift; sourceTree = "<group>"; };
+		3ADC3ABC219E03AD00774EB6 /* AddActivityViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddActivityViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -117,6 +119,7 @@
 			children = (
 				3A5365BF20B3564F0057B451 /* Main.storyboard */,
 				3A5365BD20B3564F0057B451 /* ViewController.swift */,
+				3ADC3ABC219E03AD00774EB6 /* AddActivityViewController.swift */,
 				3AD7719E20B45F6700948C2A /* ServerInteraction.swift */,
 				3AB21BC820D2CF73008CADF5 /* MenuController.swift */,
 				3A5365BB20B3564F0057B451 /* AppDelegate.swift */,
@@ -293,6 +296,7 @@
 				3A19879320FE3777003C3D91 /* GanttChartView.swift in Sources */,
 				3AB21BC920D2CF73008CADF5 /* MenuController.swift in Sources */,
 				3A5365BC20B3564F0057B451 /* AppDelegate.swift in Sources */,
+				3ADC3ABD219E03AD00774EB6 /* AddActivityViewController.swift in Sources */,
 				3A47AB31218B659A00DBD035 /* DelActTableController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

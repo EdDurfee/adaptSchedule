@@ -123,7 +123,7 @@ public class InteractionStageGUI implements Runnable {
 
 		// Allow a user on the server to select which problem file they want to demo
 		System.out.println("\nEnter number of problem file you would like to use.");
-		System.out.println("0 - toyExampleDTP.xml");
+		System.out.println("0 - twoAgentProblem.xml");
 		System.out.println("1 - multiagentSampleProblem_simp.xml");
 		System.out.println("2 - multiagentSampleProblem.xml");
 		System.out.println("3 - toyexample.xml");
@@ -136,7 +136,7 @@ public class InteractionStageGUI implements Runnable {
 		Integer problemNum = Integer.valueOf(cin.next());
 		
 		switch ( problemNum ) {
-		case 0: problemFile = "toyExampleDTP.xml"; break;
+		case 0: problemFile = "twoAgentProblem.xml"; break;
 		case 1: problemFile = "multiagentSampleProblem_simp.xml"; break;
 		case 2: problemFile = "multiagentSampleProblem.xml"; break;
 		case 3: problemFile = "toyexample.xml"; break;
@@ -685,8 +685,7 @@ public class InteractionStageGUI implements Runnable {
 						break;
 					
 						
-						// client will send this when the user has entered new (tighter) duration / availability for an activity
-						// the system is not capable of checking that the user modifications are legal => they can only tighten constraints
+						// client will send this when the user has entered new activity
 						case "addActivity":
 							
 							prevDTP = dtp.clone();
@@ -696,25 +695,33 @@ public class InteractionStageGUI implements Runnable {
 							previousDTPs.add( tempStack_add );
 							
 							JSONObject actJSON_add = (JSONObject) inJSON.get("actDetails");
+							
 							String name    = (String) actJSON_add.get("actName");
+
 							String est     = (String) actJSON_add.get("EST"); // format:  mmmm
 							String lst     = (String) actJSON_add.get("LST"); // format:  mmmm
                             String eet     = (String) actJSON_add.get("EET"); // format:  mmmm
                             String let     = (String) actJSON_add.get("LET"); // format:  mmmm
                             
-                            // TODO: This works with the current system split of morning / evening but is kind of a hardcode solution
+                            // if no value submitted for these, use default max value
+    						if (est.equals("")) {est = "0000";}
+    						if (lst.equals("")) {lst = "1440";}
+    						if (eet.equals("")) {eet = "0000";}
+    						if (let.equals("")) {let = "1440";}
+                            
+                            // This works with the current system split of morning / evening but is kind of a hardcode solution
                             String dtpIdx = "";
                             if (Integer.parseInt(est) < 720) {dtpIdx = "0";} 
                             else {dtpIdx = "1";}
                             
-                            String minDur  = ((ArrayList<String>) actJSON_add.get("minDurs")).get(0); // comes as list to handle multi ranges
-                            String maxDur  = ((ArrayList<String>) actJSON_add.get("maxDurs")).get(0); // comes as list to handle multi ranges
+                            String minDur  = ((ArrayList<String>) actJSON_add.get("minDurs")).get(0); // comes as list to handle multi ranges in future improvements
+                            String maxDur  = ((ArrayList<String>) actJSON_add.get("maxDurs")).get(0); // comes as list to handle multi ranges in future improvements
 							
 							Boolean addSuccess = addActToXML(Integer.parseInt(agentNum), dtpIdx, name, est, lst, eet, let, minDur, maxDur);
 							
 							// if the add succeeded, set up history to automatically repeat
 							// else if the add failed, the dtp will be unmodified and no need to rexecute history
-							if (addSuccess == true) { 
+							if (addSuccess == true) {
 								processingAdd = true;
 								
 								// set up historical sequence of events that led up to current time in system before deletion

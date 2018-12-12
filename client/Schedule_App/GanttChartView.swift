@@ -174,7 +174,7 @@ class GanttChartView: UIView, UITextViewDelegate {
                 
                 
                 // sort the entries based on their ID (which was sorted in the server based on act time)
-                var tempDataEntries = dataEntries.sorted(by: { $0.ID < $1.ID })
+                var tempDataEntries = dataEntries.sorted(by: { $0.EST < $1.EST })
                 if tentGantt { sortedLastConfirmedBars = lastConfirmedBars!.sorted(by: { $0.ID < $1.ID }) }
                 
                 // display the sorted items so that the earlier activities are at the top
