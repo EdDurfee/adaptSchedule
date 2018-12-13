@@ -2,75 +2,7 @@
 	<numAgent> 2 </numAgent>
 	<multiDTP>
 		<numDTP> 2 </numDTP>
-				<activity>
-			<name> orderingTest </name>
-			<dtpIdx> 1 </dtpIdx>
-			<duration>
-				<min> 40 </min>
-				<max> 60 </max>
-			</duration>
-			<availability>
-				<est> 1020 </est>
-				<lst> 1440 </lst>
-				<eet> 0000 </eet>
-				<let> 1440 </let>
-			</availability>
-		</activity>
-		<constraint>
-			<type> nonconcurrent </type>
-			<source> orderingTest </source>
-			<destination> toMartialArts </destination>
-			<min_duration> 0 </min_duration>
-		</constraint>
-		<constraint>
-			<type> nonconcurrent </type>
-			<source> orderingTest </source>
-			<destination> martialArts </destination>
-			<min_duration> 0 </min_duration>
-		</constraint>
-		<constraint>
-			<type> nonconcurrent </type>
-			<source> orderingTest </source>
-			<destination> toHome </destination>
-			<min_duration> 0 </min_duration>
-		</constraint>
-		<constraint>
-			<type> nonconcurrent </type>
-			<source> orderingTest </source>
-			<destination> homework </destination>
-			<min_duration> 0 </min_duration>
-		</constraint>
-		<constraint>
-			<type> nonconcurrent </type>
-			<source> orderingTest </source>
-			<destination> dinner </destination>
-			<min_duration> 0 </min_duration>
-		</constraint>
-		<constraint>
-			<type> nonconcurrent </type>
-			<source> orderingTest </source>
-			<destination> showerN </destination>
-			<min_duration> 0 </min_duration>
-		</constraint>
-		<constraint>
-			<type> nonconcurrent </type>
-			<source> orderingTest </source>
-			<destination> computerTime </destination>
-			<min_duration> 0 </min_duration>
-		</constraint>
-		<constraint>
-			<type> nonconcurrent </type>
-			<source> orderingTest </source>
-			<destination> orgTimeN </destination>
-			<min_duration> 0 </min_duration>
-		</constraint>
-		<constraint>
-			<type> nonconcurrent </type>
-			<source> orderingTest </source>
-			<destination> bedtime </destination>
-			<min_duration> 0 </min_duration>
-		</constraint>
-<activity>
+		<activity>
 			<name> wakeup </name>
 			<dtpIdx> 0 </dtpIdx>
 			<duration>

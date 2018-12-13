@@ -1121,7 +1121,7 @@ public class InteractionStageGUI implements Runnable {
 	/*
 	 * This function adds the activity into the XML file
 	 * It also modifies the global dtp and refreshes it
-	 * Return true/false bsased on if add failed or not
+	 * Return true/false bsased on if add failed or not yices
 	 */
 	private Boolean addActToXML(int agent, String dtpIdx, String name, String est, String lst,
 			                              String eet, String let, String minDur, String maxDur) {
