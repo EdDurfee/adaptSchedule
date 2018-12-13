@@ -16,15 +16,8 @@ import java.util.List;
 import org.apache.commons.codec.binary.Base64;
 
 import interactionFramework.InteractionStageGUI;
-//import jdk.net.SocketFlow.Status;
 
 import org.nanohttpd.protocols.http.response.Status;
-
-/*
- * This class will set up a server at http://localhost:8080/ when run that asks for your name and returns a greeting
- */
-
-
 
 import java.util.Map;
 import java.util.logging.Logger;
@@ -39,8 +32,15 @@ import org.nanohttpd.util.ServerRunner;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.JSONArray;
+
+
+
 /**
  * Subclassing NanoHTTPD to make a custom HTTP server.
+ */
+
+/*
+ * This class will set up a server at http://localhost:8080/ when run that asks for your name and returns a greeting
  */
 public class AppServerGUI extends NanoHTTPD { // implements Runnable
 	
