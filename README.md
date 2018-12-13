@@ -1,5 +1,8 @@
 # adaptSchedule
 
+## Installation
+This project was built in Eclipse. In order to run a clone of this project in eclipse you will need to set up a Java 1.8 JRE in eclipse and copy over all required .JAR library files (which are too big to include in this repo).
+
 ## Abstract:
 The complexity and pace of modern life can tax the cognitive abilities of persons without disabilities, meaning that
 persons whose disabilities introduce additional needs and complications into their daily schedules face daunting
