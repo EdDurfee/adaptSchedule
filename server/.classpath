@@ -16,10 +16,10 @@
 	<classpathentry kind="lib" path="testFramework.jar"/>
 	<classpathentry kind="lib" path="testnullerror.jar"/>
 	<classpathentry kind="lib" path="testsamerror.jar"/>
-	<classpathentry kind="lib" path="/Users/drew/Programs/eclipse-workspace/Schedule_App/server/lib/commons-codec-1.11/commons-codec-1.11.jar"/>
-	<classpathentry kind="lib" path="/Users/drew/Programs/eclipse-workspace/Schedule_App/server/lib/commons-codec-1.11/commons-codec-1.11-test-sources.jar"/>
-	<classpathentry kind="lib" path="/Users/drew/Programs/eclipse-workspace/Schedule_App/server/lib/commons-codec-1.11/commons-codec-1.11-tests.jar"/>
-	<classpathentry kind="lib" path="/Users/drew/Programs/eclipse-workspace/Schedule_App/server/lib/commons-codec-1.11/commons-codec-1.11-sources.jar"/>
-	<classpathentry kind="lib" path="/Users/drew/Programs/eclipse-workspace/Schedule_App/server/lib/commons-codec-1.11/commons-codec-1.11-javadoc.jar"/>
+	<classpathentry kind="lib" path="lib/commons-codec-1.11/commons-codec-1.11-javadoc.jar"/>
+	<classpathentry kind="lib" path="lib/commons-codec-1.11/commons-codec-1.11-sources.jar"/>
+	<classpathentry kind="lib" path="lib/commons-codec-1.11/commons-codec-1.11-test-sources.jar"/>
+	<classpathentry kind="lib" path="lib/commons-codec-1.11/commons-codec-1.11-tests.jar"/>
+	<classpathentry kind="lib" path="lib/commons-codec-1.11/commons-codec-1.11.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -208,7 +208,8 @@ public class InteractionStageGUI implements Runnable {
 		systemTime = new ArrayList<Integer>(numAgents);
 		prevSystemTime = new ArrayList<Integer>(numAgents);
 		previousDTPs = new ArrayList< Stack<SimpleEntry<Integer, DisjunctiveTemporalProblem>> >(numAgents);
-		for(int i = 0; i < numAgents; i++) previousDTPs.add( new Stack<SimpleEntry<Integer, DisjunctiveTemporalProblem>>() );
+		for(int i = 0; i < numAgents; i++) previousDTPs.add(
+				                           new Stack<SimpleEntry<Integer, DisjunctiveTemporalProblem>>() );
 		for(int i = 0; i < numAgents; i++) systemTime.add(0); prevSystemTime.add(0);
 		
 		// if > 1 agents, put the system into 'clock-mode' which allows it to interact with all 
@@ -536,7 +537,7 @@ public class InteractionStageGUI implements Runnable {
 									                                        getSystemTime() + idle + time);
 							ongoingActs.add(new SimpleEntry<String,Interval>(actName, curr_int));
 							
-							// if a confirmed activity, add the activity to the corresponding list of confirmedActs
+							// if a confirmed activity, add the activity to the corresponding list
 							if ( ((String) inJSON.get("infoType")).equals("confirmActivity") ) {
 								if (agentNum.equals("0")) agent0CurrentConfirmedActs.add(
 												  new SimpleEntry(actName, getSystemTime() + idle + time));
@@ -561,19 +562,28 @@ public class InteractionStageGUI implements Runnable {
 							actHistory.add(thisAct);
 						}
 						
-						if ( ((String) inJSON.get("infoType")).equals("tentativeActivity")) { processingTentativeAct = true; }
-						if ( ((String) inJSON.get("infoType")).equals("confirmActivity"))   { processingConfirmedAct = true; }
+						// Set request type flag for processing at the top of the loop
+						if ( ((String) inJSON.get("infoType")).equals("tentativeActivity")) {
+							processingTentativeAct = true;
+						}
+						if ( ((String) inJSON.get("infoType")).equals("confirmActivity"))   {
+							processingConfirmedAct = true;
+						}
 						
 						break;
 						
-					// this will be sent by the client when it wants to populate the 'modify activity' screen
+					// a user has selected an activity in the modify activity screen
 					case "requestActDetails":
 						
 						JSONObject actDetails = new JSONObject();
 						
 						// get the list of activities that are viable to have their duration tightened and availability tightened
-						ArrayList<String> modifiableDurActs   = (ArrayList<String>) Generics.concat(dtp.getActivities(DisjunctiveTemporalProblem.ActivityFinder.VARDUR, -getSystemTime()));
-						ArrayList<String> modifiableAvailActs = (ArrayList<String>) Generics.concat(dtp.getActivities(DisjunctiveTemporalProblem.ActivityFinder.VARAVAIL, -getSystemTime()));
+						ArrayList<String> modifiableDurActs   = (ArrayList<String>) Generics.concat(
+										dtp.getActivities(DisjunctiveTemporalProblem.ActivityFinder.VARDUR,
+										-getSystemTime()));
+						ArrayList<String> modifiableAvailActs = (ArrayList<String>) Generics.concat(
+								      dtp.getActivities(DisjunctiveTemporalProblem.ActivityFinder.VARAVAIL,
+								      -getSystemTime()));
 						
 						ArrayList<String> minDurs = new ArrayList<String>();
 						ArrayList<String> maxDurs = new ArrayList<String>();
@@ -582,12 +592,16 @@ public class InteractionStageGUI implements Runnable {
 						String EET = "";
 						String LET = "";
 						
-						// actname will be blank when client only is looking for modifiable lists
-						// if not black, get information on the activity (availability & duration)
+						// actname will be blank when client has not yet selected specefic activity to mod
+						// if not blank, get information on the activity (availability & duration)
 						if (!actName.equals("")) {
-							IntervalSet currentDuration = dtp.getInterval(actName+"_S", actName+"_E").inverse(); // this interval will be [minDur,maxDur]
-							IntervalSet startAvail  = dtp.getInterval("zero", actName+"_S").inverse(); // this interval will be [EST,LST]
-							IntervalSet endAvail    = dtp.getInterval("zero", actName+"_E").inverse(); // this interval will be [EET,LET]
+							// this interval will be [minDur,maxDur]
+							IntervalSet currentDuration = dtp.getInterval(actName+"_S", actName+"_E")
+																								.inverse();
+							// this interval will be [EST,LST]
+							IntervalSet startAvail  = dtp.getInterval("zero", actName+"_S").inverse();
+							// this interval will be [EET,LET]
+							IntervalSet endAvail    = dtp.getInterval("zero", actName+"_E").inverse();
 							
 							minDurs.add( String.valueOf( currentDuration.getLowerBound() ) );
 							maxDurs.add( String.valueOf( currentDuration.getUpperBound() ) );
@@ -597,7 +611,8 @@ public class InteractionStageGUI implements Runnable {
 							LET = String.valueOf( endAvail.getUpperBound()   );
 						}
 
-						// send the lists of modifiable activities along with details of the specific activity (if specified)
+						// send the lists of modifiable activities
+						//  along with details of the specific activity (if specified)
 						actDetails.put("actName", actName);
 						actDetails.put("modifiableDurActs", modifiableDurActs);
 						actDetails.put("modifiableAvailActs", modifiableAvailActs);
@@ -633,27 +648,30 @@ public class InteractionStageGUI implements Runnable {
 						
 						break;
 						
-					// client will send this when the user has entered new (tighter) duration / availability for an activity
-					// the system is not capable of checking that the user modifications are legal => they can only tighten constraints
+					// user has entered new (tighter) duration / availability for an activity
 					case "modifyActivity":
 						
 						prevDTP = dtp.clone();
-						SimpleEntry<Integer, DisjunctiveTemporalProblem> tempSE_mod = new SimpleEntry<Integer, DisjunctiveTemporalProblem>(getSystemTime(), prevDTP);
-						Stack<SimpleEntry<Integer, DisjunctiveTemporalProblem>> tempStack_mod = new Stack<SimpleEntry<Integer, DisjunctiveTemporalProblem>>();
+						SimpleEntry<Integer, DisjunctiveTemporalProblem> tempSE_mod =
+							 new SimpleEntry<Integer, DisjunctiveTemporalProblem>(getSystemTime(), prevDTP);
+						Stack<SimpleEntry<Integer, DisjunctiveTemporalProblem>> tempStack_mod =
+									          new Stack<SimpleEntry<Integer, DisjunctiveTemporalProblem>>();
 						tempStack_mod.push(tempSE_mod);
 						previousDTPs.add( tempStack_mod );
 						
 						JSONObject actJSON_mod = (JSONObject) inJSON.get("actDetails");
 						
-						List<String> newMinDurs_mod  = (ArrayList<String>) actJSON_mod.get("minDurs"); // format:  hh:mm
-						List<String> newMaxDurs_mod  = (ArrayList<String>) actJSON_mod.get("maxDurs"); // format:  hh:mm
-						String newEST_mod 			 = String.valueOf(actJSON_mod.get("EST")); // format:  hh:mm
-						String newLST_mod 			 = String.valueOf(actJSON_mod.get("LST")); // format:  hh:mm
-						String newEET_mod 			 = String.valueOf(actJSON_mod.get("EET")); // format:  hh:mm
-						String newLET_mod 			 = String.valueOf(actJSON_mod.get("LET")); // format:  hh:mm
+						// all times below are in format:  hh:mm
+						List<String> newMinDurs_mod  = (ArrayList<String>) actJSON_mod.get("minDurs");
+						List<String> newMaxDurs_mod  = (ArrayList<String>) actJSON_mod.get("maxDurs");
+						String newEST_mod 			 = String.valueOf(actJSON_mod.get("EST"));
+						String newLST_mod 			 = String.valueOf(actJSON_mod.get("LST"));
+						String newEET_mod 			 = String.valueOf(actJSON_mod.get("EET"));
+						String newLET_mod 			 = String.valueOf(actJSON_mod.get("LET"));
 						
 						// Duration
-						AddIntervalSet(actName+"_S", actName+"_E", getSystemTime(), Generics.stringToInterval( "[" + newMinDurs_mod.get(0) + "," + newMaxDurs_mod.get(0) + "]" ) );
+						AddIntervalSet(actName+"_S", actName+"_E", getSystemTime(),Generics.stringToInterval(
+								         "[" + newMinDurs_mod.get(0) + "," + newMaxDurs_mod.get(0) + "]" ) );
 						
 						// if no value submitted for these, use default max value
 						if (newEST_mod.equals("")) {newEST_mod = "00:00";}
@@ -662,20 +680,25 @@ public class InteractionStageGUI implements Runnable {
 						if (newLET_mod.equals("")) {newLET_mod = "24:00";}
 						
 						// EST and LST
-						AddIntervalSet("zero", actName+"_S", getSystemTime(), Generics.stringToInterval( "[" + newEST_mod + "," + newLST_mod + "]" ) );
+						AddIntervalSet("zero", actName+"_S", getSystemTime(), Generics.stringToInterval(
+															 "[" + newEST_mod + "," + newLST_mod + "]" ) );
 						// EET and LET
-						AddIntervalSet("zero", actName+"_E", getSystemTime(), Generics.stringToInterval( "[" + newEET_mod + "," + newLET_mod + "]" ) );
+						AddIntervalSet("zero", actName+"_E", getSystemTime(), Generics.stringToInterval(
+															 "[" + newEET_mod + "," + newLET_mod + "]" ) );
 						
 						processingModify = true;
 						break;
 					
 						
-						// client will send this when the user has entered new activity
+						// client will send this when the user has entered a new activity
 						case "addActivity":
 							
+							// Save current dtp in case new addition breaks system
 							prevDTP = dtp.clone();
-							SimpleEntry<Integer, DisjunctiveTemporalProblem> tempSE_add = new SimpleEntry<Integer, DisjunctiveTemporalProblem>(getSystemTime(), prevDTP);
-							Stack<SimpleEntry<Integer, DisjunctiveTemporalProblem>> tempStack_add = new Stack<SimpleEntry<Integer, DisjunctiveTemporalProblem>>();
+							SimpleEntry<Integer, DisjunctiveTemporalProblem> tempSE_add = new 
+								SimpleEntry<Integer, DisjunctiveTemporalProblem>(getSystemTime(), prevDTP);
+							Stack<SimpleEntry<Integer, DisjunctiveTemporalProblem>> tempStack_add = new
+									             Stack<SimpleEntry<Integer, DisjunctiveTemporalProblem>>();
 							tempStack_add.push(tempSE_add);
 							previousDTPs.add( tempStack_add );
 							
@@ -683,10 +706,11 @@ public class InteractionStageGUI implements Runnable {
 							
 							String name    = (String) actJSON_add.get("actName");
 
-							String est     = (String) actJSON_add.get("EST"); // format:  mmmm
-							String lst     = (String) actJSON_add.get("LST"); // format:  mmmm
-                            String eet     = (String) actJSON_add.get("EET"); // format:  mmmm
-                            String let     = (String) actJSON_add.get("LET"); // format:  mmmm
+							// times below have format:  mmmm
+							String est     = (String) actJSON_add.get("EST");
+							String lst     = (String) actJSON_add.get("LST");
+                            String eet     = (String) actJSON_add.get("EET");
+                            String let     = (String) actJSON_add.get("LET");
                             
                             // if no value submitted for these, use default max value
     						if (est.equals("")) {est = "0000";}
@@ -694,22 +718,26 @@ public class InteractionStageGUI implements Runnable {
     						if (eet.equals("")) {eet = "0000";}
     						if (let.equals("")) {let = "1440";}
                             
-                            // This works with the current system split of morning / evening but is kind of a hardcode solution
+                            // TODO: replace hardcode solution to sub-dtp selection problem
+    						// This will on work with the current system split of morning / evening 
                             String dtpIdx = "";
                             if (Integer.parseInt(est) < 720) {dtpIdx = "0";} 
                             else {dtpIdx = "1";}
                             
-                            String minDur  = ((ArrayList<String>) actJSON_add.get("minDurs")).get(0); // comes as list to handle multi ranges in future improvements
-                            String maxDur  = ((ArrayList<String>) actJSON_add.get("maxDurs")).get(0); // comes as list to handle multi ranges in future improvements
+                            // durations come as lists to handle multi ranges in future improvements
+                            String minDur  = ((ArrayList<String>) actJSON_add.get("minDurs")).get(0);
+                            String maxDur  = ((ArrayList<String>) actJSON_add.get("maxDurs")).get(0);
 							
 							Boolean addSuccess = addActToXML(Integer.parseInt(agentNum), dtpIdx, name, est, lst, eet, let, minDur, maxDur);
 							
 							// if the add succeeded, set up history to automatically repeat
-							// else if the add failed, the dtp will be unmodified and no need to rexecute history
+							// else if add failed, the dtp will be unmodified so no need to reexecute history
 							if (addSuccess == true) {
 								processingAdd = true;
 								
-								// set up historical sequence of events that led up to current time in system before deletion
+								// populate internalRequestQueue with all activities that have already been
+								// completed, the items in the internalRequestQueue will then be processed
+								// by the main loop later
 								for (HashMap<String,String> h : actHistory) {
 									JSONObject temp = createInternalJSON(h);
 									internalRequestQueue.add(temp);
@@ -719,25 +747,26 @@ public class InteractionStageGUI implements Runnable {
 								actHistory.clear();
 							}
 							
-							// automatically add request to advance the system time and update client display, either way
+							// automatically add request to advance the system time and update client display
+							// regardless of success of addition
 							JSONObject tempAddJSON = new JSONObject();
 							tempAddJSON.put("infoType", "advSysTime");
 							internalRequestQueue.add(tempAddJSON);
 							
 							break;
 						
-					// delete an activity that has not yet been performed
-					// populate internalRequestQueue with all activities that have already been completed
-					//  the items in the internalRequestQueue will be processed by the main loop
+					// user has requested to delete an activity that has not yet been performed
 					case "deleteActivity":
 						
-						// set up historical sequence of events that led up to current time in system before deletion
+						// populate internalRequestQueue with all activities that have already been
+						// completed, the items in the internalRequestQueue will then be processed
+						// by the main loop later
 						for (HashMap<String,String> h : actHistory) {
 							JSONObject temp = createInternalJSON(h);
 							internalRequestQueue.add(temp);
 						}
 						
-						// after all historical activities have been confirmed, advance the system time and update client display
+						// automatically add request to advance the system time and update client display
 						JSONObject tempDelJSON = new JSONObject();
 						tempDelJSON.put("infoType", "advSysTime");
 						internalRequestQueue.add(tempDelJSON);
@@ -750,22 +779,30 @@ public class InteractionStageGUI implements Runnable {
 						
 						break;
 					
-					// temporary demo system to allow a client to trigger an advancing of time to the next decision point (minTime)
+					// user has requested for system clocks to advance to next decision point
+					// this is a temporary system to enable demo without literally waiting for time to pass
 					case "advSysTime":
+						
+						// advance and update the dtp
 						int temp = minTime - getSystemTime();
 						advanceSystemTimeTo(minTime);
 						dtp.advanceToTime(-getSystemTime(), temp, false);
 						dtp.simplifyMinNetIntervals();
 						
-						// check each current activity being performed for the agent. If the activity ends at or before the new currentTime (minTime), remove it from list
+						// check each current activity being performed for each agent. If the activity ends
+						//  at or before the new currentTime (minTime), remove it from list
 						for (int i = 0; i < agent0CurrentConfirmedActs.size(); i++) {
-							if ( agent0CurrentConfirmedActs.get(i).getValue() <= minTime ) agent0CurrentConfirmedActs.remove(i);
+							if ( agent0CurrentConfirmedActs.get(i).getValue() <= minTime ) {
+								agent0CurrentConfirmedActs.remove(i);
+							}
 						}
 						for (int i = 0; i < agent1CurrentConfirmedActs.size(); i++) {
-							if ( agent1CurrentConfirmedActs.get(i).getValue() <= minTime ) agent1CurrentConfirmedActs.remove(i);
+							if ( agent1CurrentConfirmedActs.get(i).getValue() <= minTime ) {
+								agent1CurrentConfirmedActs.remove(i);
+							}
 						}
 						
-						// after advancing the clock all clients will need an updated gantt chart
+						// after advancing the clock, send updated gantt chart to all clients
 						sendGanttToAgent("ALL", allActNames);
 						
 						processingAdvSysTime = true;
@@ -779,7 +816,8 @@ public class InteractionStageGUI implements Runnable {
 				}
 				
 			} catch (Exception e) {
-				System.err.println("Error in request processing.  Please try again.\n"+e.toString()+"\n"+Arrays.toString(e.getStackTrace()));
+				System.err.println("Error in request processing.  Please try again.\n"+e.toString()+"\n"
+																	  +Arrays.toString(e.getStackTrace()));
 				System.err.flush();
 			}
 		}
@@ -787,7 +825,8 @@ public class InteractionStageGUI implements Runnable {
 	
 	
 	// Removes the last 'performed' activity from the dtp
-	// this should be called after every tentative action gantt sent to the client to revert dtp back to only confirmed acts
+	// This should be called after every tentative action gantt sent to the client to revert dtp
+	//  back to only confirmed acts
 	private static void removeTentAct(String agentNumber) {
 		if(previousDTPs.get( Integer.valueOf(agentNumber)).empty() ) {
 			System.out.println("The schedule has not yet been modified.\n");
@@ -795,8 +834,10 @@ public class InteractionStageGUI implements Runnable {
 		}
 		System.out.println("removing tentative selection.");
 		
+		// retrieve previous saved dtp
 		SimpleEntry<Integer, DisjunctiveTemporalProblem> ent = previousDTPs.get( Integer.valueOf(agentNumber)).pop();
 		
+		// set system time and system dtp beack to previous dtp values
 		setSystemTime(ent.getKey());
 		System.out.println("Resetting time to "+Generics.toTimeFormat(getSystemTime()));
 		dtp = ent.getValue();
@@ -804,41 +845,39 @@ public class InteractionStageGUI implements Runnable {
 	}
 	
 	
-	private static boolean disjunctivelyUncertainProblem(DisjunctiveTemporalProblem dtp) {
-		if ((dtp instanceof DUTP) || (dtp instanceof DUSTP)) {
-			return true;
-		}
-		else {
-			return false;
-		}
-	}
+//	private static boolean disjunctivelyUncertainProblem(DisjunctiveTemporalProblem dtp) {
+//		if ((dtp instanceof DUTP) || (dtp instanceof DUSTP)) {
+//			return true;
+//		}
+//		else {
+//			return false;
+//		}
+//	}
 	
 	private static double getMaxLatestEndTime(DisjunctiveTemporalProblem dtp) {
 		double let = MAX_LET;
 		ArrayList<Interval> minmaxArray = dtp.getDTPBoundaries();
 		for (Interval interv : minmaxArray) {
-			// Drew: Max seems more appropriate here. Otherwise this ends early, right?
 			let = Math.min(let, interv.getUpperBound());
-			//let = Math.max(let, interv.getUpperBound());
 		}
 		return let;
-		}
+	}
 
 	
 	public static boolean requiredActivity(String actname) {
 		return (!(actname.equals("skip")) || (actname.equals("idle")));
 	}
 
-	private static int getEarliestEnd(
-			ArrayList<SimpleEntry<String, Interval>> ongoing) {
-		int min = Integer.MAX_VALUE;
-		for(SimpleEntry<String,Interval> pair: ongoing){
-			int end = (int) pair.getValue().getUpperBound();
-			if(end < min) min = end;
-		}
-		//System.out.println("Would skip to time " + Generics.toTimeFormat(min));
-		return min;
-	}
+//	private static int getEarliestEnd(
+//			ArrayList<SimpleEntry<String, Interval>> ongoing) {
+//		int min = Integer.MAX_VALUE;
+//		for(SimpleEntry<String,Interval> pair: ongoing){
+//			int end = (int) pair.getValue().getUpperBound();
+//			if(end < min) min = end;
+//		}
+//		//System.out.println("Would skip to time " + Generics.toTimeFormat(min));
+//		return min;
+//	}
 
 
 	private static void getAndPerformIdle(int minIdle, int maxIdle, int time, int subDTPNum, int minTime){
@@ -846,8 +885,6 @@ public class InteractionStageGUI implements Runnable {
 			System.out.println("Unexpected idle time response \""+Integer.toString(time)+"\"");
 			return;
 		}
-		/// incrementSystemTime(time, currentAgent);
-		/// dtp.advanceToTime(-getSystemTime(), time, true);
 		
 		dtp.advanceSubDTPToTime(-(minTime+time), time, true, subDTPNum);
 		
@@ -856,6 +893,7 @@ public class InteractionStageGUI implements Runnable {
 	}
 
 /*
+ * This function was implemented for the text-based UI but has not yet been incorporated into the GUI system
 	private static void getAndPerformEmergencyIdle(String str){
 		printToClient("How long to idle? Format for input is H:MM");
 		JSONObject jsonIN = getNextRequest();
@@ -877,130 +915,6 @@ public class InteractionStageGUI implements Runnable {
 			uftps = dtp.getUnFixedTimepoints();
 			//for(Timepoint tp : uftps) System.out.println(tp.getName());
 		}
-	}
-*/
-	
-/*
-	private static void advancedSelection(){
-		//TODO: some of these option are causing errors in the idle time calculations, needs to be fixed
-		printToClient("Select from advanced options:\n(G)et interval\ntighten activity (D)uration\ntighten activity (A)vailability\nadd new inter-activity (C)onstraint\nadd (N)ew activity");
-		JSONObject jsonIN = getNextRequest();
-		String str = (String) jsonIN.get("value");
-		
-		//get interval between two timepoints
-		if(str.equalsIgnoreCase("G")){
-			Collection<String> activities = Generics.concat(dtp.getActivities(DisjunctiveTemporalProblem.ActivityFinder.ALL, -getSystemTime()));
-			activities.add("zero");
-			printToClient("Enter first activity to find interval from: "+ activities.toString());
-			String tp1 = getTimepoint(activities,true);
-			printToClient("Enter second activity to find interval from: "+ activities.toString());
-			String tp2 = getTimepoint(activities,true);
-			printToClient("Interval from "+tp1+" to "+tp2+" is "+dtp.getInterval(tp1, tp2));
-			return;
-		}
-		
-		//tighten activity duration
-		else if(str.equalsIgnoreCase("D")){ 
-			Collection<String> activities = Generics.concat(dtp.getActivities(DisjunctiveTemporalProblem.ActivityFinder.VARDUR, -getSystemTime()));
-			if(activities.isEmpty()){
-				printToClient("No activities with variable duration.  Please make another selection.");
-				return;
-			}
-			prevDTP = dtp.clone();
-			previousDTPs.push(new SimpleEntry<Integer, DisjunctiveTemporalProblem>(getSystemTime(), prevDTP));
-			printToClient("Select activity to tighten duration for.  Current activities with variable duration: "+activities.toString());
-			str = getTimepoint(activities,false);
-			IntervalSet interval = dtp.getInterval(str+"_S", str+"_E").inverse();
-			getIntervalSetAndAdd(str+"_S",str+"_E",getSystemTime(),"Current duration for "+str+" is: "+interval.toString()+".");
-		}
-		
-		//tighten activity availability
-		else if(str.equalsIgnoreCase("A")){ 
-			Collection<String> activities = Generics.concat(dtp.getActivities(DisjunctiveTemporalProblem.ActivityFinder.VARAVAIL, -getSystemTime()));
-			if(activities.isEmpty()){
-				printToClient("No activities with variable availability.  Please make another selection.");
-				return;
-			}
-			prevDTP = dtp.clone();
-			previousDTPs.push(new SimpleEntry<Integer, DisjunctiveTemporalProblem>(getSystemTime(), prevDTP));
-			printToClient("Select activity to tighten availability for.  Current activities with variable availability: "+activities.toString());
-			str = getTimepoint(activities,false);
-			IntervalSet start = dtp.getInterval("zero", str+"_S").inverse();
-			if(start.totalSize() > 1){
-				getIntervalSetAndAdd("zero",str+"_S",getSystemTime(),"Current availability for starting "+str+" is: "+start.toString()+".");
-			}
-			IntervalSet end = dtp.getInterval("zero", str+"_E").inverse();
-			if(end.totalSize() > 1){
-				getIntervalSetAndAdd("zero",str+"_E",getSystemTime(),"Current availability for ending "+str+" is: "+end.toString()+".");
-			}
-		}
-		
-		//add new interactivity constraint
-		else if(str.equalsIgnoreCase("C")){ 
-			Collection<String> activities = Generics.concat(dtp.getActivities(DisjunctiveTemporalProblem.ActivityFinder.ALL, -getSystemTime()));
-			if(activities.isEmpty()){
-				printToClient("No activities found.  Please try again.");
-				return;
-			}
-			//prevDTP = dtpClone(dtp, getSystemTime());
-			prevDTP = dtp.clone();
-			previousDTPs.push(new SimpleEntry<Integer, DisjunctiveTemporalProblem>(getSystemTime(), prevDTP));
-			printToClient("Enter source activity of new constraint.  Activities are: "+activities.toString());
-			String source = getTimepoint(activities,true);
-			printToClient("Enter destination activity of new constraint.  Activities are: "+activities.toString());
-			String dest = getTimepoint(activities,true);
-			getIntervalSetAndAdd(source,dest,getSystemTime(),"");
-		}
-		
-		//add new activity
-		else if(str.equalsIgnoreCase("N")){ 
-
-			prevDTP = dtp.clone();
-			
-			Collection<DisjunctiveTemporalConstraint> constrToSave = dtp.getAdditionalConstraints();
-			ArrayList<Timepoint> fixedToSave = dtp.getFixedTimepoints();
-			SimpleEntry<String, Integer> output = addNewActivity();
-			String new_act = output.getKey();
-			dtp = new ProblemLoader().loadDTPFromFile(problemFile);
-			int id = output.getValue();
-			//System.out.println("timepoint added to SUBDTP "+id);
-			//add in nonconcurrency constraints (make this so the user can choose??
-			Collection<String> tpNames = dtp.getActivityNames(id);
-//			
-//			for(String tpOne : tpNames){
-//					
-//					//String tpOne = tpNames.get(w);
-//					if(tpOne.equals(new_act)) continue;
-//					dtp.addNonconcurrentConstraint(tpOne, new_act, id);
-//					//System.out.println("adding nonconcurrency constraint between "+tpOne+" "+new_act);
-//				
-//			}
-			//((SimpleDTP) dtp).addNonconcurrentConstraint("wakeup", new_act);
-			//((SimpleDTP) dtp).addOrderingConstraint("wakeup", new_act,0,Integer.MAX_VALUE);
-			//((SimpleDTP) dtp).addOrderingConstraint(new_act, "toSchool",0,Integer.MAX_VALUE);
-			
-			//dtp.enumerateSolutions(0); // right now this and the line below are error checking. ultimately, i don't think they're needed
-			//dtp.simplifyMinNetIntervals();
-			
-			
-			dtp.addAdditionalConstraints(constrToSave);
-			//System.out.println("readded additional constraints");
-			//dtp.addFixedTimepoints(fixedToSave);
-			//System.out.println("readded fixed timepoints");
-			dtp.enumerateSolutions(getSystemTime());
-			dtp.simplifyMinNetIntervals();
-			dtp.addFixedTimepoints(fixedToSave);
-			//System.out.println("readded fixed timepoints");
-			return;
-		}
-		else{
-			printToClient("Unexpected response \""+str+"\"");
-			return;
-	
-		}
-		dtp.enumerateSolutions(getSystemTime());
-		dtp.simplifyMinNetIntervals();
-	
 	}
 */
 	
@@ -1202,53 +1116,8 @@ public class InteractionStageGUI implements Runnable {
 		}
 		return outStr;
 	}
-	
-//	/*
-//	 * This class sends a JSON message to the client to print out for the user to see
-//	 * Author: Drew
-//	 * For now, it will save a JSON file that acts as a queue containing the things
-//	 * that the server wants to print. Will be flushed (erased) once the client sends a
-//	 * GET request and gets it
-//	 */
-//	private static void printToClient(String msg) {
-//		File tmpDir = new File("JSON_to_client.json");
-//		FileWriter fout;
-//		try {
-//			if (tmpDir.exists()) { // if the file already exists, read in JSON then edit it / add to it
-//			
-//				JSONParser parser = new JSONParser();
-//				Object fileIN = parser.parse(new FileReader("JSON_to_client.json"));
-//				JSONObject jsonIN = (JSONObject) fileIN;
-//				if (!tmpDir.delete()) { // delete the JSON file after receiving it
-//					System.out.println("Error: Failed to delete to_client file when writing.");
-//					// if you fail to delete this, do not send anything
-//					return;
-//				}
-//				
-//				msg = (String)jsonIN.get("toPrint") + '\n' + msg;
-//				
-//			}
-//			
-//			fout = new FileWriter("JSON_to_client.json");
-//
-//			
-//			// JSON will have object {toPrint : someMessage}
-//			JSONObject jsonObj = new JSONObject();
-//			jsonObj.put("toPrint", msg);
-//	
-//			System.out.println("Server output: " + msg);
-//			fout.write(jsonObj.toJSONString()); // write the JSON to a string to the file
-//			
-//			
-//			fout.close();
-//			
-//		} catch (Exception e) {
-//			
-//			System.err.flush();
-//		}
-//	}
-	
-	
+
+
 	/*
 	 * This function adds the activity into the XML file
 	 * It also modifies the global dtp and refreshes it
@@ -1522,25 +1391,6 @@ public class InteractionStageGUI implements Runnable {
 		ArrayList< HashMap< String, ArrayList< String > > > plotData = Viz.retrievePlotData( dtp, initialDTP, getSystemTime() );
 		for (int i = 0; i < plotData.size(); i++) {plotData.get(i).get("currentTime").add( String.valueOf(getSystemTime()) );} // add system current time to each agent
 		
-		// wait until gantt is made, saved, and loaded into system
-//		ganttDir = new File("forClient_image.png");
-//		String imageString = "";
-		//try {
-//			while(!ganttDir.exists()) { // while it does not exist
-//				Thread.sleep(100);
-//				ganttDir = new File("forClient_image.png");
-//			}
-			
-			// once gantt is made and loaded, convert to base64 string
-//			FileInputStream fis = new FileInputStream(ganttDir);
-//			byte byteArray[] = new byte[(int)ganttDir.length()];
-//			fis.read(byteArray);
-//			imageString = Base64.encodeBase64String(byteArray);
-			
-			// clean up stream and delete png after use
-//			fis.close();
-//			ganttDir.delete();
-			
 			
 			// get count of partially constricted and significantly constricted activities
 			// go through each agent, then each activity and check the activity ratio
@@ -1550,33 +1400,6 @@ public class InteractionStageGUI implements Runnable {
 			int totalWeakCount = 0;
 			int totalStrongCount = 0;
 			
-			// if this is the first choice (no oldPlotData), then fill the restrictCount arrays with 0's
-//			if (oldPlotData.size() == 0) {
-//				for (int i = 0; i < Integer.valueOf(numAgents); i++) {
-//					weakRestrictCounts.add(0);
-//					strongRestrictCounts.add(0);
-//				}
-//			}
-//			
-//			for (int a = 0; a < oldPlotData.size(); a++) {
-//				weakRestrictCounts.add(0);
-//				strongRestrictCounts.add(0);
-//				for (int i = 0; i < oldPlotData.get(a).get("actRestricts").size(); i++) {
-//					double newRatio =  Double.parseDouble( plotData.get(a).get("actRestricts").get(i) );
-//					double oldRatio =  Double.parseDouble( oldPlotData.get(a).get("actRestricts").get(i) );
-//					double ratioOfRatios = newRatio / oldRatio;
-//					
-//					// if there has been a change over the threshold, increment strong restriction count
-//					if (ratioOfRatios < 0.7) {
-//						strongRestrictCounts.set(a, strongRestrictCounts.get(a)+1);
-//						totalStrongCount++;
-//					} // if there has been a change less than the threshold, increment weak restriction count
-//					else if (ratioOfRatios < 1.0) {
-//						weakRestrictCounts.set(a, weakRestrictCounts.get(a)+1);
-//						totalWeakCount++;
-//					}
-//				};
-//			}
 			
 			// send JSON file with infoType and image as encoded String
 			// if agentNum is set to "ALL", send the JSON to all clients/agents
@@ -1634,21 +1457,8 @@ public class InteractionStageGUI implements Runnable {
 						new ArrayList<String>()  // debugInfo
 				);
 				
-
-//				System.out.println("totalStrongCount: " + String.valueOf(totalStrongCount));
-//				System.out.println("totalWeakCount: " + String.valueOf(totalWeakCount));
-//				System.out.println("this agent strong count: " + String.valueOf(strongRestrictCounts.get(Integer.valueOf(agentNum))) );
 			}
 			
-			oldPlotData = plotData;
-			
-//		} catch (Exception e) {
-//			System.err.println("sendGanttToAgent Error: "+e.toString());
-//			System.err.flush();
-//		}
-		
-		// delete the gantt image after it has been sent
-//		ganttDir.delete();
 	}
 	
 	private JSONObject createInternalJSON(HashMap<String, String> actHistDetails) {
