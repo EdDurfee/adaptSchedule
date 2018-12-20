@@ -274,6 +274,10 @@ class MainViewController: UIViewController, UITextFieldDelegate, UITextViewDeleg
                                     self.delActMenuDelegate.allDeletableActivities.append(a)
                                 }
                             }
+                            // reset selection
+                            self.DelActMenu.deselectRow(at: IndexPath(row: self.delActMenuDelegate.currentCellRow, section: 0), animated: true)
+                            self.delActMenuDelegate.currentCellRow = -1
+                            
                             self.DelActMenu.reloadData()
                             
                             self.DelActMenu.isHidden = false
@@ -1216,6 +1220,12 @@ class MainViewController: UIViewController, UITextFieldDelegate, UITextViewDeleg
 //        self.SideMenu.deselectRow(at: SideMenu.indexPathForSelectedRow!, animated: false)
         self.ModifyActView.isHidden = true
         self.ModActMenu.deselectRow(at: self.ModActMenu.indexPathForSelectedRow!, animated: false)
+        
+        ModAct_ESTField.text = ""
+        ModAct_LSTField.text = ""
+        ModAct_EETField.text = ""
+        ModAct_LETField.text = ""
+        ModAct_DurationTextBox.text = ""
     }
     
     
@@ -1236,6 +1246,9 @@ class MainViewController: UIViewController, UITextFieldDelegate, UITextViewDeleg
         self.menuDelegate.startTime = 0
         ConfirmActButton.isEnabled = false
         self.SideMenu.reloadData()
+        
+        // clear the gantt chart until a new one is ready
+        GanttChart.dataEntries = nil
         
     }
     

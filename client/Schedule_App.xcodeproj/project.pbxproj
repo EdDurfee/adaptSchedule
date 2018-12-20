@@ -20,6 +20,8 @@
 		3A6081DA214AAA9900BEA91B /* Exclamation_in_a_circle.svg.png in Resources */ = {isa = PBXBuildFile; fileRef = 3A6081D9214AAA9800BEA91B /* Exclamation_in_a_circle.svg.png */; };
 		3A7A72A720DD3D7300A8EA55 /* IPEnterViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A7A72A620DD3D7300A8EA55 /* IPEnterViewController.swift */; };
 		3AB21BC920D2CF73008CADF5 /* MenuController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AB21BC820D2CF73008CADF5 /* MenuController.swift */; };
+		3ACEBA8321CAA659009E2036 /* lock-512.png in Resources */ = {isa = PBXBuildFile; fileRef = 3ACEBA8221CAA658009E2036 /* lock-512.png */; };
+		3ACEBA8521CAA78A009E2036 /* unlocked.png in Resources */ = {isa = PBXBuildFile; fileRef = 3ACEBA8421CAA78A009E2036 /* unlocked.png */; };
 		3AD15F43210792A300F30C23 /* ActivityEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD15F42210792A300F30C23 /* ActivityEditView.swift */; };
 		3AD15F472107BB6300F30C23 /* ModActTableController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD15F462107BB6300F30C23 /* ModActTableController.swift */; };
 		3AD7719F20B45F6700948C2A /* ServerInteraction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD7719E20B45F6700948C2A /* ServerInteraction.swift */; };
@@ -63,6 +65,9 @@
 		3A6081D9214AAA9800BEA91B /* Exclamation_in_a_circle.svg.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Exclamation_in_a_circle.svg.png; path = Assets.xcassets/Exclamation_in_a_circle.svg.png; sourceTree = "<group>"; };
 		3A7A72A620DD3D7300A8EA55 /* IPEnterViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IPEnterViewController.swift; sourceTree = "<group>"; };
 		3AB21BC820D2CF73008CADF5 /* MenuController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MenuController.swift; sourceTree = "<group>"; };
+		3ACEBA8121C801F2009E2036 /* Schedule_App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Schedule_App.entitlements; sourceTree = "<group>"; };
+		3ACEBA8221CAA658009E2036 /* lock-512.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "lock-512.png"; sourceTree = "<group>"; };
+		3ACEBA8421CAA78A009E2036 /* unlocked.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = unlocked.png; sourceTree = "<group>"; };
 		3AD15F42210792A300F30C23 /* ActivityEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityEditView.swift; sourceTree = "<group>"; };
 		3AD15F462107BB6300F30C23 /* ModActTableController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModActTableController.swift; sourceTree = "<group>"; };
 		3AD7719E20B45F6700948C2A /* ServerInteraction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerInteraction.swift; sourceTree = "<group>"; };
@@ -117,6 +122,7 @@
 		3A5365BA20B3564F0057B451 /* Schedule_App */ = {
 			isa = PBXGroup;
 			children = (
+				3ACEBA8121C801F2009E2036 /* Schedule_App.entitlements */,
 				3A5365BF20B3564F0057B451 /* Main.storyboard */,
 				3A5365BD20B3564F0057B451 /* ViewController.swift */,
 				3ADC3ABC219E03AD00774EB6 /* AddActivityViewController.swift */,
@@ -128,6 +134,8 @@
 				3A47AB30218B659A00DBD035 /* DelActTableController.swift */,
 				3A5365C220B356510057B451 /* Assets.xcassets */,
 				3A6081D9214AAA9800BEA91B /* Exclamation_in_a_circle.svg.png */,
+				3ACEBA8221CAA658009E2036 /* lock-512.png */,
+				3ACEBA8421CAA78A009E2036 /* unlocked.png */,
 				3A19879220FE3777003C3D91 /* GanttChartView.swift */,
 				3A5365C720B356510057B451 /* Info.plist */,
 				3A5365C420B356510057B451 /* LaunchScreen.storyboard */,
@@ -223,6 +231,11 @@
 				TargetAttributes = {
 					3A5365B720B3564F0057B451 = {
 						CreatedOnToolsVersion = 9.3;
+						SystemCapabilities = {
+							com.apple.DataProtection = {
+								enabled = 1;
+							};
+						};
 					};
 					3A5365CB20B356510057B451 = {
 						CreatedOnToolsVersion = 9.3;
@@ -259,6 +272,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3ACEBA8521CAA78A009E2036 /* unlocked.png in Resources */,
+				3ACEBA8321CAA659009E2036 /* lock-512.png in Resources */,
 				3A6081DA214AAA9900BEA91B /* Exclamation_in_a_circle.svg.png in Resources */,
 				3A5365C620B356510057B451 /* LaunchScreen.storyboard in Resources */,
 				3A5365C320B356510057B451 /* Assets.xcassets in Resources */,
@@ -470,6 +485,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Schedule_App/Schedule_App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = A64LSH744U;
 				INFOPLIST_FILE = Schedule_App/Info.plist;
@@ -478,7 +494,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "research.Schedule-App";
+				PRODUCT_BUNDLE_IDENTIFIER = "Schedule-App-Client";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -489,6 +505,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Schedule_App/Schedule_App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = A64LSH744U;
 				INFOPLIST_FILE = Schedule_App/Info.plist;
@@ -497,7 +514,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "research.Schedule-App";
+				PRODUCT_BUNDLE_IDENTIFIER = "Schedule-App-Client";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";

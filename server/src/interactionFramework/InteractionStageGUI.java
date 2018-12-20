@@ -765,14 +765,15 @@ public class InteractionStageGUI implements Runnable {
 							JSONObject temp = createInternalJSON(h);
 							internalRequestQueue.add(temp);
 						}
+
+						// reset the history so it can be populated naturally again
+						actHistory.clear();
 						
 						// automatically add request to advance the system time and update client display
 						JSONObject tempDelJSON = new JSONObject();
 						tempDelJSON.put("infoType", "advSysTime");
 						internalRequestQueue.add(tempDelJSON);
 						
-						// reset the history so it can be populated naturally again
-						actHistory.clear();
 						
 						// remove the selected activity from the system
 						deleteActFromXML(actName);

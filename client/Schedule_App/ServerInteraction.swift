@@ -5,7 +5,6 @@
 //  Created by Drew Davis on 5/22/18.
 //  Copyright © 2018 Drew. All rights reserved.
 //
-// Code taken from main.swift of Drew_cmdLine project
 
 import Foundation
 import UIKit
@@ -23,7 +22,7 @@ class client {
     
     var JSON_encoder: JSONEncoder
     
-    // These are the pieces of info that will be recieved on each reply from the server
+    // This object has the structure containing all info pieces that will be recieved on each reply from the server
     var currentInfo: fromServer = fromServer()
     
     var lastInfoType: String = ""
@@ -41,19 +40,18 @@ class client {
             JSON_encoder.outputFormatting = .prettyPrinted
             
             // URL to access server at, appended by client ID to validate access
+            // hardcode in port 8080
             urlString = "http://" + servIP + ":8080/" + agentNum
+            url = URL(string: urlString)
             
             print("\n\n\n\nCONNECTING TO " + urlString + "\n\n\n\n")
-            
-            url = URL(string: urlString)
             
             requestPOST = URLRequest(url: url!)
             requestPOST.httpMethod = "POST"
             requestGET = URLRequest(url: url!)
             requestGET.httpMethod = "GET"
             
-            
-            // tell server you are starting a new session
+            // tell server you are starting a new client session
             var aPut = putCMD()
             aPut.infoType = "startup"
             aPut.clientID = ID
@@ -78,6 +76,7 @@ class client {
     /*
      * Send a JSON file to the server using internal methods
      * This should be called by GUI items upon user interaction
+     * DEPRECATED: Not in use
     */
     func sendStructToServer(_ thePut: putCMD) {
         do {
@@ -107,7 +106,7 @@ class client {
         // make the specific request and then handle the reply (data, response, error)
         URLSession.shared.dataTask(with: req) { (data, response, error) in
             if error != nil {
-                print("nill error:")
+                print("non-nil communication error:")
                 print(error!.localizedDescription)
             }
             
@@ -115,24 +114,9 @@ class client {
             guard let data = data else { return }
             dataProcess: do {
                 
-//                // if this is a response immediatly after a ganttImage infoType
-//                if (self.lastInfoType == "ganttImage") {
-//                    self.mostRecentGanttImg = UIImage(data:data, scale:1.0)
-//                    if (self.mostRecentGanttImg != nil) {
-//                        self.lastInfoType = ""
-//
-//                        //                let image = UIImage(data:data,scale:1.0)
-//                        //                let imageView = UIImageView(image: image!)
-//                        //                imageView.frame = CGRect(x: 0, y: 0, width: 100, height: 200)
-//                        //                view.addSubview(imageView)
-//
-//                        return
-//                    }
-//                }
-                
                 let servData = try JSONDecoder().decode(fromServer.self, from: data)
 
-                // if the reply info type is not blank, parse the data
+                // if the reply info type is not blank, parse the data into local object
                 if (servData.infoType != "") {
                     print("\nJSON received from server:")
                     self.currentInfo.infoType = servData.infoType!;                     print("  infoType: ", terminator:"");          print(servData.infoType!)
@@ -170,6 +154,7 @@ class client {
     
     /*
      * Every 200 ms poll the server for any new requests using GET requests
+     * This allows the server to push requests and essentially breaks the restful paradigm
      */
     func heartbeat() {
         while(true) {
@@ -252,6 +237,7 @@ struct fromServer: Codable {
 }
 
 
+// Substructure of JSON sent/received to/from server
 // These struct variables need to match the names seen in the JSON object
 // This structure format should match the format on the server side
 struct activityDefinition: Codable {

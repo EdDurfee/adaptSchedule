@@ -62,6 +62,7 @@ class DelActTableController: UITableViewController {
         // if this is the row already selected, deselect it
         if indexPath.row == currentCellRow {
             tableView.deselectRow(at: indexPath, animated: true)
+            currentCellRow = -1
             return nil
         }
         

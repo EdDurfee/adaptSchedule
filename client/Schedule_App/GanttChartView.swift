@@ -50,9 +50,12 @@ class GanttChartView: UIView, UITextViewDelegate {
     // the label that displays current system time to the user
     var timeLabel: UILabel = UILabel()
     
+    // this variable decides if the x and y axis are linked or not
+    var scrollAxisLock = true
+    
     // the coloring of the duration and availability bars
     let availDefault: UIColor = UIColor.init(red: 154/255.0, green: 196/255.0, blue: 248/255.0, alpha: 1.0)
-//    let availGradStart: UIColor = UIColor.init(red: 255/255.0, green: 255/255.0, blue: 150/255.0, alpha: 1.0)
+    //let availGradStart: UIColor = UIColor.init(red: 255/255.0, green: 255/255.0, blue: 150/255.0, alpha: 1.0)
     let availGradReduced: UIColor = UIColor.init(red: 255/255.0, green: 255/255.0, blue: 110/255.0, alpha: 1.0)
     let durDefaultColor: UIColor = UIColor.init(red: 150.0/255.0, green: 150.0/255.0, blue: 150.0/255.0, alpha: 1.0)
     //let availDefaultColor: UIColor = UIColor.init(red: 200.0/255.0, green: 200.0/255.0, blue: 200.0/255.0, alpha: 1.0)
@@ -70,6 +73,11 @@ class GanttChartView: UIView, UITextViewDelegate {
     private let scaleScrollView: UIScrollView = UIScrollView()
     private let namesDrawLayer: CALayer = CALayer()
     private let namesScrollView: UIScrollView = UIScrollView()
+    
+    private let axisLockButton: UIButton = UIButton()
+    let lockedPadlockImage = UIImage(named: "lock-512.png")
+    let unlockedPadlockImage = UIImage(named: "unlocked.png")
+    
     
     
     override init(frame: CGRect) {
@@ -103,6 +111,8 @@ class GanttChartView: UIView, UITextViewDelegate {
         namesScrollView.delegate = self
         
         drawClock(xPos_left: self.frame.size.width - 160.0, yPos_top: 5.0, time: 0)
+        
+        drawAxisLockButton(xPos_left: self.frame.size.width - 200, yPos_top: 15.0)
     }
     
     // Force the x coordinates synchronized so that scaleScroll always lines up with barsScroll
@@ -110,6 +120,7 @@ class GanttChartView: UIView, UITextViewDelegate {
     // Also force the x and y coordinates to move together and match % offsets
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         
+
         // lock the x coordinates of 2 scroll views
         if scrollView == scaleScrollView {
             barsScrollView.contentOffset.x = scaleScrollView.contentOffset.x
@@ -120,17 +131,35 @@ class GanttChartView: UIView, UITextViewDelegate {
         // lock the y coordinates of 2 scroll views
         if scrollView == namesScrollView {
             barsScrollView.contentOffset.y = namesScrollView.contentOffset.y
-        }else if scrollView == barsScrollView {
+        } else if scrollView == barsScrollView {
             namesScrollView.contentOffset.y = barsScrollView.contentOffset.y
         }
         
-        // synchrinize vertical and horizontal scrolling
-        let barsXPerc = barsScrollView.contentOffset.x / (barsScrollView.contentSize.width - barsScrollView.frame.width) // what percent x offset
+        // At this point, it is guaranteed that
+        //  - the y axis of the bars and names matches
+        //  - the x axis of the bars and scale matches
+    
         
-        // do not begin automatic vertical offset scrolling unless the content exceeds the vertical screen size
-        if (barsScrollView.contentSize.height > barsScrollView.frame.height) {
-            barsScrollView.contentOffset.y = barsXPerc * abs(barsScrollView.contentSize.height - barsScrollView.frame.height)
+        if (scrollAxisLock) {
+        
+            if (barsScrollView.contentSize.height > barsScrollView.frame.height) {
+                //            // Allow the user to scroll vertically on the names and see an affect
+                //            if (scrollView == namesScrollView) {
+                //                let namesYPerc = namesScrollView.contentOffset.y / abs(namesScrollView.contentSize.height - namesScrollView.frame.height)
+                //                barsScrollView.contentOffset.x  = namesYPerc * abs(barsScrollView.contentSize.width - barsScrollView.frame.width)
+                //                scaleScrollView.contentOffset.x = namesYPerc * abs(scaleScrollView.contentSize.width - scaleScrollView.frame.width)
+                //            }
+                let barsXPerc = barsScrollView.contentOffset.x / (barsScrollView.contentSize.width - barsScrollView.frame.width) // what percent x offset
+                barsScrollView.contentOffset.y = barsXPerc * abs(barsScrollView.contentSize.height - barsScrollView.frame.height)
+                
+            }
         }
+        
+        
+        
+        // proportionally synchronize the x and y scrolling of all components
+        // but do not begin automatic synchronized scrolling unless the content exceeds the vertical screen size
+
         
     }
     
@@ -138,7 +167,7 @@ class GanttChartView: UIView, UITextViewDelegate {
         
         barsScrollView.frame  = CGRect(x: namesWidth, y: 0, width: self.frame.size.width - namesWidth, height: self.frame.size.height - scaleSpace)
         
-        scaleScrollView.frame = CGRect(x: namesWidth, y: self.frame.size.height - scaleSpace, width: self.frame.size.width - namesWidth, height: scaleSpace)
+        scaleScrollView.frame = CGRect(x: round(namesWidth), y: round(self.frame.size.height - scaleSpace), width: round(self.frame.size.width - namesWidth), height: round(scaleSpace))
         
         namesScrollView.frame = CGRect(x: 0, y: 0, width: namesWidth, height: self.frame.size.height - scaleSpace)
     }
@@ -173,8 +202,8 @@ class GanttChartView: UIView, UITextViewDelegate {
                 drawScale()
                 
                 
-                // sort the entries based on their ID (which was sorted in the server based on act time)
-                var tempDataEntries = dataEntries.sorted(by: { $0.EST < $1.EST })
+                // sort the entries based on
+                var tempDataEntries = dataEntries.sorted(by: { $0.ID < $1.ID })
                 if tentGantt { sortedLastConfirmedBars = lastConfirmedBars!.sorted(by: { $0.ID < $1.ID }) }
                 
                 // display the sorted items so that the earlier activities are at the top
@@ -475,12 +504,13 @@ class GanttChartView: UIView, UITextViewDelegate {
         let namesPath = UIBezierPath()
         namesPath.move(to: CGPoint(x: namesWidth-1, y: 0.0))
         namesPath.addLine(to: CGPoint( x: namesWidth-1, y: namesScrollView.frame.height ))
-        
+
         let lineLayerNames = CAShapeLayer()
         lineLayerNames.path = namesPath.cgPath
         lineLayerNames.lineWidth = 0.5
         lineLayerNames.strokeColor = UIColor.black.cgColor
-        namesDrawLayer.insertSublayer(lineLayerNames, at: 0)
+        self.layer.insertSublayer(lineLayerNames, at: 0)
+//        drawVertLine(x: 0.0, color: UIColor.gray, lineType: "solid")
     }
     
     // draw a horizontal line across the chart
@@ -573,6 +603,43 @@ class GanttChartView: UIView, UITextViewDelegate {
     }
     
     
+    // add a button that lets users unlink the x and y axis of the gantt chart
+    private func drawAxisLockButton(xPos_left: CGFloat, yPos_top: CGFloat) {
+        
+        let boxWidth: CGFloat = 30
+        let boxHeight: CGFloat = 30
+        
+        axisLockButton.frame = CGRect(x: xPos_left, y: yPos_top, width: boxWidth, height: boxHeight)
+        
+//        axisLockButton.backgroundColor = UIColor(red: 200.0/255, green: 200.0/255, blue: 200.0/255, alpha: 1.0)
+//        axisLockButton.setTitle("Unlock Axes", for: .normal)
+        axisLockButton.setBackgroundImage(lockedPadlockImage!, for: [])
+        axisLockButton.addTarget(self, action: #selector(lockButtonAction), for: .touchUpInside)
+        axisLockButton.alpha = 0.4
+        
+        self.addSubview(axisLockButton)
+    }
+    
+    @objc func lockButtonAction(sender: UIButton!) {
+        if sender.backgroundImage(for: []) == lockedPadlockImage {
+            sender.setBackgroundImage(unlockedPadlockImage!, for: [])
+            scrollAxisLock = false
+            // reset the scroll views
+            barsScrollView.contentOffset.x = 0
+            scaleScrollView.contentOffset.x = 0
+            barsScrollView.contentOffset.y = 0
+            namesScrollView.contentOffset.y = 0
+        } else {
+            sender.setBackgroundImage(lockedPadlockImage!, for: [])
+            scrollAxisLock = true
+            // reset the scroll views
+            barsScrollView.contentOffset.x = 0
+            scaleScrollView.contentOffset.x = 0
+            barsScrollView.contentOffset.y = 0
+            namesScrollView.contentOffset.y = 0
+        }
+    }
+    
     // draw a clock display as a box with a simple text display of time inside
     private func drawClock(xPos_left: CGFloat, yPos_top: CGFloat, time: Int) {
         
@@ -651,15 +718,18 @@ class GanttChartView: UIView, UITextViewDelegate {
     
     // draw a label on the x scale (ex: 14:00)
     private func drawScaleLabel(mins: Int) {
-        let xPos = minsToX(mins: mins-30) + leftSpace // left of text
-        let yPos = scaleScrollView.contentSize.height / 4 // top of text
+        let xPos = round(minsToX(mins: mins-30) + leftSpace) // left of text
+        let yPos = round(scaleScrollView.contentSize.height / 4) // top of text
         
         let textLayer = CATextLayer()
         textLayer.alignmentMode = kCAAlignmentCenter
         textLayer.fontSize = 18
         textLayer.foregroundColor = UIColor.black.cgColor
-        textLayer.frame = CGRect(x: xPos, y: yPos, width: minsToX(mins:60), height: scaleSpace )
+        textLayer.frame = CGRect(x: xPos, y: yPos, width: round(minsToX(mins:60)), height: round(scaleSpace) )
         textLayer.string = String(mins / 60) + ":00"
+        
+        // This is done in an attempt to keep text from being blury due to ios bug with frame floating values
+        textLayer.frame = textLayer.frame.integral
         
         scaleDrawLayer.insertSublayer(textLayer, at: 0)
     }
