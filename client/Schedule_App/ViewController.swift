@@ -29,6 +29,9 @@ class MainViewController: UIViewController, UITextFieldDelegate, UITextViewDeleg
     // keep track of all activities that this agent has confirmed
     var confirmedActsList : [String] = []
     
+    // hold a list of all acitivity names (received with gantt info)
+    var allActNames : [String] = []
+    
     
     //MARK: Properties
     
@@ -367,9 +370,9 @@ class MainViewController: UIViewController, UITextFieldDelegate, UITextViewDeleg
                         if (self.viewInInfo.infoType == "ganttImage") {
                             
                             
-                            // temp info to test gantt with
-                            // these traits will need to be derived from list of timepoits in server, not necesarily what is hardcoded into dtp definition file
+                            // info needed to build gantt chart on client
                             var actNames = self.viewInInfo.actNames!
+                            self.allActNames = actNames
                             var actIDs = self.viewInInfo.actIDs!
                             var actESTs = self.viewInInfo.actESTs!
                             var actLETs = self.viewInInfo.actLETs!

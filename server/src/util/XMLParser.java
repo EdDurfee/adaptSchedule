@@ -130,8 +130,9 @@ public class XMLParser {
 	 * Adds an activity and returns new xml string
 	 * Returns NULL if error in adding
 	 */
-	public static String addActivity(String xmlString, int agentNum, String dtpIdx, String name, String est, String lst,
-			                                                            String eet, String let, String minDur, String maxDur){
+	public static String addActivity(String xmlString, int agentNum, String dtpIdx, String name, String est,
+									 String lst, String eet, String let, String minDur, String maxDur,
+									 ArrayList<String> precConstraints, ArrayList<String> succConstraints){
 		
 		
 		// Holds pairs of (DTPname, startIdx)
@@ -174,6 +175,8 @@ public class XMLParser {
 		int prependPoint = xmlString.substring(agentStringStart,agentStringEnd).indexOf("<activity>");
 		
 		// create full string that will be inserted
+		
+		// create <activity> part of insertion
 		String insertStr = "";
 		insertStr += "\t\t<activity>\n";
 		insertStr += "\t\t\t<name> " +name+ " </name>\n";
@@ -189,6 +192,24 @@ public class XMLParser {
 		if (!let.equals("")) {insertStr += "\t\t\t\t<let> "+ let +" </let>\n";}
 		insertStr += "\t\t\t</availability>\n";
 		insertStr += "\t\t</activity>\n";
+		
+		// create <constraint> parts of insertion
+		for (int i = 0; i < precConstraints.size(); i++) {
+			insertStr += "\t\t<constraint>\n"; // <constraint>
+			insertStr += "\t\t\t<type> ordering </type>\n"; // <type> ordering </type>
+			insertStr += "\t\t\t<source> " +precConstraints.get(i)+ " </source>\n"; // <source> wakeup </source>
+			insertStr += "\t\t\t<destination> " +name+ " </destination>\n"; // <destination> showerM </destination>
+			insertStr += "\t\t\t<min_duration> 0 </min_duration>\n"; // <min_duration> 0 </min_duration>
+			insertStr += "\t\t</constraint>\n"; // </constraint>
+		}
+		for (int i = 0; i < succConstraints.size(); i++) {
+			insertStr += "\t\t<constraint>\n"; // <constraint>
+			insertStr += "\t\t\t<type> ordering </type>\n"; // <type> ordering </type>
+			insertStr += "\t\t\t<source> " +name+ " </source>\n"; // <source> wakeup </source>
+			insertStr += "\t\t\t<destination> " +succConstraints.get(i)+ " </destination>\n"; // <destination> showerM </destination>
+			insertStr += "\t\t\t<min_duration> 0 </min_duration>\n"; // <min_duration> 0 </min_duration>
+			insertStr += "\t\t</constraint>\n"; // </constraint>
+		}
 		
 		
 		// because we are assuming all activities to be noncopncurrent, we need to add specific non-concurrency constraints for every act

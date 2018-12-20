@@ -138,7 +138,7 @@ public class InteractionStageGUI implements Runnable {
 		System.out.println("5 - DUTPtoyexampleNoSE.xml");
 		System.out.println("6 - toyExampleEd.xml");
 		System.out.println("7 - parentSampleProblem.xml");
-		System.out.println("8 - sampleProb2.xml");
+		System.out.println("8 - singleAgentProb.xml");
 		
 		Integer problemNum = Integer.valueOf(cin.next());
 		
@@ -151,7 +151,7 @@ public class InteractionStageGUI implements Runnable {
 		case 5: problemFile = "DUTPtoyexampleNoSE.xml"; break;
 		case 6: problemFile = "toyExampleEd.xml"; break;
 		case 7: problemFile = "parentSampleProblem.xml"; break;
-		case 8: problemFile = "sampleProb2.xml"; break;
+		case 8: problemFile = "singleAgentProb.xml"; break;
 		default:
 			System.out.println("Illegal problem number entered. Restart server to try again.");
 		}
@@ -727,8 +727,13 @@ public class InteractionStageGUI implements Runnable {
                             // durations come as lists to handle multi ranges in future improvements
                             String minDur  = ((ArrayList<String>) actJSON_add.get("minDurs")).get(0);
                             String maxDur  = ((ArrayList<String>) actJSON_add.get("maxDurs")).get(0);
+                            
+                            // Assume all constraints are ordering constraints
+                            // Sources are preceeding activities and dest are succeeding activities
+                            ArrayList<String> precConstraints = (ArrayList<String>) actJSON_add.get("constraintSource");
+                            ArrayList<String> succConstraints = (ArrayList<String>) actJSON_add.get("constraintDest");
 							
-							Boolean addSuccess = addActToXML(Integer.parseInt(agentNum), dtpIdx, name, est, lst, eet, let, minDur, maxDur);
+							Boolean addSuccess = addActToXML(Integer.parseInt(agentNum), dtpIdx, name, est, lst, eet, let, minDur, maxDur, precConstraints, succConstraints);
 							
 							// if the add succeeded, set up history to automatically repeat
 							// else if add failed, the dtp will be unmodified so no need to reexecute history
@@ -1125,7 +1130,9 @@ public class InteractionStageGUI implements Runnable {
 	 * Return true/false bsased on if add failed or not yices
 	 */
 	private Boolean addActToXML(int agent, String dtpIdx, String name, String est, String lst,
-			                              String eet, String let, String minDur, String maxDur) {
+			                              String eet, String let, String minDur, String maxDur,
+			                              ArrayList<String> precConstraints,
+			                              ArrayList<String> succConstraints) {
 		
 		
 		File modifiedXML = null;
@@ -1156,7 +1163,8 @@ public class InteractionStageGUI implements Runnable {
 		prevXMLModString = xmlModString;
 		
 		// add this activity to the modified xml file string
-		xmlModString = XMLParser.addActivity(xmlModString, agent, dtpIdx, name, est, lst, eet, let, minDur, maxDur);
+		xmlModString = XMLParser.addActivity(xmlModString, agent, dtpIdx, name, est, lst, eet, let, minDur,
+																 maxDur, precConstraints, succConstraints);
 		
 		// put new xml string into file
 		try {

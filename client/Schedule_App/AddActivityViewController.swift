@@ -13,7 +13,9 @@ import UIKit
  *  them to input the details of the activity they want to add in an intuitive
  *  way.
 */
-class AddActivityViewController: UIViewController {
+class AddActivityViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, UITextFieldDelegate {
+    
+    
 
     // All variables that can be used to describe a new activity
     var actName: String!
@@ -85,6 +87,9 @@ class AddActivityViewController: UIViewController {
     
     //// end outlet reference definitions ////
     
+    // object of ViewController (where this view was called from)
+    var mainViewCont : MainViewController!
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -104,13 +109,25 @@ class AddActivityViewController: UIViewController {
         // start on the nameSlide
         switchToSlide(nameSlide)
         
+        // link name field delegate
+        nameSlide_nameField.delegate = self
+        
         // link the time pickers to the function that will update associated class variables and keep them in legal ranges
         DurSlide_minTimePicker.addTarget(self, action: #selector(datePickerChanged(sender:)), for: .valueChanged)
         DurSlide_maxTimePicker.addTarget(self, action: #selector(datePickerChanged(sender:)), for: .valueChanged)
         LETTimeSlide_timePicker.addTarget(self, action: #selector(datePickerChanged(sender:)), for: .valueChanged)
         
+        // set the constraint picker delagates to this view class
+        ESTConstraintsSlide_actList.delegate = self
+        ESTConstraintsSlide_actList.dataSource = self
+        ESTConstraintsSlide_actList.allowsMultipleSelection = true;
+        LETConstraintsSlide_actList.delegate = self
+        LETConstraintsSlide_actList.dataSource = self
+        LETConstraintsSlide_actList.allowsMultipleSelection = true;
+        
+        mainViewCont = self.presentingViewController as? MainViewController
     }
-
+    
     
     // this function switches to a certain slide by hiding all other slides
     // it also initializes / resets all varaibles associated with the given slide
@@ -153,6 +170,7 @@ class AddActivityViewController: UIViewController {
         
         case ESTConstraintsSlide:
             precConstraints = []
+//            ESTConstraintsSlide_actList.
         
         case LETSlide:
             LET = ""
@@ -169,8 +187,8 @@ class AddActivityViewController: UIViewController {
         case finishedSlide:
             // if you've reached this slide, you should have a full act description
             // send off request for activity addition to server
-            let mainViewCont = self.presentingViewController as? MainViewController
-            mainViewCont!.addActivity(actName: actName, minDur: minDur, maxDur: maxDur, EST: EST, LET: LET, precConstraints: precConstraints, succConstraints: succConstraints)
+            // Assume all constraints are ordering constraints - Sources are preceeding activities and dest are succeeding activities
+            self.mainViewCont!.addActivity(actName: actName, minDur: minDur, maxDur: maxDur, EST: EST, LET: LET, precConstraints: precConstraints, succConstraints: succConstraints)
             
         
         default:
@@ -213,7 +231,13 @@ class AddActivityViewController: UIViewController {
             switchToSlide(LETSlide)
         
         case ESTConstraintsSlide_next:
-            precConstraints = [] // TODO: all selected preceeding constraints
+            precConstraints = []
+            let selectedPrecIdxs = ESTConstraintsSlide_actList.indexPathsForSelectedRows
+            if (selectedPrecIdxs != nil && selectedPrecIdxs!.count > 0) {
+                for i in selectedPrecIdxs! {
+                    precConstraints.append(self.mainViewCont.allActNames[i.row])
+                }
+            }
             switchToSlide(LETSlide)
         
         case LETTimeSlide_next:
@@ -224,7 +248,13 @@ class AddActivityViewController: UIViewController {
             switchToSlide(finishedSlide)
         
         case LETConstraintsSlide_next:
-            succConstraints = [] // TODO: all selected succeeding constraints
+            succConstraints = []
+            let selectedSuccIdxs = LETConstraintsSlide_actList.indexPathsForSelectedRows
+            if (selectedSuccIdxs != nil && selectedSuccIdxs!.count > 0) {
+                for i in selectedSuccIdxs! {
+                    succConstraints.append(self.mainViewCont.allActNames[i.row])
+                }
+            }
             switchToSlide(finishedSlide)
         
         
@@ -237,6 +267,7 @@ class AddActivityViewController: UIViewController {
             switchToSlide(ESTTimeSlide)
             
         case ESTSlide_butt_constraint:
+            ESTConstraintsSlide_actList.reloadData()
             switchToSlide(ESTConstraintsSlide)
             
         case LETSlide_butt_anytime:
@@ -246,6 +277,7 @@ class AddActivityViewController: UIViewController {
             switchToSlide(LETTimeSlide)
             
         case LETSlide_butt_constraint:
+            LETConstraintsSlide_actList.reloadData()
             switchToSlide(LETConstraintsSlide)
         
             
@@ -332,6 +364,34 @@ class AddActivityViewController: UIViewController {
     }
     
     
+    // add picker delegate functionality for constraint pickers
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        if (section == 0) {return mainViewCont.allActNames.count}
+        return 0
+    }
+    
+    /*
+     * Populate the cell at indexPath with the cell returned by this function
+     */
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+//        if indexPath.section != 0 {return nil}
+        
+        var cell : UITableViewCell = UITableViewCell()
+        if tableView == ESTConstraintsSlide_actList {
+            cell = tableView.dequeueReusableCell(withIdentifier: "ESTConstraintCell", for: indexPath)
+        } else if (tableView == LETConstraintsSlide_actList) {
+            cell = tableView.dequeueReusableCell(withIdentifier: "LETConstraintCell", for: indexPath)
+        }
+        
+        cell.textLabel?.text = self.mainViewCont.allActNames[indexPath.row]
+        cell.textLabel?.isEnabled = true
+        cell.selectionStyle = UITableViewCellSelectionStyle.blue
+        cell.isUserInteractionEnabled = true
+        
+        return cell
+    }
+    
+    
     // when presenting this popover, dim the background view
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -344,5 +404,10 @@ class AddActivityViewController: UIViewController {
         self.presentingViewController?.view.alpha = 1
     }
     
+    // hide keyboard after clicking 'done' on keyboard
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        self.view.endEditing(true)
+        return false
+    }
     
 }
