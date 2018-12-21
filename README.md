@@ -1,10 +1,10 @@
 
-##How to run server
+## How to run server
 - Requires Java 1.8 JRE
 - In Eclipse, run the AppServerGUI.java file as a java application
 - Immediately after starting, follow the console prompts to select which example schedule you want to see
 
-##How to run client
+## How to run client
 - First, start running the server and select which problem to run on the server
 - If the app was open previously, reset it by fully closing the app. This is done by double-clicking the home button on the iPad and then swiping the app up off the screen
 - On iPad home screen, click the app icon that looks like this: 
@@ -16,14 +16,14 @@
   - If using a single-agent problem, select agent 0
 
 
-##How to install app on iPad from TestFlight
+## How to install app on iPad from TestFlight
 - If the schedule app has been deleted, updated, or just needs to be reinstalled, it must be updated/installed through the testflight app. This app has already been installed on both iPads and has this icon: 
 - Steps
   - Open TestFlight app on iPad
   - Select the app on the left menu
   - Click install on the details pane shown on the right 2/3s of the screen
 
-##How to push to TestFlight from codebase
+## How to push to TestFlight from codebase
 - If for any reason a new version of the app needs to be distributed onto TestFlight, it must be distributed using xCode on a Mac computer.
 - Steps
   - Open the client project in Xcode (client folder in repo)
@@ -36,7 +36,7 @@
   - Proceed through the option slides leaving all values at default
   - After the upload is complete, the project will be automatically process in Apple servers, which will take some time. Wait for an email on the iPads from Apple saying the distribution succeeded/failed. The email usually arrives within 5/10 minutes.
 
-##How to install fresh instance of the server
+## How to install fresh instance of the server
 - Due to the size of Yices and the java JAR files, the entire system cannot be stored on the git repo.
   - A zip file containing all versions of Yices and a zip file containing all necessary JAR files can be found in the directory containing this document.
   - There is also a zip file containing a full instance of the server and client system. This instance’s program files may be outdated, but can be updated by pulling from the git repo.
@@ -52,7 +52,7 @@
       - By right clicking the top-level project folder in the Eclipse Package Explorer -> Properties
     - Run the AppServerGUI.java file
 
-##How to update server from repo codebase
+## How to update server from repo codebase
 - If changes have been made to the server and pushed to the repo, you can update your server instance without redownloading or transfering the entire system
 - Steps
   - Navigate to the top level of that directory ( adaptSchedule/ )
