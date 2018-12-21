@@ -153,12 +153,8 @@
 			<name> toSchool </name>
 			<dtpIdx> 0 </dtpIdx>
 			<duration>
-				<min> 30 </min>
-				<max> 30 </max>	
-			</duration>
-			<duration>
 				<min> 10 </min>
-				<max> 10 </max>	
+				<max> 30 </max>	
 			</duration>
 			<availability>
 				<est> 330 </est>
@@ -490,10 +486,6 @@
 			<name> morningCommute </name>
 			<duration>
 				<min> 20 </min>
-				<max> 20 </max>	
-			</duration>
-			<duration>
-				<min> 40 </min>
 				<max> 40 </max>	
 			</duration>
 		</activity>

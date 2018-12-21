@@ -60,15 +60,11 @@ public class AppServerGUI extends NanoHTTPD { // implements Runnable
 	public boolean connectionInitiated = false;
 
     public static void main(String[] args) {
-    	// DREW: switched from using main in InteractionStageGUI to this main
-    	// to avoid forced staticness of the ServerRUnner
-    	// TODO: Will this change enable me to get rid of the saving to/from json files?
         ServerRunner.run(AppServerGUI.class);
     }
     
     public AppServerGUI() {
         super(8080);
-//		interactive = new InteractionStageGUI(0);
 		interactiveThread = new Thread( interactive );
 		interactiveThread.start();
     }
@@ -124,7 +120,9 @@ public class AppServerGUI extends NanoHTTPD { // implements Runnable
         	break;
         
         case "GET": // if a GET request
-        	if (connectionInitiated == false) break; // ignore gets until a confirmed connection with a valid client
+        	
+        	// ignore gets until a confirmed connection with a valid client
+        	if (connectionInitiated == false) break;
         	
         	String getClientID = session.getUri().substring(1);
         	

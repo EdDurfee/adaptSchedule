@@ -130,28 +130,28 @@ public class InteractionStageGUI implements Runnable {
 		// These are 9 files of interest at the time of writing. Additional files can be accessed by
 		//  changing the xml file names inside of the switch( problemNum ) statement
 		System.out.println("\nEnter number of problem file you would like to use.");
-		System.out.println("0 - twoAgentProblem.xml");
-		System.out.println("1 - multiagentSampleProblem_simp.xml");
-		System.out.println("2 - multiagentSampleProblem.xml");
-		System.out.println("3 - toyexample.xml");
-		System.out.println("4 - drew_test.xml");
-		System.out.println("5 - DUTPtoyexampleNoSE.xml");
-		System.out.println("6 - toyExampleEd.xml");
-		System.out.println("7 - parentSampleProblem.xml");
-		System.out.println("8 - singleAgentProb.xml");
+		System.out.println("0 - multiagentSampleProblem.xml");
+		System.out.println("1 - singleAgentProb.xml");
+		System.out.println("2 - twoAgentProblem.xml");
+		System.out.println("3 - multiagentSampleProblem_simp.xml");
+		System.out.println("4 - toyexample.xml");
+		System.out.println("5 - drew_test.xml");
+		System.out.println("6 - DUTPtoyexampleNoSE.xml");
+		System.out.println("7 - toyExampleEd.xml");
+		System.out.println("8 - parentSampleProblem.xml");
 		
 		Integer problemNum = Integer.valueOf(cin.next());
 		
 		switch ( problemNum ) {
-		case 0: problemFile = "twoAgentProblem.xml"; break;
-		case 1: problemFile = "multiagentSampleProblem_simp.xml"; break;
-		case 2: problemFile = "multiagentSampleProblem.xml"; break;
-		case 3: problemFile = "toyexample.xml"; break;
-		case 4: problemFile = "drew_test.xml"; break;
-		case 5: problemFile = "DUTPtoyexampleNoSE.xml"; break;
-		case 6: problemFile = "toyExampleEd.xml"; break;
-		case 7: problemFile = "parentSampleProblem.xml"; break;
-		case 8: problemFile = "singleAgentProb.xml"; break;
+		case 0: problemFile = "multiagentSampleProblem.xml"; break;
+		case 1: problemFile = "singleAgentProb.xml"; break;
+		case 2: problemFile = "twoAgentProblem.xml"; break;
+		case 3: problemFile = "multiagentSampleProblem_simp.xml"; break;
+		case 4: problemFile = "toyexample.xml"; break;
+		case 5: problemFile = "drew_test.xml"; break;
+		case 6: problemFile = "DUTPtoyexampleNoSE.xml"; break;
+		case 7: problemFile = "toyExampleEd.xml"; break;
+		case 8: problemFile = "parentSampleProblem.xml"; break;
 		default:
 			System.out.println("Illegal problem number entered. Restart server to try again.");
 		}
@@ -445,6 +445,12 @@ public class InteractionStageGUI implements Runnable {
 				if (internalRequestQueue.size() == 0) {
 					// wait for the client to send a POST request
 					inJSON = getNextRequest();
+
+					// Parse variables from the request JSON
+					agentNum = String.valueOf(inJSON.get("agentNum"));
+					actName = String.valueOf(inJSON.get("activityName"));
+					actDur = String.valueOf(inJSON.get("activityDuration"));
+					
 				}
 				// If system is currently recovering from a reset (which may be brought on by adding,
 				//  removing, or modifying an activity), pull activities out of internalRequestQueue. This
@@ -452,6 +458,24 @@ public class InteractionStageGUI implements Runnable {
 				//  before the reset and need to be re-processed.
 				else {
 					inJSON = internalRequestQueue.poll();
+					
+					// Parse variables from the request JSON
+					agentNum = String.valueOf(inJSON.get("agentNum"));
+					actName = String.valueOf(inJSON.get("activityName"));
+
+					// Because it is possible to have a lower max duration time after
+					//  additions / modifications to the schedule, the duration should be the min of the
+					//  selected duration or max possible duration
+					// This obviously will bring up problems in future versions of this system when the
+					//  time system is not manually controlled
+					actDur = String.valueOf(inJSON.get("activityDuration"));
+					if (!actDur.equals("null") && !actDur.equals("")) {
+						int tempDur = Integer.valueOf(Generics.fromTimeFormat(actDur));
+						int tempAgentNum = Integer.valueOf(agentNum);
+						int tempMaxDur = Integer.valueOf( actMaxDurs.get(tempAgentNum).get(allActNames.get(tempAgentNum).indexOf(actName)) );
+						actDur = String.valueOf( Math.min(tempMaxDur, tempDur) );
+						actDur = Generics.toTimeFormat(Integer.valueOf(actDur)); // should be in hh:mm format
+					}
 				} 
 				
 				
@@ -461,10 +485,6 @@ public class InteractionStageGUI implements Runnable {
 				 */
 				
 				
-				// Parse variables from the request JSON
-				agentNum = String.valueOf(inJSON.get("agentNum"));
-				actName = String.valueOf(inJSON.get("activityName"));
-				actDur = String.valueOf(inJSON.get("activityDuration"));
 				
 				// process the request depending on the type of request received (AKA the infoType)
 				switch ( (String) inJSON.get("infoType")) {
@@ -851,15 +871,6 @@ public class InteractionStageGUI implements Runnable {
 	}
 	
 	
-//	private static boolean disjunctivelyUncertainProblem(DisjunctiveTemporalProblem dtp) {
-//		if ((dtp instanceof DUTP) || (dtp instanceof DUSTP)) {
-//			return true;
-//		}
-//		else {
-//			return false;
-//		}
-//	}
-	
 	private static double getMaxLatestEndTime(DisjunctiveTemporalProblem dtp) {
 		double let = MAX_LET;
 		ArrayList<Interval> minmaxArray = dtp.getDTPBoundaries();
@@ -874,17 +885,6 @@ public class InteractionStageGUI implements Runnable {
 		return (!(actname.equals("skip")) || (actname.equals("idle")));
 	}
 
-//	private static int getEarliestEnd(
-//			ArrayList<SimpleEntry<String, Interval>> ongoing) {
-//		int min = Integer.MAX_VALUE;
-//		for(SimpleEntry<String,Interval> pair: ongoing){
-//			int end = (int) pair.getValue().getUpperBound();
-//			if(end < min) min = end;
-//		}
-//		//System.out.println("Would skip to time " + Generics.toTimeFormat(min));
-//		return min;
-//	}
-
 
 	private static void getAndPerformIdle(int minIdle, int maxIdle, int time, int subDTPNum, int minTime){
 		if(time < 0 || time > maxIdle+1){
@@ -897,32 +897,6 @@ public class InteractionStageGUI implements Runnable {
 		
 		dtp.simplifyMinNetIntervals();
 	}
-
-/*
- * This function was implemented for the text-based UI but has not yet been incorporated into the GUI system
-	private static void getAndPerformEmergencyIdle(String str){
-		printToClient("How long to idle? Format for input is H:MM");
-		JSONObject jsonIN = getNextRequest();
-		String temp = (String) jsonIN.get("value");
-		int time = Generics.fromTimeFormat(temp);
-		if(time < 0){
-			printToClient("Unexpected response \""+str+"\"");
-			return;
-		}
-		List<String> uftps = dtp.getUnFixedTimepoints();
-		printToClient( uftps.toString() );
-		printToClient("incrementing system time by " + time);
-		incrementSystemTime(time, currentAgent);
-		printToClient("advancing to time");
-		dtp.advanceToTime(-getSystemTime(), time, true);
-		printToClient("simplifying min net intervals");
-		dtp.simplifyMinNetIntervals();
-		if (dtp.getMinTime() > 24*60){
-			uftps = dtp.getUnFixedTimepoints();
-			//for(Timepoint tp : uftps) System.out.println(tp.getName());
-		}
-	}
-*/
 	
 	/*
 	 * The following set of get-/set-/increment- SystemTime function should be used to interface the system clock rather than directly accessing things 
@@ -985,68 +959,9 @@ public class InteractionStageGUI implements Runnable {
 	 * @param msg
 	 */
 	private static void AddIntervalSet(String tpS, String tpE, int time, IntervalSet newIS){
-//		printToClient(msg+"\nEnter new interval set or (n) to leave unchanged. Format {[interval1]v[interval2]v...} with no whitespace.");
-//		JSONObject jsonIN = getNextRequest();
-//		String avail = (String) jsonIN.get("value");
-//		String avail = cin.next(); // Commented out by Drew
-//		if(!avail.equalsIgnoreCase("N")){
-//			IntervalSet is = Generics.stringToInterval(avail);
-		
 		dtp.addAdditionalConstraint(tpS, tpE, newIS, time, true, true);	
 		dtp.simplifyMinNetIntervals();
 	}
-
-	
-	/**
-	 * ui helper code to prompt a user to select a timepoint from a
-	 * @param a
-	 * @param getStartEnd toggles whether to prompt user to specify between start/end timepoint
-	 * @return
-	 */
-/*	private static String getTimepoint(Collection<String> a, boolean getStartEnd){
-		JSONObject jsonIN = getNextRequest();
-		String tp = (String) jsonIN.get("value");
-//		String tp = cin.next(); // Commented out by Drew
-		while(!a.contains(tp)){
-			printToClient("Unexpected response \""+tp+"\"");
-			jsonIN = getNextRequest();
-			tp = (String) jsonIN.get("value");
-//			tp = cin.next(); // Commented out by Drew
-		}
-		if(tp.equals("zero")) return tp; 
-		boolean flag = getStartEnd;
-		if(flag){
-			printToClient("From (s)tart or (e)nd time of "+tp+"?");
-			jsonIN = getNextRequest();
-			String str = (String) jsonIN.get("value");
-//			String str = cin.next(); // Commented out by Drew
-			while(flag){
-				flag = false;
-				if(str.equalsIgnoreCase("S")) tp += "_S";
-				else if(str.equalsIgnoreCase("E")) tp += "_E";
-				else{
-					printToClient("Unexpected response \""+str+"\"");
-					jsonIN = getNextRequest();
-					str = (String) jsonIN.get("value");
-//					str = cin.next(); // Commented out by Drew
-					flag = true;
-				}
-			}
-		}
-		return tp;
-	}
-*/
-	
-	/*private static void setAgentSelection(String newAgent) {
-		if (Integer.valueOf(newAgent) != currentAgent) {
-			currentAgent = Integer.valueOf(newAgent);
-		}
-		if (currentAgent < 0 || currentAgent > numAgents) {
-			System.err.println("ERROR: Invalid agent selection");
-			System.exit(1);
-		}
-		dtp.setCurrentAgent(currentAgent);
-	}*/
 	
 	
 	
@@ -1179,20 +1094,20 @@ public class InteractionStageGUI implements Runnable {
 		DisjunctiveTemporalProblem beforeModDTP = dtp.clone();
 		
 		
-		// load this xml string to a dtp and put it in main dtp variable
-		// set up dtp
-		dtp = new ProblemLoader().loadDTPFromFile("tempModifiedXML.xml");
-		System.out.println("tempModifiedXML.xml" + " loaded succesfully.\n\n"); // file loaded correctly
-
-		// initialize variables and the DTP
-		// if these initialization functions throw an exception, assume added activity was illegal and revert back to previous
 		try {
+			// load this xml string to a dtp and put it in main dtp variable
+			// set up dtp
+			dtp = new ProblemLoader().loadDTPFromFile("tempModifiedXML.xml");
+			System.out.println("tempModifiedXML.xml" + " loaded succesfully.\n\n"); // file loaded correctly
+	
+			// initialize variables and the DTP
+			// if these initialization functions throw an exception, assume added activity was illegal and revert back to previous
 			dtp.updateInternalData();
 			dtp.enumerateSolutions(0);	
 			dtp.simplifyMinNetIntervals();
 		} catch (Exception e) {
 			
-			System.out.println("Attempted to add illegal activity to dtp. Rejecting addition and reverting to previous dtp.");
+			System.err.println("Attempted to add illegal activity to dtp. Rejecting addition and reverting to previous dtp.\n" + e.getMessage()+"\n"+e.getStackTrace().toString());
 			
 			// revert the dtp to before changes
 			dtp = beforeModDTP.clone();
@@ -1234,11 +1149,8 @@ public class InteractionStageGUI implements Runnable {
 		File modifiedXML = null;
 		String xmlModString = "";
 		try {
-//			File originalXML = new File(problemFile);
 			String newXMLFileName = "tempModifiedXML.xml";
 			modifiedXML = new File(newXMLFileName);
-//			modifiedXML.delete();
-//			Files.copy(originalXML.toPath(), modifiedXML.toPath());
 			
 		} catch (Exception e) {
 			System.err.println("Error is creating new modified XML file in deleteActivity.\n"+e.toString()+"\n"+Arrays.toString(e.getStackTrace()) + "\n");
@@ -1387,20 +1299,11 @@ public class InteractionStageGUI implements Runnable {
 	 * Gantt is sent as a 64byte encoded String
 	 */
 	private void sendGanttToAgent(String agentNum, List<List<String>> remActs) {
-	
-		// delete any outdated gantt images
-//		File ganttDir = new File("forClient_image.png");
-//		ganttDir.delete();
-		
-		// create visual png of DTP with current state
-//		Viz.createAndSaveDTPDiagram(dtp, initialDTP, getSystemTime(),1);
-		
 		
 		// retrieve all of the data needed to create a plot from the timepoints inside viz
 		ArrayList< HashMap< String, ArrayList< String > > > plotData = Viz.retrievePlotData( dtp, initialDTP, getSystemTime() );
 		for (int i = 0; i < plotData.size(); i++) {plotData.get(i).get("currentTime").add( String.valueOf(getSystemTime()) );} // add system current time to each agent
 		
-			
 			// get count of partially constricted and significantly constricted activities
 			// go through each agent, then each activity and check the activity ratio
 			double ratioThreshold = 0.66;
@@ -1408,7 +1311,6 @@ public class InteractionStageGUI implements Runnable {
 			ArrayList< Integer > strongRestrictCounts = new ArrayList(numAgents);
 			int totalWeakCount = 0;
 			int totalStrongCount = 0;
-			
 			
 			// send JSON file with infoType and image as encoded String
 			// if agentNum is set to "ALL", send the JSON to all clients/agents
@@ -1433,7 +1335,6 @@ public class InteractionStageGUI implements Runnable {
 							"", // String.valueOf( totalStrongCount - strongRestrictCounts.get(a) ), // otherStrongRestrictCount
 							plotData.get(a).get("currentTime").get(0),			 // currentTime
 							"",   // imgStr
-//							imageString,			    // imgStr
 							new JSONObject(),
 							new ArrayList<String>()  // debugInfo
 					);
@@ -1505,6 +1406,25 @@ public class InteractionStageGUI implements Runnable {
 		}
 		return jsonIN;
 	}
+	
+	
+    // convert time format of hh:mm to mmmm
+    private String hhmmTOmmmm(String hhmm) {
+        if (hhmm == "") {return "";}
+        try {
+	        int hh = Integer.valueOf( hhmm.substring(0, 2) );
+	        int mm = Integer.valueOf( hhmm.substring(3, 5) );
+	        String mmmm = String.valueOf( hh * 60 + mm );
+	        if (Integer.valueOf(mmmm) < 10) {mmmm = "000" + mmmm;}
+	        else if (Integer.valueOf(mmmm) < 100) {mmmm = "00" + mmmm;}
+	        else if (Integer.valueOf(mmmm) < 1000) {mmmm = "0" + mmmm;}
+	        
+	        return String.valueOf( mmmm );
+        } catch (Exception e) {
+        	System.err.println("Error converting from hhmm to mmmmm. Input: " + hhmm);
+        	return "";
+        }
+    }
 	
 }
 

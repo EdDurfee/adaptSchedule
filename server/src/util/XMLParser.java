@@ -158,12 +158,13 @@ public class XMLParser {
 			if (dtpTypeString.equals("numDTP")) {continue;}
 			
 			// else add it to the array of DTP starts
-			agentStarts.add(new SimpleEntry<String,Integer>(dtpTypeString,dtpCount));
+			agentStarts.add(new SimpleEntry<String,Integer>(dtpTypeString,searchIdx+4));
 			dtpCount++;
 		}
 		
 		int subStringStart;
 		int subStringEnd;
+		
 		
 		
 		// not including the first line, each instance of "<...DTP>" indicates a new agent (and corresponding DTP)
@@ -172,7 +173,7 @@ public class XMLParser {
 		int agentStringEnd   = xmlString.indexOf("</"+agentStarts.get(agentNum).getKey());
 		
 		// this is the point where new details will be inserted before
-		int prependPoint = xmlString.substring(agentStringStart,agentStringEnd).indexOf("<activity>");
+		int prependPoint = xmlString.indexOf("<activity>", agentStringStart); //substring(agentStringStart,agentStringEnd).
 		
 		// create full string that will be inserted
 		
@@ -252,23 +253,6 @@ public class XMLParser {
 		
 		// insert insertStr into the xml string and return it
 		return new StringBuffer(xmlString).insert(prependPoint, insertStr).toString();
-		
-		
-		/*
-		<activity>
-			<name> wakeup </name>
-			<dtpIdx> 0 </dtpIdx>
-			<duration>
-				<min> 10 </min>
-				<max> 10 </max>	
-			</duration>
-			<availability>
-				<est> 300 </est>
-			</availability>
-		</activity>
-		*/
-
-		
 		
 	}
 		
