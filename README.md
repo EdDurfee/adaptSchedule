@@ -10,7 +10,7 @@ This schedule system was designed to assist adolescents transitioning towards in
 ## How to run client
 - First, start running the server and select which problem to run on the server
 - If the app was open previously, reset it by fully closing the app. This is done by double-clicking the home button on the iPad and then swiping the app up off the screen
-- On iPad home screen, click the app icon that looks like this: 
+- On iPad home screen, open the app label "Day Plan"
 - Enter the IP address of the computer running the server
   - If using a commercial network (like U of M’s), enter the public IP address of the server system. This IP can be obtained by googling “what is my IP address”
   - If on a private network (like your home), enter the private IP address of the server system. This IP address can be found in the network settings of the computer
@@ -20,7 +20,7 @@ This schedule system was designed to assist adolescents transitioning towards in
 
 
 ## How to install app on iPad from TestFlight
-- If the schedule app has been deleted, updated, or just needs to be reinstalled, it must be updated/installed through the testflight app. This app has already been installed on both iPads and has this icon: 
+- If the schedule app has been deleted, updated, or just needs to be reinstalled, it must be updated/installed through the testflight app.
 - Steps
   - Open TestFlight app on iPad
   - Select the app on the left menu
