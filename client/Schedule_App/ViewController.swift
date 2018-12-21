@@ -6,6 +6,12 @@
 //  Copyright © 2018 Drew. All rights reserved.
 //
 
+/*
+ * This is the primary view controller for the adaptSchedule client app
+ * It handles the majority of components within the app and will be the screen
+ *  users interact with in the standard case.
+ */
+
 import UIKit
 import QuartzCore
 
@@ -37,7 +43,6 @@ class MainViewController: UIViewController, UITextFieldDelegate, UITextViewDeleg
     
     @IBOutlet weak var SideMenu: UITableView!
     @IBOutlet weak var ConfirmActButton: UIButton!
-//    @IBOutlet weak var GanttImageDisplay: UIImageView!
     
     @IBOutlet weak var advSysClockButton: UIButton!
     
@@ -73,8 +78,6 @@ class MainViewController: UIViewController, UITextFieldDelegate, UITextViewDeleg
     // clickable image to warn user why their system has locked them from actions
     @IBOutlet weak var WarningImage: UIImageView!
     
-    
-    
     var origEST : String?
     var origLST : String?
     var origEET : String?
@@ -95,8 +98,6 @@ class MainViewController: UIViewController, UITextFieldDelegate, UITextViewDeleg
     // Called whenever this view (main screen) opens to the user (including app startup)
     override func viewDidLoad() {
         super.viewDidLoad()
-//        NotificationCenter.default.addObserver(self, selector: #selector(ViewControl ler.keyboardWillShow), name: NSNotification.Name.UIKeyboardWillShow, object: nil)
-//        NotificationCenter.default.addObserver(self, selector: #selector(ViewController.keyboardWillHide), name: NSNotification.Name.UIKeyboardWillHide, object: nil)
         
         
         // set up warning exclamation point image
@@ -107,10 +108,7 @@ class MainViewController: UIViewController, UITextFieldDelegate, UITextViewDeleg
         WarningImage.isUserInteractionEnabled = true
         WarningImage.addGestureRecognizer(warningTap)
         
-        // Set the sideMenu tableView as a child view and Set the ModActMenu delegate and dataSource
-//        addChildViewController(modActMenuDelegate)
-        //        view.addSubview(modActMenuDelegate.view)
-//        modActMenuDelegate.didMove(toParentViewController: self)
+        // Set the ModActMenu delegate and dataSource
         ModActMenu.delegate = modActMenuDelegate
         ModActMenu.dataSource = modActMenuDelegate
         
@@ -124,16 +122,12 @@ class MainViewController: UIViewController, UITextFieldDelegate, UITextViewDeleg
         ModifyActView.isHidden = true
         AddActView.isHidden = true
         
-        // Set the sideMenu tableView as a child view and Set the sideMenu delegate and dataSource to MenuController (sublass of TableViewController)
+        // Set the sideMenu tableView as a child view and Set the sideMenu delegate and dataSource
+        //  to MenuController (sublass of TableViewController)
         addChildViewController(menuDelegate)
-//        view.addSubview(menuDelegate.view)
         menuDelegate.didMove(toParentViewController: self)
         SideMenu.delegate = menuDelegate
         SideMenu.dataSource = menuDelegate
-        
-        
-        // testing to see how addTarget works and then see its feasibility for handeling actions inside of modifyAct view
-//        menuDelegate.picker.addTarget(self, action: #selector(testTarg(sender:)), for: .valueChanged)
         
         ModAct_ESTField.availConstraint = "EST";
         ModAct_LSTField.availConstraint = "LST";
@@ -147,28 +141,6 @@ class MainViewController: UIViewController, UITextFieldDelegate, UITextViewDeleg
         ModifyActView.addBackgroundShape()
         AddActView.addBackgroundShape()
 
-//        // create a pop-up requesting the IP of the server
-//        var serverIP: String? = nil
-//        let alert = UIAlertController(title: "Setup", message: "Enter the IP address of the server machine.", preferredStyle: .alert)
-//        //adding textfields to our dialog box
-//        alert.addTextField { (textField) in
-//            textField.placeholder = "IP address"
-//        }
-//        alert.addAction(UIAlertAction(title: "Enter", style: .default) { (_) in
-//
-//            //getting the input values from user
-//            serverIP = alert.textFields?[0].text
-//            alert.dismiss(animated: true)
-//
-//            })
-//        self.present(alert, animated: true)
-//
-//        while serverIP == nil {
-//            sleep(1)
-//        }
-    
-        // make sure the advSystemTimeButton is always above the scale
-        
         
         advSysClockButton.frame = CGRect(x: SideMenu.frame.width + 120.0, y: self.view.frame.height - GanttChart.scaleSpace - advSysClockButton.frame.height - 20.0, width: 200, height: 72)
         
@@ -176,17 +148,9 @@ class MainViewController: UIViewController, UITextFieldDelegate, UITextViewDeleg
         self.aClient = client(serverIP!, agentNumber!)
         
         
-        //        let boxWidth: CGFloat = 200.0
-        //        let boxHeight: CGFloat = 125.0
-        //        let boxX: CGFloat = view.frame.width - boxWidth - 50.0
-        //        let boxY: CGFloat = 50
-        
         let impactHeight: CGFloat = 70.0
         let impactWidth: CGFloat =  140.0
         let impactY: CGFloat =  50
-        
-//        drawImpactBox(title: "Personal", weakCount: 0, StrongCount: 0, boxX: view.frame.width - impactWidth - 30.0,   boxY: impactY, boxWidth: impactWidth, boxHeight: impactHeight)
-//        drawImpactBox(title: "Others",   weakCount: 0, StrongCount: 0, boxX: view.frame.width - impactWidth*2 - 50.0, boxY: impactY, boxWidth: impactWidth, boxHeight: impactHeight)
         
         // In the background, the client should continuously send heartbeat GET messages to the server
         // Heartbeat function will update the member variables of aClient in background whenever the server replies with new info
@@ -199,14 +163,12 @@ class MainViewController: UIViewController, UITextFieldDelegate, UITextViewDeleg
             while (true) {
                 usleep(200000) // wait microseconds
                 
-                
                 // if the side menu activity selected has changed
                 if ( self.menuDelegate.actSelectionChanged == true ) {
                     
                     DispatchQueue.main.async() {
                         // if an activity option was selected
                         if (self.SideMenu.indexPathForSelectedRow?.section == 0) {
-                            
                             
                             // request new gantt chart
                             self.requestTentActGantt()
@@ -240,19 +202,12 @@ class MainViewController: UIViewController, UITextFieldDelegate, UITextViewDeleg
                         // if 'add activity' selected, display modAct screen
                         if (self.SideMenu.indexPathForSelectedRow?.section == 1 && self.SideMenu.indexPathForSelectedRow?.row == 0) {
                             
-                            // NEW SYSTEM: segue to full new add act view
+                            // segue to full new add act view
                             self.performSegue(withIdentifier: "AddActSegue", sender: self)
                             
 //                            self.AddActView.isHidden = false
                         }
                         
-//                        // if 'add activity' screen is showing but not selected on side menu, hide it
-//                        if ( self.AddActView.isHidden == false && ( self.SideMenu.indexPathForSelectedRow?.section != 1 || self.SideMenu.indexPathForSelectedRow?.row != 0 ) ) {
-//                            self.AddActView.isHidden = true
-//                            if self.ModActMenu.indexPathForSelectedRow != nil {
-//                                self.ModActMenu.deselectRow(at: self.ModActMenu.indexPathForSelectedRow!, animated: false)
-//                            }
-//                        }
                         
                         
                         // if 'modify activity' selected, display modAct screen
@@ -328,13 +283,6 @@ class MainViewController: UIViewController, UITextFieldDelegate, UITextViewDeleg
                     // wait for counts to be same to avoid race condition towards seg fault
                     if (self.aClient!.currentInfo.infoType != "" &&
                                 self.aClient!.currentInfo.nextActivities!.count == self.aClient!.currentInfo.nextActsMaxDur!.count) {
-//                        self.viewInInfo.infoType = self.aClient!.currentInfo.infoType!; self.aClient!.currentInfo.infoType = ""
-//                        self.viewInInfo.startTime = self.aClient!.currentInfo.startTime!; self.aClient!.currentInfo.startTime? = ""
-//                        self.viewInInfo.nextActivities = self.aClient!.currentInfo.nextActivities!; self.aClient!.currentInfo.nextActivities = []
-//                        self.viewInInfo.nextActsMinDur = self.aClient!.currentInfo.nextActsMinDur!; self.aClient!.currentInfo.nextActsMinDur = []
-//                        self.viewInInfo.nextActsMaxDur = self.aClient!.currentInfo.nextActsMaxDur!; self.aClient!.currentInfo.nextActsMaxDur = []
-//                        self.viewInInfo.strImg = self.aClient!.currentInfo.strImg!; self.aClient!.currentInfo.strImg = ""
-//                        self.viewInInfo.debugInfo = self.aClient!.currentInfo.debugInfo!; self.aClient!.currentInfo.debugInfo?.removeAll()
                         self.viewInInfo = self.aClient!.currentInfo
                         
 
@@ -344,18 +292,13 @@ class MainViewController: UIViewController, UITextFieldDelegate, UITextViewDeleg
                             self.menuDelegate.minDurs = self.viewInInfo.nextActsMinDur!
                             self.menuDelegate.maxDurs = self.viewInInfo.nextActsMaxDur!
                             self.SideMenu.reloadData()
-                            /*if self.viewInInfo.nextActivities!.count > 0 && self.viewInInfo.clearToConfirm == "true" {
-                                self.ConfirmActButton.isEnabled = true
-                                //self.ConfirmActButton.backgroundColor = UIColor(red: 76/255, green: 217/255, blue: 100/255, alpha: 1.0)
-                            } else {
-                                self.ConfirmActButton.isEnabled = false
-                                //self.ConfirmActButton.backgroundColor = UIColor.white
-                            }*/
+                            
                             self.lastConfirmedBars = self.GanttChart.dataEntries
                             
-                            // if the user needs to wait for a higher priority user to make a decision first, display the
-                            //  notification warning clickable image to explain the situation
-                            //  only trigger 'confirm block' response when the user would typically be able to make a decision
+                            // If the user needs to wait for a higher priority user to make a decision
+                            //  first, display the notification warning clickable image to explain the
+                            //  situation only trigger 'confirm block' response when the user would
+                            //  typically be able to make a decision
                             if self.viewInInfo.clearToConfirm == "false" && self.menuDelegate.activityOptions.count > 0 {
                                 self.menuDelegate.clearToConfirm = false
                                 self.WarningImage.isHidden = false
@@ -389,27 +332,13 @@ class MainViewController: UIViewController, UITextFieldDelegate, UITextViewDeleg
                                 
                                 barColor = UIColor.init(red: 204.0/255.0, green: 255.0/255.0, blue: 204.0/255.0, alpha: 1.0)
                                 
-                                // set the bar color (for tentative selections) based on how much the availability has
-                                //  been restricted relative to the last confirmed act
-                                // lower restrict values => more restricted
-                                // if the side menu has something selected in section 0, this is a tent selection
-//                                NOTE: THIS BAR COLOR SELECTION SYSTEM WAS REPLACED WITH A SIMPLER SYSTEM INSIDE OF GanttChartView
                                 if (self.SideMenu.indexPathForSelectedRow?.section == 0) {
-//                                    // if it has been restricted twice as much as previous:
-//                                    // 50% threshold
-//                                    if (self.lastConfirmedBars![actNum].restrict > 1.5 * Double(actRestricts[actNum])!) {
-//                                        barColor = self.stronglyRestrictColor
-//                                    } // if it has been restricted any more than previous but less than double:
-//                                    else if (self.lastConfirmedBars![actNum].restrict > Double(actRestricts[actNum])!) {
-//                                        barColor = self.weaklyRestrictedColor
-//                                    }
                                     self.GanttChart.tentGantt = true
                                     self.ConfirmActButton.isEnabled = true
                                 } else {
                                     self.GanttChart.tentGantt = false
                                     self.ConfirmActButton.isEnabled = false
                                 }
-                                
                                 
                                 // if this activity has already been completed
                                 if (currentTime == "") {currentTime = "0"}
@@ -501,16 +430,9 @@ class MainViewController: UIViewController, UITextFieldDelegate, UITextViewDeleg
                                 self.origDur = durStr
                             }
                         }
-
-                        // Legacy code for old gantt image display system (generated on Java server)
-//                        if (self.viewInInfo.strImg != "") {
-//                            if let decodedData = Data(base64Encoded: self.viewInInfo.strImg!, options: .ignoreUnknownCharacters) {
-//                                let image = UIImage(data: decodedData)
-//                                self.GanttImageDisplay.image = image
-//                            }
-//                        }
                     
                     self.aClient!.currentInfo = fromServer()
+                    
                     }
                 }
                 
@@ -525,21 +447,6 @@ class MainViewController: UIViewController, UITextFieldDelegate, UITextViewDeleg
         NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIKeyboardWillHide, object: self.view.window)
     }
     
-//    @objc func keyboardWillShow(notification: NSNotification) {
-//        if let keyboardSize = (notification.userInfo?[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.cgRectValue {
-//            if self.view.frame.origin.y == 0{
-//                self.view.frame.origin.y -= keyboardSize.height
-//            }
-//        }
-//    }
-//
-//    @objc func keyboardWillHide(notification: NSNotification) {
-//        if let keyboardSize = (notification.userInfo?[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.cgRectValue {
-//            if self.view.frame.origin.y != 0{
-//                self.view.frame.origin.y += keyboardSize.height
-//            }
-//        }
-//    }
     
     @objc func WarningImgTapDetected() {
         
@@ -553,9 +460,6 @@ class MainViewController: UIViewController, UITextFieldDelegate, UITextViewDeleg
     }
 
     override func viewDidAppear(_ animated: Bool) {
-        
-        
-        
         
     }
 
@@ -1097,17 +1001,6 @@ class MainViewController: UIViewController, UITextFieldDelegate, UITextViewDeleg
         ConfirmActButton.isEnabled = false
         self.SideMenu.reloadData()
         
-//        let durLines = AddAct_DurationTextBox.text!.components(separatedBy: CharacterSet.newlines)
-//        for line in durLines {
-//
-//            // if not an empty line, append its durations to the newActDetails
-//            if line != "" {
-//                var splitLine = line.components(separatedBy: " - " )
-//                // trim off white space and append to min/max duration lists
-//                newActDetails.minDurs?.append( hhmmTOmmmm(hhmm: splitLine[0].trimmingCharacters(in: .whitespaces)) ) // format:  mmmm
-//                newActDetails.maxDurs?.append( hhmmTOmmmm(hhmm: splitLine[1].trimmingCharacters(in: .whitespaces)) ) // format:  mmmm
-//            }
-//        }
         
         // minDurs and maxDurs are lists due to old implementation details
         // see communication protocol outline for details
@@ -1300,14 +1193,6 @@ class MainViewController: UIViewController, UITextFieldDelegate, UITextViewDeleg
     
     
     // segue code for transitioning view controller
-    
-//    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // if segue to add activity screen, no info that needs to be passed in
-//        if let destinationViewController = segue.destination as? ViewController {
-//            destinationViewController.serverIP = IPaddress
-//        }
-//    }
-    
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         
         if segue.identifier == "AddActSegue" {
@@ -1333,10 +1218,6 @@ class MainViewController: UIViewController, UITextFieldDelegate, UITextViewDeleg
         
     }
     
-//    func adaptivePresentationStyle(for controller: UIPresentationController) -> UIModalPresentationStyle {
-//        return UIModalPresentationStyle.none
-//    }
-
     
 }
 

@@ -141,12 +141,8 @@
 	<name> toSchool </name>
 	<dtpIdx> 0 </dtpIdx>
 	<duration>
-		<min> 30 </min>
-		<max> 30 </max>	
-	</duration>
-	<duration>
 		<min> 10 </min>
-		<max> 10 </max>	
+		<max> 30 </max>	
 	</duration>
 	<availability>
 		<est> 330 </est>

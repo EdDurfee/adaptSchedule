@@ -1,6 +1,6 @@
 //
 //  MenuController.swift
-//  Test2_Drew
+//  Drew
 //
 //  Created by Drew Davis on 6/13/18.
 //  Copyright © 2018 Drew. All rights reserved.
@@ -35,11 +35,9 @@ class MenuController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Uncomment the following line to preserve selection between presentations
+        // Preserve selection between presentations
          self.clearsSelectionOnViewWillAppear = false
 
-        // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
-        // self.navigationItem.rightBarButtonItem = self.editButtonItem
     }
 
     override func didReceiveMemoryWarning() {
@@ -225,8 +223,6 @@ class MenuController: UITableViewController {
         currentCellRow = indexPath.row
     }
     
-    //optional func tableView(_ tableView: UITableView, accessoryButtonTappedForRowWith indexPath: IndexPath)
- 
 
     /*
     // Override to support conditional editing of the table view.
@@ -281,8 +277,7 @@ class MenuController: UITableViewController {
         
         let popover = alert!.popoverPresentationController
         popover?.sourceView = alert!.view
-        popover?.sourceRect = CGRect(x: 150, y: 64 + 50*(selectionActNum+1), width: 1, height: 1) //50*(selectionActNum+1)
-//        popover?.barButtonItem = UIBarButtonItem(customView: UIView(frame: CGRect(x: 300, y: 200 + 50*(selectionActNum+1), width: 1000, height: 1000)))
+        popover?.sourceRect = CGRect(x: 150, y: 64 + 50*(selectionActNum+1), width: 1, height: 1)
         
         
         //Create a frame (placeholder/wrapper) for the picker and then create the picker
@@ -298,22 +293,6 @@ class MenuController: UITableViewController {
         picker.setDate(date, animated: true)
         
         picker.addTarget(self, action: #selector(datePickerChanged(sender:)), for: .valueChanged)
-        
-        
-//        let currentServDate = Date(timeInterval: Double(startTime)*60, since: Calendar.current.startOfDay(for: Date()) )
-//        picker.minimumDate = Date( timeInterval: 5 * 60,                             since: currentServDate )  // minimum idle time (in seconds)
-//        picker.maximumDate = Date( timeInterval: Double(self.maxDurs[actNum])! * 60, since: currentServDate ) // max idle time (in seconds)
-//        picker.Timer = 300.0 // start at 5 minutes
-        
-
-        
-        
-        // picker.countDownDuration  ==  currently selected time in seconds
-        
-        
-        //set the pickers datasource and delegate
-//        picker.delegate = self;
-//        picker.dataSource = self;
         
         //Add the picker to the alert controller
         alert!.view.addSubview(picker);
@@ -339,12 +318,6 @@ class MenuController: UITableViewController {
         alert!.view.addSubview(toolView);
         
         self.present(alert!, animated: true, completion: nil);
-        //        let ac = UIAlertController(title: "Hello!", message: "This is a test.", preferredStyle: .actionSheet)
-        //        let popover = ac.popoverPresentationController
-        //        popover?.sourceView = tableView
-        //        popover?.sourceRect = CGRect(x: 32, y: 44, width: 64, height: 64)
-        //
-        //        present(ac, animated: true)
         
     }
 
@@ -375,12 +348,7 @@ class MenuController: UITableViewController {
     
     func convertMinsToTimeSent(str: String) -> String {
         let numMins = Int(str)
-//        if (numMins! / 60 == 0) { // if total time is less than 1 hour
-//            return String(format: "%02d", numMins!) + " minutes"
-//        } else {
-            //return String(numMins! / 60) + " hours and " + String(numMins! % 60) + " minutes"
-            return String(format: "%02d", numMins! / 60) + ":" + String(format: "%02d", numMins! % 60)
-//        }
+        return String(format: "%02d", numMins! / 60) + ":" + String(format: "%02d", numMins! % 60)
     }
 
     

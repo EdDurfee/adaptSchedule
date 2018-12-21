@@ -58,7 +58,6 @@ class GanttChartView: UIView, UITextViewDelegate {
     //let availGradStart: UIColor = UIColor.init(red: 255/255.0, green: 255/255.0, blue: 150/255.0, alpha: 1.0)
     let availGradReduced: UIColor = UIColor.init(red: 255/255.0, green: 255/255.0, blue: 110/255.0, alpha: 1.0)
     let durDefaultColor: UIColor = UIColor.init(red: 150.0/255.0, green: 150.0/255.0, blue: 150.0/255.0, alpha: 1.0)
-    //let availDefaultColor: UIColor = UIColor.init(red: 200.0/255.0, green: 200.0/255.0, blue: 200.0/255.0, alpha: 1.0)
     let currentTentActColor: UIColor = UIColor(red: 190/255.0, green: 229/255.0, blue: 191/255.0, alpha: 1.0)
     let finishedColor: UIColor         = UIColor.init(red: 100.0/255.0,  green: 100.0/255.0, blue: 100.0/255.0, alpha: 1.0)
     
@@ -104,8 +103,6 @@ class GanttChartView: UIView, UITextViewDelegate {
         self.addSubview(barsScrollView)
         barsScrollView.delegate = self
         
-//        namesScrollView.backgroundColor = UIColor.clear
-//        namesDrawLayer.backgroundColor = UIColor.clear.cgColor
         namesScrollView.layer.addSublayer(namesDrawLayer)
         self.addSubview(namesScrollView)
         namesScrollView.delegate = self
@@ -143,12 +140,6 @@ class GanttChartView: UIView, UITextViewDelegate {
         if (scrollAxisLock) {
         
             if (barsScrollView.contentSize.height > barsScrollView.frame.height) {
-                //            // Allow the user to scroll vertically on the names and see an affect
-                //            if (scrollView == namesScrollView) {
-                //                let namesYPerc = namesScrollView.contentOffset.y / abs(namesScrollView.contentSize.height - namesScrollView.frame.height)
-                //                barsScrollView.contentOffset.x  = namesYPerc * abs(barsScrollView.contentSize.width - barsScrollView.frame.width)
-                //                scaleScrollView.contentOffset.x = namesYPerc * abs(scaleScrollView.contentSize.width - scaleScrollView.frame.width)
-                //            }
                 let barsXPerc = barsScrollView.contentOffset.x / (barsScrollView.contentSize.width - barsScrollView.frame.width) // what percent x offset
                 barsScrollView.contentOffset.y = barsXPerc * abs(barsScrollView.contentSize.height - barsScrollView.frame.height)
                 
@@ -210,13 +201,6 @@ class GanttChartView: UIView, UITextViewDelegate {
                 var i = -1
                 while i < tempDataEntries.count-1 {
                     i+=1
-                    // if max duration is zero, this is an optinal acitvity that cannot be performed, so skip it:
-                    /*if (tempDataEntries[i].maxDuration == 0) {
-                        tempDataEntries.remove(at: i)
-                        sortedLastConfirmedBars!.remove(at: i)
-                        i -= 1
-                        continue
-                    }*/
                     
                     if (tentGantt && sortedLastConfirmedBars![i].minDuration == 0) {
                         sortedLastConfirmedBars![i].minDuration = sortedLastConfirmedBars![i].maxDuration
@@ -257,10 +241,7 @@ class GanttChartView: UIView, UITextViewDelegate {
         if (entry.LET <= currentTime) {
             // draw activity participation time
             barLength = minsToX ( mins: entry.LET - entry.EST )
-            // if this activity was not skipped, draw its bar
-            //if (entry.maxDuration != 0) {
-                drawBar(xPos_left: xPos, yPos_top: yPos, barLength: barLength, color: finishedColor, type: "default")
-            //}
+            drawBar(xPos_left: xPos, yPos_top: yPos, barLength: barLength, color: finishedColor, type: "default")
             if tentGantt { nameColor = UIColor(red: 238.0/255, green: 238.0/255, blue: 238/255.0, alpha: 1.0) }
             else { nameColor = UIColor.clear}
         }
@@ -291,18 +272,6 @@ class GanttChartView: UIView, UITextViewDelegate {
                 else { avail = entry.LET - entry.EST; oldAvail = oldEntry.LET - oldEntry.EST; }
                 barLength = minsToX ( mins: avail )
                 
-//                var startRed: CGFloat = 0
-//                var startGreen: CGFloat = 0
-//                var startBlue: CGFloat = 0
-//                var startAlpha: CGFloat = 0
-//                availGradStart.getRed(&startRed, green: &startGreen, blue: &startBlue, alpha: &startAlpha)
-//
-//                var endRed: CGFloat = 0
-//                var endGreen: CGFloat = 0
-//                var endBlue: CGFloat = 0
-//                var endAlpha: CGFloat = 0
-//                availGradEnd.getRed(&endRed, green: &endGreen, blue: &endBlue, alpha: &endAlpha)
-                
                 let barColor: UIColor
                 
                 let restrictRatio: CGFloat = CGFloat(avail) / CGFloat(oldAvail) // ratio (0 < r <= 1) gets smaller as new avail shrinks
@@ -310,22 +279,8 @@ class GanttChartView: UIView, UITextViewDelegate {
                 if restrictRatio == 1.0 {
                     barColor = availDefault
                 } else {
-//                    colorChangeRatio = min(1.0,1-restrictRatio*2)
-//                    let red = startRed + (startRed - endRed) * colorChangeRatio
-//                    let blue = startBlue + (startBlue - endBlue) * colorChangeRatio
-//                    let green = startGreen + (startGreen - endGreen) * colorChangeRatio
                     barColor = availGradReduced // UIColor(red: red, green: green, blue: blue, alpha: 1.0)
-                } // gets larger as avail shrinks
-//                let greenRangeToMax: CGFloat = 255-(startGreen*255) // how much can the green color chang before max green level (255)
-//                green = startGreen + ((1-restrictRatio) * greenRangeToMax)/255.0 // increase green level up to max of 255
-//                startGreen = startGreen - (80 * (1-restrictRatio))/255
-//                startBlue = startBlue - (80 * (1-restrictRatio))/255
-//                let red = startRed + (endRed - startRed)*colorChangeRatio
-//                let green = startGreen + (endGreen-startGreen)*colorChangeRatio
-//                let blue = startBlue + (endBlue-startBlue)*colorChangeRatio
-//                let red = startRed + (startRed - endRed) * colorChangeRatio
-//                let blue = startBlue + (startBlue - endBlue) * colorChangeRatio
-//                let green = startGreen + (startGreen - endGreen) * colorChangeRatio
+                }
                 
                 
                 drawBar(xPos_left: xPos, yPos_top: yPos, barLength: barLength, color: barColor, type: "default")
@@ -567,9 +522,6 @@ class GanttChartView: UIView, UITextViewDelegate {
         let lineLayerScale = CAShapeLayer()
         lineLayerScale.path = pathScale.cgPath
         lineLayerScale.lineWidth = 0.5
-//        if lineType == "dashed" {
-//            lineLayerScale.lineDashPattern = [4, 4]
-//        }
         lineLayerScale.strokeColor = color.cgColor
         scaleDrawLayer.insertSublayer(lineLayerScale, at: 0)
     }
