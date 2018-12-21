@@ -1,3 +1,6 @@
+# AdaptSchedule
+This schedule system was designed to assist adolescents transitioning towards independence. It allows them to set up a daily schedule with all activities that must be performed and any constraints between those activities. The system then offers the users the ability to dynamically select which activity they want to perform at the time of selection. If a user follows the schedule, they are guaranteed to complete all necessary activities during a day while still having the freedom to choose how they want to spend their time.
+
 
 ## How to run server
 - Requires Java 1.8 JRE
