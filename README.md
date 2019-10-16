@@ -3,6 +3,11 @@ This system was designed to assist adolescents, particularly adolescents with di
 
 When the client scheduling interface is run on an iPad, the user is presented with not only with a listing of activities that could be done next, and with the ability to alter the schedule by adding, modifying, and/or removing schedules, but also with a visual timeline of the windows in which activities can be done.  This allows the user to see the consequences of different tentative choices of activities to perform next.  The schedule server can serve multiple (current implementation is hardwired for up to 2) clients, whose schedules can be connected (e.g., a parent and adolescent might need to commute to school/work together, or eat dinner together), and as one person makes choices that constrain such joint activities, those constraints are automatically propagated to the other person's schedule.
 
+## Outline of the set up
+- The main engine of the scheduling system, the server, runs in Java, in Eclipse.  It uses the Yices SMT solver, so the version of Yices it calls depends on the system (Apple vs Windows).
+- Besides a built-in interface that simulates a distributed system on the server, the distributed interface has been developed to run on iPads.  The client software runs on an iPad, communicating with the server through the internet.  The client largely does rendering, with the scheduling reasoning done on the server.
+- As currently implemented, the server can support up to 2 clients, whose schedules can interact.
+
 
 ## How to run server
 - Requires Java 1.8 JRE
