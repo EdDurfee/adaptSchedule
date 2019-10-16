@@ -690,11 +690,13 @@ class GanttChartView: UIView, UITextViewDelegate {
     private func minsToStrTime(_ mins: Int) -> String {
         var dayHalf = "AM"
         var adjMins = mins
-        if (adjMins > 780) { // if it is the afternoon
-            adjMins = mins - 780
+        if (adjMins > 719) { // if it is noon or later, flip to PM
             dayHalf = "PM"
         }
-        let strHours = String(adjMins / 60) // interger division
+        if (adjMins > 779) { // if it is 1pm or later, for 12:30 pm don't want change
+            adjMins = mins - 720
+        }
+       let strHours = String(adjMins / 60) // interger division
         let strMins = String(format: "%02d", adjMins % 60)
         return strHours + ":" + strMins + " " + dayHalf
     }
