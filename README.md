@@ -47,8 +47,8 @@ When the client scheduling interface is run on an iPad, the user is presented wi
   - After the upload is complete, the project will be automatically process in Apple servers, which will take some time. Wait for an email on the iPads from Apple saying the distribution succeeded/failed. The email usually arrives within 5/10 minutes.
 
 ## How to install fresh instance of the server
-- A zip file containing all versions of Yices (https://yices.csl.sri.com/) is in the git repository.
-- Due to the size of the java JAR files, they cannot be stored on the git repository and need to be retrieved separately.
+- A zip file containing all versions of Yices (https://yices.csl.sri.com/) is in the git repository.  Depending on what OS you are running, you will need to modify which version of yices is being accessed in `server/src/dtp/SimpleDTP.java`.
+- The java JAR files are in a subdirectory in the server folder.
 - Steps
   - Pull latest changes from online github repo
     - (Mac / Linux) In the terminal run git pull origin master
