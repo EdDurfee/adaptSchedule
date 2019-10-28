@@ -3,6 +3,9 @@ This system was designed to assist adolescents, particularly adolescents with di
 
 When the client scheduling interface is run on an iPad, the user is presented with not only with a listing of activities that could be done next, and with the ability to alter the schedule by adding, modifying, and/or removing schedules, but also with a visual timeline of the windows in which activities can be done.  This allows the user to see the consequences of different tentative choices of activities to perform next.  The schedule server can serve multiple (current implementation is hardwired for up to 2) clients, whose schedules can be connected (e.g., a parent and adolescent might need to commute to school/work together, or eat dinner together), and as one person makes choices that constrain such joint activities, those constraints are automatically propagated to the other person's schedule.
 
+## Status of software
+- The intent of this repository is to make available the source code for a prototype distributed schedule managment tool. This is not intended to represent a finished product for potential immediate use.  It is intended to provide developers of commercial products with the software realization of the tool that has been developed, to inform incorporation of ideas from this prototype into commercial products.
+
 ## Outline of the set up
 - The main engine of the scheduling system, the server, runs in Java, in Eclipse.  It uses the Yices SMT solver, so the version of Yices it calls depends on the system (Apple vs Windows).
 - Besides a built-in interface that simulates a distributed system on the server, the distributed interface has been developed to run on iPads.  The client software runs on an iPad, communicating with the server through the internet.  The client largely does rendering, with the scheduling reasoning done on the server.
@@ -66,3 +69,6 @@ When the client scheduling interface is run on an iPad, the user is presented wi
   - Pull latest changes from online github repo
     - (Mac / Linux) In the terminal run git pull origin master
     - (Windows) Use a git shell to run git pull origin master
+
+## Acknowledgements
+- The software in this repository is the result of the research efforts of a series of graduate students at the University of Michigan. The initial codebase for multiagent temporal reasoning was developed by James Boerkoel, Jr. Jason Sleight used that codebase to create the initial schedule management tool.  Lynn Garrett extended this tool particularly in ways to support dynamic adaptation of a schedule.  Drew Bennett split the software base into the client and server components, and developed the user interface in part informed by an earlier design by Jorday MacKay.  The principal investogators of the project were Professors Edmund Durfee and Abigail Johnson.
