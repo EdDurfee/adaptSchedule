@@ -55,8 +55,7 @@ When the client scheduling interface is run on an iPad, the user is presented wi
   - Pull latest changes from online github repo
     - (Mac / Linux) In the terminal run git pull origin master
     - (Windows) Use a git shell to run git pull origin master
-    - The Eclipse project that contains the server will have automatically lost its connections to the JAR files. This can be fixed by opening the project in Eclipse, right clicking the top-level project folder in the Eclipse Package Explorer, and clicking refresh.
-    - If the project still has errors, manually check the Java Build Path in 2 places:
+    - If the project has errors, manually check the Java Build Path in 2 places:
       - In File -> Preferences
       - By right clicking the top-level project folder in the Eclipse Package Explorer -> Properties
     - Run the AppServerGUI.java file in the utils subdirectory
