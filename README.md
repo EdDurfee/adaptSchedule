@@ -51,7 +51,6 @@ When the client scheduling interface is run on an iPad, the user is presented wi
 
 ## How to install fresh instance of the server
 - A zip file containing all versions of Yices (https://yices.csl.sri.com/) is in the git repository.  Depending on what OS you are running, you will need to modify which version of yices is being accessed in `server/src/dtp/SimpleDTP.java`.
-- The java JAR files are in a subdirectory in the server folder.
 - Steps
   - Pull latest changes from online github repo
     - (Mac / Linux) In the terminal run git pull origin master
@@ -60,7 +59,7 @@ When the client scheduling interface is run on an iPad, the user is presented wi
     - If the project still has errors, manually check the Java Build Path in 2 places:
       - In File -> Preferences
       - By right clicking the top-level project folder in the Eclipse Package Explorer -> Properties
-    - Run the AppServerGUI.java file
+    - Run the AppServerGUI.java file in the utils subdirectory
 
 ## How to update server from repo codebase
 - If changes have been made to the server and pushed to the repo, you can update your server instance without redownloading or transfering the entire system
